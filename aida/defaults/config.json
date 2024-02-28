@@ -1,0 +1,15 @@
+{
+    "webapp_dir": "aida",
+    "admin_email": "xxx@xxx.xxx",
+    "offset": 1,
+    "history": 10,
+    "nprocs": 4,
+    "local_db": {
+        "host": "mysql-aida",
+        "port": 3306,
+        "socket": "",
+        "user": "lota",
+        "password": "VerdiLoTA2024!",
+        "dbname": "aida_local"
+    }
+}

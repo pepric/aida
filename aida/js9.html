@@ -1,0 +1,74 @@
+<div class="row">
+	<div>
+		<section class="panel">
+			<div class="js9-panel-body">
+				<div class="col-md-8">
+					<div class="JS9Menubar" data-js9id="*" data-width="100%" ></div>
+					<div class="JS9Toolbar"></div>
+					<div class="JS9" data-width="100%"></div>
+					<div style="margin-top: 2px;">
+						<div class="JS9Colorbar" data-js9id="*" data-width="100%"></div>
+					</div>
+				</div>
+				<div class = "col-md-4" style="padding-left : 0">
+					<div class = "col-md-6">
+						<div class="JS9Magnifier" data-width="100%" data-height="230"></div> <!--data-width=100%???-->
+					</div>
+					<div class = "col-md-6">
+						<div class="JS9Panner" data-width="100%" data-height="230"></div>
+					</div>
+					<div class = "col-md-12 imginfo">
+						<div class="JS9Info" data-width="100%"></div>
+					</div>
+					<div class = "col-md-12 newpanel" style="margin-top:20px;">
+						<button class="btn btn-primary js9-btn" id="new-js9-panel" onclick="open_panel()">Open new panel</button>
+					</div>
+			</div>
+			<div class="col-md-8" style="padding-top: 15px;">		
+				<div class="col-md-3 imexam">
+					<div class="ImExam3dPlot" data-js9id="*"></div>
+				</div>
+				<div class="col-md-3 imexam">
+					<div class="ImExamXProj" data-js9id="*" ></div>
+				</div>
+				<div class="col-md-3 imexam">
+					<div class="ImExamYProj" data-js9id="*" ></div>
+				</div>
+				<div class="col-md-3 imexam">
+					<div class="ImExamHistogram" data-js9id="*" ></div>
+				</div>
+				<div class="col-md-3 imexam">
+					<div class="ImExamEncEnergy" data-js9id="*" ></div>
+				</div>
+				<div class="col-md-3 imexam">
+					<div class="ImExamRadialProj" data-js9id="*" ></div>
+				</div>
+				<div class="col-md-6 imexam">
+					<div class="ImExamRegionStats" data-js9id="*"></div>
+				</div>
+			</div>
+			
+			<!-- list of stored files. TO CORRECT -->
+			<div class="col-md-4" id = "iottree">
+				<div class="drag-handle" style="margin-top: 15px;">Files</div>
+				<div class = "col-md-12 iottree">
+					<!--<h5 class="text-semibold text-dark text-uppercase">FILES</h5>-->
+					<!--<p>Questa funzione deve essere ricaricata quando si uploadano nuovi files</p>-->
+					<div class="col-md-12" style="overflow-x:auto" id="treeUser"></div>
+					<div class="col-md-12" style="overflow-x:auto" id="treeStored"></div>
+				</div>
+			</div>
+					
+			
+			
+			
+			</section>
+		</div>
+	</div>
+	
+	
+
+</div>
+
+	 
+<script src="assets/javascripts/lsst/image-explorer.js"></script>

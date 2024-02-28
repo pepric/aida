@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SIR>
+	<pre-generated apply="all">
+		<table>calibration</table>
+		<items apply="all">
+			<select>
+				<id>ic</id>
+				<name>ic</name>
+				<onchange>set_params(this)</onchange>
+				<option type="file">forms.json,0</option>
+			</select>			
+			<select>
+				<id>sys</id>
+				<name>sys</name>
+				<option type="file">forms.json,1</option>
+			</select>
+			<select>
+				<id>partype</id>
+				<name>partype</name>
+				<onchange>xml_refresh_params(this)</onchange>
+				<style>display:none</style>
+				<option>Pre-generated Plot,[histogram]</option>
+			</select>
+			<select>
+				<id>params</id>
+				<name>params</name>
+				<style>display:none</style>
+			</select>			
+		</items>
+		<items apply="pipo">
+			<select>
+				<id>iAAAAAc</id>
+			</select>			
+		</items>
+		<main_filter>
+			<label>ProductID</label>
+			<div_id>productid</div_id>
+			<input>
+				<type>text</type>
+				<class>indate</class>
+				<style>width: 400px !important; border-radius:6px</style>
+				<name>pid</name>
+				<id>pid</id>
+			</input>
+		</main_filter>
+				
+	</pre-generated> 
+</SIR>

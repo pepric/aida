@@ -1,0 +1,195 @@
+<!-- Form-->
+<script src="assets/vendor/select2/select2.js"></script>
+<script src="assets/vendor/bootstrap-multiselect/bootstrap-multiselect.js"></script>
+<script src="assets/vendor/jquery-maskedinput/jquery.maskedinput.js"></script>
+<script src="assets/vendor/bootstrap-tagsinput/bootstrap-tagsinput.js"></script>
+<script src="assets/vendor/fuelux/js/spinner.js"></script>
+<script src="assets/vendor/dropzone/dropzone.js"></script>
+<script src="assets/vendor/bootstrap-markdown/js/markdown.js"></script>
+<script src="assets/vendor/bootstrap-markdown/js/to-markdown.js"></script>
+<script src="assets/vendor/bootstrap-markdown/js/bootstrap-markdown.js"></script>
+<script src="assets/vendor/codemirror/lib/codemirror.js"></script>
+<script src="assets/vendor/codemirror/addon/selection/active-line.js"></script>
+<script src="assets/vendor/codemirror/addon/edit/matchbrackets.js"></script>
+<script src="assets/vendor/codemirror/mode/javascript/javascript.js"></script>
+<script src="assets/vendor/codemirror/mode/xml/xml.js"></script>
+<script src="assets/vendor/codemirror/mode/htmlmixed/htmlmixed.js"></script>
+<script src="assets/vendor/codemirror/mode/css/css.js"></script>
+<script src="assets/vendor/summernote/summernote.js"></script>
+<script src="assets/vendor/bootstrap-maxlength/bootstrap-maxlength.js"></script>
+<script src="assets/vendor/ios7-switch/ios7-switch.js"></script>
+	
+<!-- Form validation -->
+<script src="assets/vendor/jquery-validation/jquery.validate.js"></script>
+
+<script>
+	//action when addmore button is clicked
+	function addmore_btn(visible=1, showpartype=0){
+		//show remove button
+		document.getElementById("remove").style="display: inline;"
+		var npar = document.getElementById("n_ypar").value;
+		var parent = document.getElementById("yparams");
+		var last = document.getElementById("y"+(npar-1)+"-par-form");
+		//create hidden label for alignment
+		var node = document.createElement("label");
+		node.setAttribute("class", "col-md-2 control-label additional");
+		parent.appendChild(node);
+		// duplicate last y row
+		var clone = last.cloneNode(true);
+		clone.setAttribute("id", "y"+npar+"-par-form");
+		clone.setAttribute("class", "col-md-10 additional");
+		//remove addmore and remove buttons from clone
+		if(npar == 1){
+          	$(clone).find("#addmore").remove();
+            $(clone).find("#remove").remove();
+		}
+		//add extra filters
+		var extraf = $(clone).find("#y"+(npar-1)+"_extra_filters_btn_show");
+		if($(extraf).length > 0){
+          	$(extraf).attr("style","display:none")
+          	$(extraf).attr("id","y"+npar+"_extra_filters_btn_show")
+          	$(extraf).attr("onclick","show_extra_filters('y"+npar+"')")
+          	$(clone).find("#y"+(npar-1)+"_extra_filters_btn_hide").attr("onclick","hide_extra_filters('y"+npar+"')")          
+          	$(clone).find("#y"+(npar-1)+"_extra_filters_btn_hide").attr("id","y"+npar+"_extra_filters_btn_hide");
+			$(clone).find("#y"+(npar-1)+"_extra_filters").attr("id","y"+npar+"_extra_filters");
+          	$(clone).find("#y"+npar+"_extra_filters").attr("style","display:none");
+          	$(clone).find("#y"+npar+"_extra_filters_btn_hide").attr("style","display:none");
+          	$(clone).find("#y"+(npar-1)+"l").attr("id","y"+npar+"l").attr("for","y"+npar+"_pid1").val("");
+          	$(clone).find("#y"+(npar-1)+"_pid1").attr("id","y"+npar+"_pid1").attr("name","y"+npar+"_pid1").val("");
+          	$(clone).find("#y"+(npar-1)+"_pid2").attr("id","y"+npar+"_pid2").attr("name","y"+npar+"_pid2").val("");
+            $(clone).find("#y"+(npar-1)+"_DataSetRelease").attr("id","y"+npar+"_DataSetRelease").attr("name","y"+npar+"_DataSetRelease").val("");
+			$("#y"+npar+"_extra_filters").each(function(){
+        	    $(this).find('input').val("5");
+      		})
+        }
+		//add checkbutton for adu/physical values
+		var checkb = $(clone).find("#y"+(npar-1)+"-adu_cal");      
+		if(checkb != null){
+
+        	checkb.attr("id","y"+npar+"-adu_cal")
+        	checkb.attr("name","y"+npar+"-adu_cal")
+          	$(clone).find("#y"+(npar-1)+"-adu_check").attr("style","display:none").attr("id","y"+npar+"-adu_check")
+          	$(clone).find("#units").html(null)          
+        }      
+      
+      
+		document.getElementById("yparams").appendChild(clone)
+		var children = clone.getElementsByTagName('select');
+		for(var i = 0; i<children.length; i++){
+			var child = children[i];
+			var child_id = child.id;
+			var childarr = child_id.split("-");
+			childarr[0] = "y"+npar;
+				
+			child.setAttribute("id", childarr.join("-"));
+			child.setAttribute("name", childarr.join("-"));
+      	
+			if(i >= visible){
+				child.setAttribute("style", "display:none");
+			}
+		}
+        
+        $("#"+clone.id+" > input").each(function() {
+            var curr_id = $(this).attr("id");
+            var curr_id_arr = curr_id.split("-");
+            curr_id_arr[0] = "y"+npar;
+            $(this).attr("id", curr_id_arr.join("-"))
+            $(this).attr("name", curr_id_arr.join("-"))
+			$(this).attr("style", "display:none");
+			$(this).val("");
+        });      
+        
+		if(showpartype==1){
+			$("#y"+npar+"-partype").show();
+		}      
+      
+		//update n_ypar value
+		n_ypar_new = parseInt(npar) +1
+		document.getElementById('n_ypar').value=n_ypar_new;
+		event.preventDefault();
+			
+		//add new element in det-type  array
+		var dettypearr = document.getElementById("det-type")
+        var hktmdiv = document.getElementById("hktm_source")
+        if(hktmdiv != null){
+            if(hktmdiv.value=="VIS" && document.getElementById("usecase").value=="science"){
+              var coord=document.getElementById('y'+npar+'-sys')
+              coord.value="ALL"
+              set_params(coord)
+            }         
+        }
+        
+	}
+	//action when remove button is clicked
+  	function remove_btn(){	
+		//remove select option
+		$('#yparams').children().last().remove();
+		//remove label
+		$('#yparams').children().last().remove();
+		//update n_ypar value
+		var nparams = $("#n_ypar").val();
+		n_ypar_new = parseInt(nparams) -1
+		document.getElementById('n_ypar').value=n_ypar_new;
+		//reset det-type
+        var detdiv = document.getElementById('det-type')
+        if(detdiv != null){
+            var dettype = detdiv.value.split(",")
+
+            if(dettype.length>1 && dettype.length==parseInt(nparams)+1){
+                //remove last element
+                dettype.pop()
+            }
+            //update det-type
+            document.getElementById('det-type').value = dettype.join()
+        }
+        
+        
+		//hide remove button
+		if (n_ypar_new == 1){
+				
+			document.getElementById("remove").style="display: none;"
+					
+		}
+		
+	}
+
+	function show_extra_filters(par){
+    	document.getElementById(par+"_extra_filters_btn_hide").style="display: inline;"
+    	document.getElementById(par+"_extra_filters_btn_show").style="display: none;"   
+      	document.getElementById(par+"_extra_filters").style="display: inline;"
+    }  
+
+	function hide_extra_filters(par){
+    	document.getElementById(par+"_extra_filters_btn_hide").style="display: none;"
+    	document.getElementById(par+"_extra_filters_btn_show").style="display: inline;"  
+      	document.getElementById(par+"_extra_filters").style="display: none;"
+		$("#"+par+"_extra_filters").each(function(){
+            $(this).find('input').val("");
+            $(this).find('textarea').val("");
+      	})      	
+    }   
+
+	function set_units(pdiv){
+    	var el = $(pdiv).parent().find("#units")
+    	if(pdiv.checked == true){
+          	var parid = pdiv.id.split("-")[0]
+        	$.ajax({
+              url: 'functions.php',
+              method:"POST",
+              data: {
+                action: "get_units",
+                par	: document.getElementById(parid+"-params").value,
+                s	: document.getElementById("hktm_source").value,
+                o	: document.getElementById("usecase").value
+              },
+              success : function(response){
+                var res = JSON.parse(response)['units']
+                el.html(res)
+              }
+            });
+    	}else{
+			el.html(null)
+   		}        
+    }  
+  
+</script> 

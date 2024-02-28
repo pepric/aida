@@ -1,0 +1,154 @@
+.JS9PluginToolbar-div select{
+	height : 29px;
+  	padding : 0 12px;
+
+}
+
+.drag-handle{
+	padding-top : 4px;
+}
+
+.imexam .JS9PluginToolbar-div{
+	/* top : -5px; JS9 v2.2 */
+	top : -15px;
+
+}
+
+div.JS9Plugin {
+    width: 100% !important;
+}
+
+.imexam .JS9PluginContainer{
+    padding-bottom: 10px;
+}
+
+.imginfo{
+	margin-top : 10px;
+}
+
+.js9InfoTable .input2 {
+    width: 190px;
+}
+
+.iottree .jstree-anchor{
+	font-size:12px;
+	font-family : "Arial"
+}
+
+.iottree .jstree-default{
+	padding-left:0px
+}
+
+
+.iottree{
+    height: 250px;
+    overflow-y: scroll;
+    background: #E9E9E9;  
+	padding-left:0px;
+	padding-top: 10px  
+}
+
+
+.JS9Select{
+	height : auto;
+	padding:5px;
+	
+	
+}
+
+.JS9PanZoom input[type="number"], .JS9PanZoom input[type="text"]{
+	height : auto;
+	padding:2px;	
+	width: 80px;
+}
+
+.JS9PanZoom input[type="button"]{
+	padding:5px;
+	
+}
+
+.JS9PanZoomCol5{
+	width : 100px !important;
+	
+}
+
+.JS9ScaleValue{
+	height: auto !important;
+    padding: 3px !important;
+	
+}
+
+.context-menu-input > label > input[type="text"] {
+	height : auto !important;
+	
+}
+
+.JS9Text{
+	height: auto !important;
+    padding: 3px !important;
+	
+}
+
+.rconfigtext_regid{
+	display : none;
+}
+
+.rconfigtext_R{
+	
+	width : 100% !important;
+}
+
+ .regid .JS9Select, .rconfiglinegroup .JS9Select, .rconfiglinegroup2 .JS9Select{
+
+    padding: 0px !important;
+	
+}
+
+.rconfiglinegroup input[type="text"]{
+	height: 22px;
+    padding: 0px;
+    width: 60px;
+	
+}
+
+.js9Form input[type=text] {
+    height : 25px;
+}
+
+.DataSourcesArchivesCatalogs input[type="text"]{
+	height : 25px;
+	
+}
+
+.dhtmlwindow input[type="number"]{
+	
+	height : 25px;
+	width : 60px !important
+	
+}
+
+.JS9ColorButton {
+	padding : 6px
+}
+
+.JS9ColorInput {
+	height : 29px !important;
+	width: 100px !important;
+	
+}
+
+.JS9FiltersRange{
+	top : 3px;
+	
+}
+.JS9FiltersValue{
+	height: 22px !important;
+	padding: 0px 4px !important;
+    width: 45px !important;	
+	
+}
+
+.spinner{
+	
+	z-index:85 !important;
+}

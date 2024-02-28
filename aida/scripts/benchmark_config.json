@@ -1,0 +1,19 @@
+{
+	"start time" : "2020-01-20T00:00:00",
+	"period":"daily",
+	"n" : 1,
+	"description" :"",
+	"priority" : "memory",      
+	"benchmark type" : "one_for_all",
+	"include systems" : {
+		"vis" :  0, 
+		"nisp" : 1, 
+		"qla" : 0
+		},
+	"analysis": {
+		"plots" : 1,
+		"stats" : 1
+	}
+	
+
+}

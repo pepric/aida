@@ -1,0 +1,21 @@
+{
+	"efd" : {
+		"fake" : {
+			"hktm":{
+              	"required" :{
+                    "subsystem": {
+                        "values": ["SysA", "SysB", "SysC"]
+                    }
+                }				
+			}
+			
+	 		
+		}
+		
+		
+	}
+	
+	
+	
+	
+}
