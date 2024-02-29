@@ -140,7 +140,7 @@ Once the form is submitted, if all the inserted data are correct, the user will 
 # Fake data DB & Examples
 A small DB containing fake data is provided together with this version: it contains data for three parameters (temperature, voltage, current), divided into three subsystems (SysA, SysB, SysC), covering the time range [2023-01-01, 2023-02-12].
 
-An example of configuration file for reporting is provided in the "**_examples_++" folder.
+An example of configuration file for reporting is provided in the "**_examples_**" folder.
 
 The AIDA user manual will be released in few days.
 
