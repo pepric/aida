@@ -94,6 +94,8 @@ docker-compose up –d --build
 </pre> 
   * If you want to automatically launch AIDA at each machine reboot, you have to configure your machine to do that, for example by using the _crontab_ on Ubuntu.
 
+**NOTE**: BEFORE launching the AIDA docker, it is **STRONGLY** suggested to change the DBs password, being visible in this repository. Once changed the passwords, edit the config.json file in the AIDA root folder and copy it in the **_defaults_** folder, overwriting the existing file.
+
 ## First Access Configuration
 Once installed, AIDA can be accessed by any web browser at the dedicated address. On first access, an introductory page is shown in order to start the definition of some primary settings:
 
