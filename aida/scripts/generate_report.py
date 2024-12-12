@@ -128,18 +128,21 @@ class reportConfig():
 
             #get list of systems to analyze
             try:
-                allowed_systems = db_io.dbIO(conndata).get_systems()              
+                allowed_systems = db_io.dbIO(conndata).get_systems()
                 self.systems, systems_error = get_keys(self.repdata, allowed_systems, ["General Info"])
+                
                 #get list of parameters to analyze            
                 if systems_error == 0:
                     self.pars = {}
                     self.sysclasses = []
                     for s in self.systems:
                         sys_class = classes.sys_inst(s)
+                         
                         self.sysclasses.append(sys_class)
                         sys_params = sys_class.get_report_params(self.repdata)
                         self.pars.update({s : sys_params})
             except Exception as e:
+
                 systems_error = 1              
 
         #check errors
@@ -496,7 +499,8 @@ class threadSys(threading.Thread):
 
         threadLimiter.release()
 
-    def ondemand_pipe(self, report_conf, conf, e):      
+    def ondemand_pipe(self, report_conf, conf, e):
+
         s = self.cls
         nthreads = self.nth
         connconfig = conf.data['local_db']
@@ -540,6 +544,7 @@ class threadSys(threading.Thread):
                 tf = str(datetime.utcfromtimestamp(times_arr[dt]))
                 for sub in report_conf.pars[self.source].keys():
                     repoClass = conf.repclass[sub]
+
                     params_chunk, e = repoClass.retrieve_report_data(conf, sub, self, t0, tf, report_conf, e, dt, i)                  
                     #return params_chunk list
                     if len(params_chunk) > 0:

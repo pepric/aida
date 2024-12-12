@@ -259,14 +259,18 @@ class Email():
         return text
       
     def send_mail(self, message):
-        server = smtplib.SMTP(self.host, self.port)
-        server.ehlo()
-        server.starttls()
+        if self.port==465:
+            server=smtplib.SMTP_SSL(self.host, self.port)
+        else:
+            server = smtplib.SMTP(self.host, self.port)
+            server.ehlo()
+            server.starttls()
         if self.pwd != "":        
             server.login(self.user, self.pwd)
 
-        TO = [message['To'],message['CC']]
-        server.sendmail(self.user, TO, message.as_string())
+        TO = [message['To']]
+        CC = message["CC"].split(",")                             
+        server.sendmail(self.user, TO+CC, message.as_string())
         server.quit()      
       
     def set_message(self, subject, fromuser, touser, text, cc=""):
@@ -274,7 +278,10 @@ class Email():
         message['Subject'] = subject
         message["From"] = fromuser
         message["To"] = touser
-        message["CC"] = cc
+        if isinstance(cc,list):
+            message["CC"] = ",".join(cc)
+        else:
+            message["CC"] = cc                            
         part = MIMEText(text, "html")   
         message.attach(part)
         

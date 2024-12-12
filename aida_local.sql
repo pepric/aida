@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: mysql-aida
--- Creato il: Feb 27, 2024 alle 13:30
+-- Creato il: Dic 12, 2024 alle 09:37
 -- Versione del server: 8.0.31
 -- Versione PHP: 7.4.1
 
@@ -91,6 +91,78 @@ CREATE TABLE `hktm_efd_params` (
 --
 
 INSERT INTO `hktm_efd_params` (`id`, `param`, `units`, `description`, `minval`, `maxval`, `hardmin`, `hardmax`, `subsystem`, `hascalib`, `extra`) VALUES
+(1, 'ring0', 'deg_C', 'Ring temperatures: LG2-1, LG2-2, LG2-3, LG2-4, LG3-1, LG3-2, LG3-3, LG3-4, LG4-1, LG4-2, LG4-3, and LG4-4.', -999, -999, -999, -999, 'MTM2', 0, 'temperature'),
+(2, 'ring1', 'deg_C', 'Ring temperatures: LG2-1, LG2-2, LG2-3, LG2-4, LG3-1, LG3-2, LG3-3, LG3-4, LG4-1, LG4-2, LG4-3, and LG4-4.', -999, -999, -999, -999, 'MTM2', 0, 'temperature'),
+(3, 'ring10', 'deg_C', 'Ring temperatures: LG2-1, LG2-2, LG2-3, LG2-4, LG3-1, LG3-2, LG3-3, LG3-4, LG4-1, LG4-2, LG4-3, and LG4-4.', -999, -999, -999, -999, 'MTM2', 0, 'temperature'),
+(4, 'ring11', 'deg_C', 'Ring temperatures: LG2-1, LG2-2, LG2-3, LG2-4, LG3-1, LG3-2, LG3-3, LG3-4, LG4-1, LG4-2, LG4-3, and LG4-4.', -999, -999, -999, -999, 'MTM2', 0, 'temperature'),
+(5, 'ring2', 'deg_C', 'Ring temperatures: LG2-1, LG2-2, LG2-3, LG2-4, LG3-1, LG3-2, LG3-3, LG3-4, LG4-1, LG4-2, LG4-3, and LG4-4.', -999, -999, -999, -999, 'MTM2', 0, 'temperature'),
+(6, 'ring3', 'deg_C', 'Ring temperatures: LG2-1, LG2-2, LG2-3, LG2-4, LG3-1, LG3-2, LG3-3, LG3-4, LG4-1, LG4-2, LG4-3, and LG4-4.', -999, -999, -999, -999, 'MTM2', 0, 'temperature'),
+(7, 'ring4', 'deg_C', 'Ring temperatures: LG2-1, LG2-2, LG2-3, LG2-4, LG3-1, LG3-2, LG3-3, LG3-4, LG4-1, LG4-2, LG4-3, and LG4-4.', -999, -999, -999, -999, 'MTM2', 0, 'temperature'),
+(8, 'ring5', 'deg_C', 'Ring temperatures: LG2-1, LG2-2, LG2-3, LG2-4, LG3-1, LG3-2, LG3-3, LG3-4, LG4-1, LG4-2, LG4-3, and LG4-4.', -999, -999, -999, -999, 'MTM2', 0, 'temperature'),
+(9, 'ring6', 'deg_C', 'Ring temperatures: LG2-1, LG2-2, LG2-3, LG2-4, LG3-1, LG3-2, LG3-3, LG3-4, LG4-1, LG4-2, LG4-3, and LG4-4.', -999, -999, -999, -999, 'MTM2', 0, 'temperature'),
+(10, 'ring7', 'deg_C', 'Ring temperatures: LG2-1, LG2-2, LG2-3, LG2-4, LG3-1, LG3-2, LG3-3, LG3-4, LG4-1, LG4-2, LG4-3, and LG4-4.', -999, -999, -999, -999, 'MTM2', 0, 'temperature'),
+(11, 'ring8', 'deg_C', 'Ring temperatures: LG2-1, LG2-2, LG2-3, LG2-4, LG3-1, LG3-2, LG3-3, LG3-4, LG4-1, LG4-2, LG4-3, and LG4-4.', -999, -999, -999, -999, 'MTM2', 0, 'temperature'),
+(12, 'ring9', 'deg_C', 'Ring temperatures: LG2-1, LG2-2, LG2-3, LG2-4, LG3-1, LG3-2, LG3-3, LG3-4, LG4-1, LG4-2, LG4-3, and LG4-4.', -999, -999, -999, -999, 'MTM2', 0, 'temperature'),
+(13, 'intake0', 'deg_C', 'Intake temperatures: #1 and #2.', -999, -999, -999, -999, 'MTM2', 0, 'temperature'),
+(14, 'intake1', 'deg_C', 'Intake temperatures: #1 and #2.', -999, -999, -999, -999, 'MTM2', 0, 'temperature'),
+(15, 'exhaust0', 'deg_C', 'Exhaust temperatures: #1 and #2.', -999, -999, -999, -999, 'MTM2', 0, 'temperature'),
+(16, 'exhaust1', 'deg_C', 'Exhaust temperatures: #1 and #2.', -999, -999, -999, -999, 'MTM2', 0, 'temperature'),
+(17, 'lutGravity0', 'N', 'Gravity component (F_e + F_0 + F_a + F_f) of look-up table (LUT) force for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(18, 'lutGravity1', 'N', 'Gravity component (F_e + F_0 + F_a + F_f) of look-up table (LUT) force for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(19, 'lutGravity2', 'N', 'Gravity component (F_e + F_0 + F_a + F_f) of look-up table (LUT) force for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(20, 'lutGravity3', 'N', 'Gravity component (F_e + F_0 + F_a + F_f) of look-up table (LUT) force for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(21, 'lutGravity4', 'N', 'Gravity component (F_e + F_0 + F_a + F_f) of look-up table (LUT) force for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(22, 'lutGravity5', 'N', 'Gravity component (F_e + F_0 + F_a + F_f) of look-up table (LUT) force for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(23, 'lutTemperature0', 'N', 'Temperature component (T_u + T_x + T_y + T_r) of look-up table (LUT) force for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(24, 'lutTemperature1', 'N', 'Temperature component (T_u + T_x + T_y + T_r) of look-up table (LUT) force for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(25, 'lutTemperature2', 'N', 'Temperature component (T_u + T_x + T_y + T_r) of look-up table (LUT) force for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(26, 'lutTemperature3', 'N', 'Temperature component (T_u + T_x + T_y + T_r) of look-up table (LUT) force for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(27, 'lutTemperature4', 'N', 'Temperature component (T_u + T_x + T_y + T_r) of look-up table (LUT) force for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(28, 'lutTemperature5', 'N', 'Temperature component (T_u + T_x + T_y + T_r) of look-up table (LUT) force for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(29, 'applied0', 'N', 'Force applied by SAL command or script for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(30, 'applied1', 'N', 'Force applied by SAL command or script for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(31, 'applied2', 'N', 'Force applied by SAL command or script for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(32, 'applied3', 'N', 'Force applied by SAL command or script for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(33, 'applied4', 'N', 'Force applied by SAL command or script for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(34, 'applied5', 'N', 'Force applied by SAL command or script for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(35, 'measured0', 'N', 'Force measurement by load cell for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(36, 'measured1', 'N', 'Force measurement by load cell for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(37, 'measured2', 'N', 'Force measurement by load cell for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(38, 'measured3', 'N', 'Force measurement by load cell for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(39, 'measured4', 'N', 'Force measurement by load cell for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(40, 'measured5', 'N', 'Force measurement by load cell for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(41, 'hardpointCorrection0', 'N', 'Hardpoint compensation force correction for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(42, 'hardpointCorrection1', 'N', 'Hardpoint compensation force correction for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(43, 'hardpointCorrection2', 'N', 'Hardpoint compensation force correction for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(44, 'hardpointCorrection3', 'N', 'Hardpoint compensation force correction for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(45, 'hardpointCorrection4', 'N', 'Hardpoint compensation force correction for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce'),
+(46, 'hardpointCorrection5', 'N', 'Hardpoint compensation force correction for each actuator in sequence.', -999, -999, -999, -999, 'MTM2', 0, 'tangentForce');
+
+-- --------------------------------------------------------
+
+--
+-- Struttura della tabella `hktm_fake_params`
+--
+
+CREATE TABLE `hktm_fake_params` (
+  `id` int NOT NULL,
+  `param` varchar(45) DEFAULT NULL,
+  `units` varchar(10) DEFAULT NULL,
+  `description` longtext,
+  `minval` float DEFAULT '-999',
+  `maxval` float DEFAULT '-999',
+  `hardmin` float NOT NULL DEFAULT '-999',
+  `hardmax` float NOT NULL DEFAULT '-999',
+  `subsystem` varchar(45) DEFAULT NULL,
+  `hascalib` tinyint NOT NULL DEFAULT '0',
+  `extra` varchar(20) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dump dei dati per la tabella `hktm_fake_params`
+--
+
+INSERT INTO `hktm_fake_params` (`id`, `param`, `units`, `description`, `minval`, `maxval`, `hardmin`, `hardmax`, `subsystem`, `hascalib`, `extra`) VALUES
 (1, 'temperature', 'degC', 'Example of Temperature parameter', -114.5, 124.5, -114.5, 124.5, 'SysA', 0, '0'),
 (2, 'current', 'mA', 'Example of Current parameter', 0.15, 0.4, 0.15, 0.4, 'SysB', 0, '0'),
 (3, 'voltage', 'V', 'Example of Voltage parameter', 9.2, 9.8, 9.2, 9.8, 'SysC', 0, '0');
@@ -141,7 +213,9 @@ INSERT INTO `login_attempts` (`user_id`, `time`) VALUES
 (1, '1704900286'),
 (1, '1704900299'),
 (1, '1704900311'),
-(1, '1706803435');
+(1, '1706803435'),
+(1, '1715776428'),
+(2, '1725374307');
 
 -- --------------------------------------------------------
 
@@ -219,6 +293,13 @@ CREATE TABLE `pwd_reset_tmp` (
   `k` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `expdate` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dump dei dati per la tabella `pwd_reset_tmp`
+--
+
+INSERT INTO `pwd_reset_tmp` (`id`, `email`, `k`, `expdate`) VALUES
+(34, 'giuseppe.riccio08@gmail.com', 'f2f4012f777983b0fcf4c116ef52f340d466cbbc7e', '2024-04-13 11:54:48');
 
 -- --------------------------------------------------------
 
@@ -364,7 +445,8 @@ CREATE TABLE `systems` (
 --
 
 INSERT INTO `systems` (`id`, `name`, `origin`, `allowed_subs_check`, `required_filters`, `add_filters`, `plot_delta`, `enabled`, `has_eas`, `has_iws`) VALUES
-(1, 'EFD', 'hktm', 'HKTM', '{\"Subsytem\": {\"col\": \"nisp_system\", \"type\": \"dropdown-db\", \"set_for\": \"single\"}}', NULL, 0, 1, 1, 0);
+(1, 'EFD', 'hktm', 'HKTM', '{\"Subsytem\": {\"col\": \"efd_system\", \"type\": \"dropdown-db\", \"set_for\": \"single\"}}', NULL, 0, 1, 1, 0),
+(16, 'FAKE', 'hktm', 'HKTM', '{\"Subsytem\": {\"col\": \"fake_system\", \"type\": \"dropdown-db\", \"set_for\": \"single\"}}', NULL, 0, 1, 1, 0);
 
 -- --------------------------------------------------------
 
@@ -427,6 +509,13 @@ ALTER TABLE `history`
 -- Indici per le tabelle `hktm_efd_params`
 --
 ALTER TABLE `hktm_efd_params`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `id_UNIQUE` (`id`);
+
+--
+-- Indici per le tabelle `hktm_fake_params`
+--
+ALTER TABLE `hktm_fake_params`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `id_UNIQUE` (`id`);
 
@@ -538,13 +627,19 @@ ALTER TABLE `history`
 -- AUTO_INCREMENT per la tabella `hktm_efd_params`
 --
 ALTER TABLE `hktm_efd_params`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
+
+--
+-- AUTO_INCREMENT per la tabella `hktm_fake_params`
+--
+ALTER TABLE `hktm_fake_params`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT per la tabella `local_files`
 --
 ALTER TABLE `local_files`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1681;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1683;
 
 --
 -- AUTO_INCREMENT per la tabella `members`
@@ -568,7 +663,7 @@ ALTER TABLE `plots`
 -- AUTO_INCREMENT per la tabella `pwd_reset_tmp`
 --
 ALTER TABLE `pwd_reset_tmp`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
 
 --
 -- AUTO_INCREMENT per la tabella `report_files`
@@ -580,7 +675,7 @@ ALTER TABLE `report_files`
 -- AUTO_INCREMENT per la tabella `running_reports`
 --
 ALTER TABLE `running_reports`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13839;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13846;
 
 --
 -- AUTO_INCREMENT per la tabella `statistics`
@@ -604,7 +699,7 @@ ALTER TABLE `stored_plots`
 -- AUTO_INCREMENT per la tabella `systems`
 --
 ALTER TABLE `systems`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT per la tabella `temp_plot`

@@ -135,7 +135,7 @@ function init_detectors(sys, par, elbefore="sys"){
 	set_detectors(idpar, par+"-det-row", nrow, par+"-det-col", ncol, par+"-"+elbefore);
 }
 
-function set_params(sys) {
+function set_params(sys, fromdb=false) {
 
 	var par = sys.id.split("-")[0]
 	var system = document.getElementById("hktm_source").value; //EFD
@@ -149,13 +149,37 @@ function set_params(sys) {
 	// reset param values select box
 	$("#"+par+"-values").empty();
 
-	// reset filter select box  
+	// reset filter select box
+	// Add subsystem query
 	var element = document.getElementById(par+"-partype");
-	if (element!==null){
-      for(i=1; i<element.options.length;i++){
-        element.options[i].value = element.options[i].innerHTML
-      }
-	}  
+	
+	/*ADDED FOR LSST */
+	if(fromdb==true){
+		
+		var url   =   'functions.php';
+		$.ajax({
+			method:"POST",
+			url:url,
+			data:{
+			  action : "get_parameter_group",
+			  syst : system,
+			  origin : usecase,
+			  subs : document.getElementById(sys.id).value
+			},
+			success:function(data)
+			{
+				element.innerHTML='<option value="" disabled selected>Select Field</option>'+data
+			}
+		});
+	}
+	else{
+		
+		if (element!==null){
+		  for(i=1; i<element.options.length;i++){
+			element.options[i].value = element.options[i].innerHTML
+		  }
+		}  
+	}
 
 	if(usecase == "science"){
       	if(system == 'QLA'){
@@ -1715,4 +1739,75 @@ function refresh_history(){
     	update_history('global','treeGlobalHist');
     }
   	setTimeout(() => { $("#wait_history").hide(); }, 2500);
+}
+
+
+/**** NEW FOR LSST ***/
+function set_sys_options(ic, fromdb=true, next="sys"){
+	var par = ic.id.split("-")[0]
+	var system = document.getElementById("hktm_source").value; //EFD
+	var stats = document.getElementById('stats_enable').value;
+	var usecase = document.getElementById('usecase').value;	//HTKM
+	var element = document.getElementById(par+"-"+next);	
+	
+
+	if(fromdb==true){
+		
+		var url   =   'functions.php';
+		$.ajax({
+			method:"POST",
+			url:url,
+			data:{
+			  action : "get_parameter_group",
+			  syst : system,
+			  origin : usecase,
+			  subs : document.getElementById(ic.id).value
+			},
+			success:function(data)
+			{
+				element.innerHTML='<option value="" disabled selected>Select Field</option>'+data
+			}
+		});
+		$("#"+par+"-"+next).show()
+	}
+	else	
+	{
+		alert("NOT IMPLEMENTED YET")
+	}
+}
+
+function set_par_options(div){
+	var par_id = div.id.split("-")[0]
+	var system = document.getElementById("hktm_source").value; //EFD
+	var stats = document.getElementById('stats_enable').value;
+	var usecase = document.getElementById('usecase').value;	//HTKM
+
+	var tbl = usecase+"_"+system.toLowerCase()
+	var subs = document.getElementById(par_id+"-ic").value;
+	var extra = div.value
+	
+	//console.log(tbl,subs,extra)
+	const url = "functions.php"
+ 	$.ajax({
+		method:"POST",
+		url:url,
+		data:{
+		  action : "fetch_values_subsystem",
+		  cat_val : subs,			//y0-ic value
+		  cat_name : tbl,			//usecase+"_"+system
+		  cat_filter : extra				//extra => y0-sys value
+		},
+		success:function(data)
+		{
+		  $("#"+par_id+"-params").html(data);
+		  $("#"+par_id+"-values").html("");		
+		  $("#"+par_id+"-params").show()
+		  show_addmore(par_id)
+			if (stats == "advanced"){
+				document.getElementById('stats').style='display:inline;';
+			}		  
+		}
+	});	
+	
+	
 }

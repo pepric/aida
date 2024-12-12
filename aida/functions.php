@@ -217,6 +217,15 @@ if(isset($_POST['action']) && !empty($_POST['action'])) {
 			$result = get_allowed_repos($sys,$origin);
 			echo json_encode($result);
 			break; 
+		}
+      	case 'get_parameter_group':{
+        	$sys = $_POST["syst"];
+        	$origin = $_POST["origin"];
+			$subs = $_POST["subs"];
+			get_parameter_group($sys,$origin,$subs);
+			//$result = get_parameter_group($sys,$origin,$subs);
+			//echo json_encode($result);
+			break; 
 		}		
     }
 }
@@ -2310,7 +2319,12 @@ function send_confirmation_email($username, $email, $op){
 		}
 		$mail->Host = $host;
 		$mail->Port = $port;
-		$mail->SMTPSecure = 'tls';
+		if($port==465){
+			$mail->SMTPSecure = 'ssl';
+		}
+		else{
+			$mail->SMTPSecure = 'tls';
+		}
 		$mail->IsHTML(true); 
 		$mail->Username = $user; // Nome utente SMTP autenticato
 		$mail->Password = $pwd; // Password account email con SMTP autenticato
@@ -2411,7 +2425,12 @@ function send_reset_email($username, $email, $key){
 		}
 		$mail->Host = $host;
 		$mail->Port = $port;
-		$mail->SMTPSecure = 'tls';
+		if($port==465){
+			$mail->SMTPSecure = 'ssl';
+		}
+		else{
+			$mail->SMTPSecure = 'tls';
+		}
 		$mail->IsHTML(true); 
 		$mail->Username = $user; // Nome utente SMTP autenticato
 		$mail->Password = $pwd; // Password account email con SMTP autenticato
@@ -3593,7 +3612,12 @@ function test_smtp($data, $to){
 			}
 			$mail->Host = $host;
 			$mail->Port = $port;
-			$mail->SMTPSecure = 'tls';
+			if($port==465){
+				$mail->SMTPSecure = 'ssl';
+			}
+			else{
+				$mail->SMTPSecure = 'tls';
+			}
 			$mail->IsHTML(true); 
 			$mail->Username = $user; // Nome utente SMTP autenticato
 			$mail->Password = $pwd; // Password account email con SMTP autenticato
@@ -3655,5 +3679,29 @@ function get_cols_from_db($tbl, $cols="*", $stat="",$ordercol=""){
 	
 	return $qresult;
 }
+
+function get_parameter_group($sys, $origin, $subs){
+	$config = read_config_json("config.json");
+	$host = $config['host'];
+	$dbuser = $config['user'];
+	$dbpwd = $config['password'];
+	$dbname = $config['dbname'];	
+	$mysqli = new mysqli($host, $dbuser, $dbpwd, $dbname); 
+ 	$sql = "SELECT extra FROM ".$origin."_".strtolower($sys)."_params WHERE subsystem='".$subs."' GROUP BY extra";
+
+	$qresult = $mysqli->query($sql);
+	$out = "";
+	if (mysqli_num_rows($qresult) > 0){
+		#$row = $qresult->fetch_row();
+ 		while ($row = mysqli_fetch_array($qresult))
+		{
+			$out .= '<option value="'.$row['extra'].'">'.$row['extra'].'</option>';
+		}
+	}
+	else{$out = "No fields were found!";}
+    mysqli_close($mysqli);	
+	echo $out;
+}
+
 
 ?>

@@ -51,7 +51,10 @@ svglib==1.1.0 \
 threadpoolctl==2.1.0 \
 tinycss2==1.1.0 \
 urllib3==1.26.7 \
-webencodings==0.5.1 
+webencodings==0.5.1 \
+pandas \
+lsst_efd_client
+ 
 
 
 COPY apache2.conf /etc/apache2/apache2.conf

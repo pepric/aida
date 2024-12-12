@@ -1,5 +1,30 @@
 {
+	"efd_full" : {
+		"usdf" : {
+			"hktm":{
+              	"required" :{
+                    "subsystem": {
+                        "values": ["ATAOS", "ATArchiver", "ATCamera", "ATDome", "ATDomeTrajectory", "ATHeaderService", "ATHexapod", "ATMCS", "ATMonochromator", "ATOODS", "ATPneumatics", "ATPtg", "ATSpectrograph", "ATWhiteLight", "AdamSensors", "CCArchiver", "CCCamera", "CCHeaderService", "CCOODS", "DIMM", "DSM", "Dome", "ESS", "Electrometer", "Environment", "FiberSpectrograph", "GCHeaderService", "GIS", "GenericCamera", "HVAC", "Hexapod", "LaserTracker", "MTAOS", "MTAirCompressor", "MTCamera", "MTDome", "MTDomeTrajectory", "MTHexapod", "MTM1M3", "MTM1M3TS", "MTM2", "MTMount", "MTPtg", "MTRotator", "MTVMS", "NewMTMount", "OCPS", "PMD", "Rotator", "Scheduler", "Script", "ScriptQueue", "Test", "TunableLaser", "Watcher", "WeatherForecast", "WeatherStation"]
+                    }
+                }				
+			}
+			
+	 		
+		}
+	},
 	"efd" : {
+		"usdf" : {
+			"hktm":{
+              	"required" :{
+                    "subsystem": {
+                        "values": ["MTM2"]
+                    }
+                }				
+			}
+
+		}
+	},	
+	"fake" : {
 		"fake" : {
 			"hktm":{
               	"required" :{
@@ -8,14 +33,6 @@
                     }
                 }				
 			}
-			
-	 		
 		}
-		
-		
-	}
-	
-	
-	
-	
+	}	
 }

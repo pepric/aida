@@ -194,8 +194,8 @@ function send_admin_email($username, $email, $mail_admin, $role){
 	
 	
 	// subject and body
-	$subject = "New Registration Request on IOT";
-	$msg = "<p>A new user requested registration in IOT web app. Please activate user in the DB if authorized.<p><p>Name: ".$username."</p><p>Email: ".$email."</p><p>Role: ".$role."</p>";
+	$subject = "New Registration Request on AIDA";
+	$msg = "<p>A new user requested registration in AIDA web app. Please activate user in the DB if authorized.<p><p>Name: ".$username."</p><p>Email: ".$email."</p><p>Role: ".$role."</p>";
 
 	/* Create a new PHPMailer object. Passing TRUE to the constructor enables exceptions. */
 	/* $mail = new PHPMailer(TRUE); */
@@ -333,7 +333,8 @@ function send_user_email($username, $email, $mail_admin){
 					
 					
 	   /* Set the mail sender. */
-	   $mail->setFrom($mail_admin, "AIDA admin");
+	   /*$mail->setFrom($mail_admin, "AIDA admin");*/
+		$mail->setFrom($user, "AIDA admin");
 
 	   /* Add a recipient. */
 	   $mail->addAddress($email, $username);

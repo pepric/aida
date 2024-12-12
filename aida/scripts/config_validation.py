@@ -40,6 +40,11 @@ class configCheck():
         for k in keys:
             if k not in allowed:
                 msgarr.append('Key Error! "'+k+'" is not an allowed key\n')
+                
+            #temporary addition to avoid EFD in configuration files
+            if k == "EFD":
+                msgarr.append('Key Error! "'+k+'" system is not currently enabled for reports\n')            
+        
         if len(msgarr)>0:
             check = False
        
@@ -78,6 +83,7 @@ class configCheck():
         return isvalid, msg      
 
     def check_composed_par(self, item, tpl_arr, extra_tpl, tree, extra_name):
+
         check = True
         msg = ""
         tree_arr = tree.split("/")
@@ -102,7 +108,10 @@ class configCheck():
             curr_sub = tree_arr[1]
             next_for_id = 0
             k_idx = np.where(np.array(self.allowed_subs)==curr_sub)[0][0]
-              
+        
+      
+        
+                      
         check_par = False
         for i in range(next_for_id,len(tpl_arr)):          
             curr2check = curr_add[i]
@@ -117,6 +126,10 @@ class configCheck():
                 stat=""
                 if tpl_arr[0] == "sub":
                     stat = "WHERE subsystem='"+curr_sub+"'"
+                    if i!=0:
+                        if tpl_arr[i-1] == "field":
+                            stat += " AND extra='"+curr_add[i-1]+"'"
+                    
                 listpar, listval = curr_inst.get_params_list(origin, self.connection,stat)
                 check_par = curr2check in listpar
                 if not check_par:
@@ -139,6 +152,18 @@ class configCheck():
                         if not check_val:
                             msg = 'Value Error! Value not allowed for "'+extra_name+'" in '+tree+"\n"
                             return False, msg
+            elif tpl_arr[i] == "field":
+                curr_inst = classes.sys_inst(source)
+                sys = curr_inst.name
+                ss = origin.lower()
+                table = ss+"_"+sys+"_params"
+                query_allowed_extra = util.db_query(self.connection, table, 'extra', "GROUP BY extra", "all")
+                allowed_extra = []
+                for el in query_allowed_extra:
+                    allowed_extra.append(el["extra"])
+                if curr2check not in allowed_extra:
+                    return False, "Value Error! "+curr2check.upper()+" value not allowed for "+extra_name+" in "+tree+"\n"
+
             else:
                 req_filters = self.get_filters(source, curr_sub, True)
                 allowed_f = req_filters[tpl_arr[i]]['values']
@@ -259,7 +284,7 @@ class configCheck():
         except:
             msg = 'ERROR! Invalid branch structure in '+treetext+"\n"
             return {"isvalid" : False, "msg" : msg}
-
+  
         #check experiment "Type"
         isvalid, msg, pstr = self.check_exp_type(exp_data, keys, treetext)
         if not isvalid:
@@ -671,6 +696,9 @@ class configCheck():
         return keys,{"isvalid" : check, "msg" : msg}        
       
     def check_plot_config(self, p, root, listpar, pstr, tree="", extra_tpl = "par"):
+        
+
+        
         isvalid = True
         msg = ""
         if p == "Additional Parameters":
