@@ -281,6 +281,7 @@ def xml_collect_results(procid, pardict, s, conf, connconfig, runid, parpos, err
                     hfout = h5py.File(hfoutfile, "w")
 
                     for par in list(pardict[o]):
+                        
                         #init hfout for par
                         pgroup = hfout.create_group(par)
                         #get list of operations for selected parameter
@@ -344,40 +345,43 @@ def xml_collect_results(procid, pardict, s, conf, connconfig, runid, parpos, err
 
                         #add extra info following parameter name
                         if par_splitted[-1] != parname:
-                            extrainfo = par_splitted[parid+1:]
-                            try:
-                                pxml.text = parname
-                                currpar.insert(0, pxml)
-                                tagconf = sysclass.tagconf[curr_k]
-                                for ief,ef in enumerate(tagconf):
-                                    for jef in extrainfo:
-                                        if jef.startswith(ef):
-                                            ef_val = jef.replace(ef,"")
-                                            ET.SubElement(currpar, ef).text = ef_val
-                            except:
-                                #case for decimal numbers in parameter name or .<value> for, for example, QLA
-                                el = extrainfo[0]
-                                try:
-                                    int(el)
-                                    parname += "."+el
-                                    extraval = ""
-                                except:
-                                    extraval = el
-                                pxml.text = parname
-                                currpar.insert(0, pxml)
-                                if extraval != "":
-                                    ET.SubElement(currpar, "value").text = extraval
+                            extra_stat = "AND extra='"+parname+"'"
+                            parname = par_splitted[-1]
+                            
+                            #OLD IODA
+                            # extrainfo = par_splitted[parid+1:]
+                            # try:
+                                # pxml.text = parname
+                                # currpar.insert(0, pxml)
+                                # tagconf = sysclass.tagconf[curr_k]
+                                # for ief,ef in enumerate(tagconf):
+                                    # for jef in extrainfo:
+                                        # if jef.startswith(ef):
+                                            # ef_val = jef.replace(ef,"")
+                                            # ET.SubElement(currpar, ef).text = ef_val
+                            # except:
+                                # #case for decimal numbers in parameter name or .<value> for, for example, QLA
+                                # el = extrainfo[0]
+                                # try:
+                                    # int(el)
+                                    # parname += "."+el
+                                    # extraval = ""
+                                # except:
+                                    # extraval = el
+                                # pxml.text = parname
+                                # currpar.insert(0, pxml)
+                                # if extraval != "":
+                                    # ET.SubElement(currpar, "value").text = extraval
                         else:  
                             pxml.text = parname
                             currpar.insert(0, pxml)
-
+                
                         #add parameter info from DB
                         if subname is None:
                             statement = "WHERE param = '"+parname+"'"
                         else:
                             statement = "WHERE param = '"+parname+"' AND subsystem = '"+subname+"'"+extra_stat
                         tbl = o+"_"+sysclass.name+"_params"
-                        
                         infopar = util.db_query(connection, tbl, "*", statement, "one")
                         #add description
                         try:
@@ -984,7 +988,7 @@ def create_pdf_report(filename, plotfromfile = False):
     c = pdfBuilder(xmldata, plotfromfile, xmldata.rep_id)
     doc = MyDocTemplate(pdffile, pagesize=A4, showBoundary=0,leftMargin=5, rightMargin=5, topMargin=5, bottomMargin=5, author=c.author, title=c.title)
     #add report id
-    c.add_centred_title("Euclid IOT On-Demand Report id: "+xmldata.rep_id, size=16,textcolor=[1,0,0])
+    c.add_centred_title("AIDA On-Demand Report id: "+xmldata.rep_id, size=16,textcolor=[1,0,0])
     #add filename
     c.add_centred_title(filename, size=10,textcolor=[0,0,0], mtop=20)
 

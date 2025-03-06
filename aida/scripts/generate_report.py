@@ -357,6 +357,7 @@ class reportData():
             #get data from DB
             #split params to use in multiprocess
             parray = np.array_split(np.array(self.params), self.nthreads)
+            
             #get data
             with multiprocessing.Pool(self.nthreads) as p:
                 multi_data = p.map(self.get_data_from_db, parray)
@@ -503,6 +504,7 @@ class threadSys(threading.Thread):
 
         s = self.cls
         nthreads = self.nth
+
         connconfig = conf.data['local_db']
         dbio = db_io.dbIO(connconfig)        
         ############################ BENCHMARK ##################        
@@ -534,7 +536,6 @@ class threadSys(threading.Thread):
             else:                
                 nsteps = 1              
             update_perc = 81.0/(self.nsys*self.nacq*nsteps)
-
             #cadence
             for dt in range(1, len(times_arr)):
                 if dt>1:

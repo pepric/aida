@@ -42,8 +42,8 @@ class configCheck():
                 msgarr.append('Key Error! "'+k+'" is not an allowed key\n')
                 
             #temporary addition to avoid EFD in configuration files
-            if k == "EFD":
-                msgarr.append('Key Error! "'+k+'" system is not currently enabled for reports\n')            
+            # if k == "EFD":
+                # msgarr.append('Key Error! "'+k+'" system is not currently enabled for reports\n')            
         
         if len(msgarr)>0:
             check = False

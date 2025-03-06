@@ -3545,8 +3545,11 @@ function update_smtpset($data,$admin){
 }
 
 function test_smtp($data, $to){
-	require("PHPMailer/src/PHPMailer.php");
-	require("PHPMailer/src/SMTP.php");
+//	require("PHPMailer/src/PHPMailer.php");
+//	require("PHPMailer/src/SMTP.php");
+	require(__DIR__ ."/PHPMailer/src/PHPMailer.php");
+	require(__DIR__ ."/PHPMailer/src/SMTP.php");
+	require(__DIR__ ."/PHPMailer/src/Exception.php");
 	$error = 0;
 	parse_str($data, $output);
 	$host = $output['conf_host'];
