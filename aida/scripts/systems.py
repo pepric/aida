@@ -636,11 +636,11 @@ class Efd():
         sub = data['usecase'].value
         #merged_result = None
         merged_result = pd.DataFrame()
-        n_results=0
+        n_results=False
         for l,f in input_dict.items():
             result = asyncio.run(self.get_data_from_efd(l, f, t_start, t_end))
             result = result.add_prefix(l+".")
-
+            result = result.reset_index()
             #if l == "MTM2.tangentForce":
             #if l == "MTM2.temperature":
                 #result=pd.DataFrame()
@@ -648,10 +648,11 @@ class Efd():
             #result=pd.DataFrame()
 
             if not result.empty:    
-                n_results += 1
+                n_results = True
                 #if merged_result is not None:
                 if not merged_result.empty:
-                    merged_result = merged_result.merge(result, how = 'inner', on = result.index)
+                    merged_result = merged_result.merge(result, how = 'outer', on = "index")
+                    #merged_result = merged_result.merge(result, how = 'outer', on = result.index)
                 else:
                     merged_result = result
         
@@ -661,13 +662,18 @@ class Efd():
             e.datastatus = 1
             return {}
         else:
-            merged_result = merged_result.replace(r'^\s*$', -999, regex=True)
-        #build final output
-        if n_results>1:
-            dates = merged_result['key_0'].astype(str).tolist()
-        else:
-            dates = merged_result.index.astype(str).tolist()
+            #merged_result = merged_result.replace(r'^\s*$', -999, regex=True)
+            merged_result = merged_result.fillna(-999)
 
+        #build final output
+        dates = []
+        if n_results:
+            #dates = merged_result['key_0'].astype(str).tolist()
+            dates = merged_result['index'].astype(str).tolist()
+        #else:
+            #dates = merged_result.index.astype(str).tolist()
+            
+            
         output.update({"date" : dates})
         for i,l in enumerate(labels_list):
             if l == "None":
@@ -728,49 +734,142 @@ class Efd():
         tend = tf.replace(" ","T")
         t_start = Time(tstart, scale="utc", format="isot")
         t_end = Time(tend, scale="utc", format="isot")    
+        e = 0
 
         for l,f in pars.items():
             result = asyncio.run(self.get_data_from_efd(l, f, t_start, t_end))
-            result = result.add_prefix(l+".")        
+            if not result.empty: 
+                result = result.add_prefix(l+".")        
+            else:
+                e = 1
 
-        return result
-    # def report_data_from_db(self, par, sub, conf, tstart = None, tstop = None, result={}):
-        # """ Read data by querying remote DB
+        return result, e
+    def report_data_from_db(self, par, sub, conf, tstart = None, tstop = None, result={}):
+        """ Read data by querying remote DB
 
-        # Parameters
-        # --------
-            # par : list
-                # list of all parameters to query, indipendently from being main or additional parameters
-            # sub: string
-                # second level key ("hktm"/"science") as defined in the report configuration file in lowercase format.                
-            # conf : class
-                # main AIDA configuration (from functions.repConfig())
-            # tstart : int
-                # timestamp of start date/time (UTC)
-            # tstop : int
-                # timestamp of end date/time (UTC)
-            # result : dictionary, optional
-                # results dictionary to update. Default : {}
+        Parameters
+        --------
+            par : list
+                list of all parameters to query, indipendently from being main or additional parameters
+            sub: string
+                second level key ("hktm"/"science") as defined in the report configuration file in lowercase format.                
+            conf : class
+                main AIDA configuration (from functions.repConfig())
+            tstart : int
+                timestamp of start date/time (UTC)
+            tstop : int
+                timestamp of end date/time (UTC)
+            result : dictionary, optional
+                results dictionary to update. Default : {}
 
-        # Returns
-        # -------
-            # result: dictionary
-                # results dictionary updated with extracted values. Its structure is:
-                    # ret={<parameter> : {"dates" : [datetime string in the form 'YYYY-MM-DD HH:mm:ss'], "values" : [values]}
-        # """
+        Returns
+        -------
+            result: dictionary
+                results dictionary updated with extracted values. Its structure is:
+                    ret={<parameter> : {"dates" : [datetime string in the form 'YYYY-MM-DD HH:mm:ss'], "values" : [values]}
+        """
+        
+
+        # tend = tf.replace(" ","T")
+        # t_start = Time(tstart, scale="utc", format="isot")
+        # t_end = Time(tend, scale="utc", format="isot")    
+        # e = 0
+
+        # for l,f in pars.items():
+            # result = asyncio.run(self.get_data_from_efd(l, f, t_start, t_end))
+            # if not result.empty: 
+                # result = result.add_prefix(l+".")        
+            # else:
+                # e = 1
+
+        # return result, e
 
         # conndata = conf.dbconfig[sub]
         # connlocal = conf.data['local_db']
-        # #convert dates
-        # if tstart is None:      
-            # t0 = self.exp_par_info['tstart']
-        # else:
-            # t0 = datetime.utcfromtimestamp(tstart).strftime('%Y-%m-%d %H:%M:%S')
-        # if tstop is None:       #????
-            # tf = self.exp_par_info['tstop']
-        # else:
-            # tf = datetime.utcfromtimestamp(tstop).strftime('%Y-%m-%d %H:%M:%S')
+        #convert dates
+        t_start = Time(datetime.utcfromtimestamp(tstart).strftime('%Y-%m-%dT%H:%M:%S'), scale="utc", format="isot")
+        t_end = Time(datetime.utcfromtimestamp(tstop).strftime('%Y-%m-%dT%H:%M:%S'), scale="utc", format="isot")   
+        e = 0
+
+        pardict={}
+        fields=[]
+        for p in par:
+            p_arr = p.rsplit(".",1)
+            topic = p_arr[0]
+            field = p_arr[1]
             
+            if topic in pardict.keys():
+                fields = pardict[topic]
+                fields.append(field)
+            else:
+                fields = [field]            
+                pardict[topic] = fields
+        
+        #n_results=False
+        #merged_result = pd.DataFrame()
+        for topic,field in pardict.items():
+            try:
+                curr_res = asyncio.run(self.get_data_from_efd(topic, field, t_start, t_end))
+                #print(curr_res)
+                if not curr_res.empty:
+                    curr_res = curr_res.add_prefix(topic+".")
+                    curr_res = curr_res.reset_index()
+                    #n_results = True
+                    
+                    # if not merged_result.empty:
+                        # merged_result = merged_result.merge(curr_res, how = 'outer', on = "index")
+                    # else:
+                        # merged_result = curr_res
+                    dates = curr_res['index'].astype(str).tolist()
+                    #result.update({"dates":dates})
+                    for p, v in curr_res.items():
+                        if p!="index":
+                            vals = v.tolist()
+                            result.update({p:{"dates":dates, "values":vals}})
+                else:
+                    e = 1            
+            except:
+                e = 2
+        
+        #check no data parameters
+        for p in par:
+            if p not in result.keys():
+                result.update({p:{"dates":[],"values":[]}})
+        
+        # #print(merged_result.sort("index"))
+        # if not merged_result.empty:
+            # #merged_result = merged_result.replace(r'^\s*$', -999, regex=True)
+            # merged_result = merged_result.fillna(-999)
+            # merged_result = merged_result.sort_values('index')
+            # #dates column
+            # dates = merged_result['index'].astype(str).tolist()
+            # for p, v in merged_result.items():
+                # if p != "index":
+                    # #values columns
+                    
+                    
+                    
+                # print(p)
+        
+        
+        # else:
+            # for p in par:
+                # result.update({p:{"dates":[], "values":[]}})
+        # #print(merged_result)
+
+        # #build final output
+        # if n_results:
+            # dates = merged_result['index'].astype(str).tolist()
+        # else:
+            # #dates = merged_result.index.astype(str).tolist()
+            # dates = []
+
+        #for p, v in merged_result
+        #print(dates, len(dates))
+        # "e" per ora non considerata
+        #convertire curr_res in dict result.update({p:{"dates":dates, "values":vals}})
+        #print(curr_res.to_dict("split")) #convertire df in liste per colonne
+        
         # tbl = conndata["tabname"]            
         # extra = {}
         # for p in par:
@@ -804,7 +903,7 @@ class Efd():
                 # vals.append(curr)
             # result.update({p:{"dates":dates, "values":vals}})
 
-        # return result       
+        return result       
     
     # def read_data_from_file(self, input, temp_dir, par, conf, tstart = None, tstop = None, adu=None, det=None, repo = None, metadata={}, result = {}):
         # """ Read useful data from files in the temporary report directory
@@ -1759,7 +1858,7 @@ class Fake():
             dates=[]
             vals = []
             for item in out_data:
-                print(item)
+                #print(item)
                 dates.append(item['timestamp'])
                 curr = item[parname]
                 if isinstance(curr, str):

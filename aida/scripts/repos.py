@@ -273,10 +273,28 @@ class USDF():
            
             pardict.update({topic : fields})
         
+        #sysclass = classes.sys_inst(thClass.source)
+        if len(thClass.exppars)>0:
+            #metadata.update({"fullpar" : 0})
+            #self.metadata = metadata
+            #get data
+            params_chunk = thClass.collect_data(i, report_conf, sub, None, conf, t0, tf, dt, self)
+        else:
+            params_chunk = []           
+        #print(params_chunk)
+
+        # d, error = sysclass.get_report_data(pardict, t0, tf)
+        # print("DATA"+str(d))
+        # if error:
+            # thClass.th_error.append({"type": "No data error",
+            # "msg" : "No data available for on archive for dates in ["+t0.replace(" ","T")+", "+tf.replace(" ","T")+"]",
+            # "sub" : "EFD",
+            # "level" : "warning"})  
         
-        sysclass = classes.sys_inst(thClass.source)
-        d = sysclass.get_report_data(pardict, t0, tf)
-        print(d)
+        #ret={<parameter> : {"dates" : [datetime string in the form 'YYYY-MM-DD HH:mm:ss'], "values" : [values]}
+        
+        
+        
         # rep_error = self._setrepoconf(thClass.source.lower(), conf.opmode, sub)
 
         # if rep_error :         
@@ -530,7 +548,6 @@ class USDF():
                     # params_chunk = []                                             
       
             # elif thClass.source == "QLA":
-                # #python dataProductRetrieval.py --username EC_IODA --password plokij --data_product DpdQlaReport --query "Parameters.Parameter.IntValue>=1717315200&Parameters.Parameter.IntValue<=1717322400&Parameters.Parameter.StringValue=NISP-P"
             
                 # remotelist = []
                 # #NEW PART#
@@ -941,7 +958,7 @@ class USDF():
                 # else:
                     # params_chunk = []                                             
 
-        # return params_chunk, e
+        return params_chunk, e
         
         
     

@@ -172,7 +172,7 @@
 									</li>
 								</ul>
 							</nav>
-                          <div class="version"><p>v0.2</p></div>
+                          <div class="version"><p>v0.3</p></div>
 					</div>
 				                      	
 				</aside>
