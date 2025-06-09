@@ -376,6 +376,7 @@
                 $('#stats').hide()
             }
 			$.ajax({
+				   //Build form
 				   method:"POST",
 				   url: 'forms.php',
 				   data:{
@@ -408,7 +409,7 @@
 		
 
 $(document).ready(function() {
-
+		//file upload
         $('#loadfile').on('click', function(event) {
           	var filetype = $("#stored_file").val()
 
@@ -555,7 +556,7 @@ document.addEventListener("DOMContentLoaded", function(){
             }
             $('#fmt_field').val(farr[0])
             $('#upfile-preview').html(filename)
-            console.log(fmt)
+            //console.log(fmt)
             read_uploaded_file(filename, fmt, header, "local")
             $('#btn-reset').css("display","none")            
           }

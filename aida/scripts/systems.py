@@ -1047,45 +1047,47 @@ class Efd():
 
         # return out
 
-    # def set_pdf_params_items(self, p, conn, tbl, usecase = "hktm"):
-        # """Retrieve description data for paramaters from AIDA db
+    def set_pdf_params_items(self, p, conn, tbl, usecase = "hktm"):
+        """Retrieve description data for paramaters from AIDA db
 
-        # Parameters
-        # --------
-            # p: string
-                # name of parameter
-            # conn: class
-                # opened connection to AIDA db
-            # tbl: string
-                # table containing 'description' column,
-            # usecase : "hktm" or "science"
-                # origin of data. Default is "hktm"
+        Parameters
+        --------
+            p: string
+                name of parameter
+            conn: class
+                opened connection to AIDA db
+            tbl: string
+                table containing 'description' column,
+            usecase : "hktm" or "science"
+                origin of data. Default is "hktm"
 
-        # Returns
-        # -------
-            # list
-                # list containing name, subsystem and description of the input parameter
+        Returns
+        -------
+            list
+                list containing name, subsystem and description of the input parameter
 
-        # """
+        """
 
-        # par_arr = p.split(".")
-        # if usecase == "hktm":
-            # par = par_arr[1]
-            # subs = par_arr[0]
-            # add = {}
-        # elif usecase == "science":
-            # par = par_arr[-1]
-            # subs = None
-            # add = {"INTR_CONF" : par_arr[0], "EXP_CONF" : par_arr[1]}
-        # sql = "SELECT description FROM "+tbl+" WHERE param = '"+par+"'"
-        # with conn.cursor() as cursor:
-            # cursor.execute(sql)
-            # result = cursor.fetchone()
-            # d = result['description']
-            # if d == "":
-                # d = "-"
+        par_arr = p.split(".")
 
-        # return [par,subs, d, add]
+        if usecase == "hktm":
+            par = par_arr[2]
+            subs = par_arr[0]
+            extra = par_arr[1]
+            add = {}
+        sql = "SELECT description FROM "+tbl+" WHERE (param = '"+par+"' AND subsystem = '"+subs+"' AND extra='"+extra+"')"
+        with conn.cursor() as cursor:
+            cursor.execute(sql)
+            result = cursor.fetchone()
+
+            try:
+                d = result['description']
+            except:
+                d = "-"
+            if d == "":
+                d = "-"
+
+        return [par,subs, d, add]
         
         
 class Fake():

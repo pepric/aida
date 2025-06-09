@@ -202,6 +202,7 @@ def serial_analysis(params, source, origin, runid, acquid, jsonconf, conf, qstat
         stats_config = {}
         p = params[i]
         k = get_operation_branches(p, jsonconf, source, origin, hasorig, parstruct)
+
         for op in k.keys():
             curr_k = op.split("_")[0]
             if curr_k == "Operation":

@@ -1836,7 +1836,7 @@ def create_plot_pdf(data):
             out = {"file" : filepath, "error" : error}
 
         except Exception as e:
-            print(traceback.format_exc())
+            #print(traceback.format_exc())
             out = {"file" : "", "error" : 1}          
 
     else:

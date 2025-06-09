@@ -15,9 +15,16 @@ import pymysql.cursors
 from time import sleep
 
 def read_config():
-	fileobj = open("benchmark_config.json", "r")
-	jsonstr = fileobj.read()
-	fileobj.close()
-	#convert input string to json object
-	config = json.loads(jsonstr)
-	return config
+    """ Read data from JSON benchmarking configuration file.
+    
+    Returns    
+    --------
+    config :  dict,
+        dictionary containing data read from configuration file
+    """    
+    fileobj = open("benchmark_config.json", "r")
+    jsonstr = fileobj.read()
+    fileobj.close()
+    #convert input string to json object
+    config = json.loads(jsonstr)
+    return config
