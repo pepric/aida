@@ -8,8 +8,25 @@ import socket
 import functions as util
 
 class Email():
-
+    """ Class to create emails to automatically send"""
     def __init__(self, smtpfile):
+        """Email init
+        Parameters
+        ---------
+        smtpfile : dict,
+            SMTP server configuration data
+            
+        Attributes
+        ---------
+        host : str,
+            SMTP host
+        port : str,
+            SMTP port
+        user : str,
+            SMTP username
+        pwd : str,
+            SMTP password
+        """         
         smtpconf = self.get_smtp_data(smtpfile)
         if smtpconf['host'] != "":
             self.host = smtpconf['host']
@@ -21,6 +38,20 @@ class Email():
             pass
 
     def error_img_text(self, maildata, error = "N/A"):
+        """ Build email text in case of error in image analysis
+        Parameters
+        ---------
+        maildata : list,
+                list of info to put in email
+        error : str,
+                description of encountered error
+
+        Returns
+        --------
+        text : str,
+              email text
+        """       
+        
         text = """\
     <html>
       <body>
@@ -42,9 +73,21 @@ class Email():
     """
         return text
 
-
-
     def error_plot_text(self, maildata, error = "N/A"):
+        """ Build email text in case of error in plot generation
+        Parameters
+        ---------
+        maildata : list,
+                list of info to put in email
+        error : str,
+                description of encountered error
+
+        Returns
+        --------
+        text : str,
+              email text
+        """         
+        
         text = """\
     <html>
       <body>
@@ -81,6 +124,20 @@ class Email():
         return text
       
     def error_report_text(self, maildata, period, error = "N/A"):
+        """ Build email text in case of error in report generation
+        Parameters
+        ---------
+        maildata : list,
+                list of info to put in email
+        error : str,
+                description of encountered error
+
+        Returns
+        --------
+        text : str,
+              email text
+        """         
+        
         text = """\
     <html>
       <body>
@@ -102,6 +159,18 @@ class Email():
         return text        
           
     def get_smtp_data(self, smtpfile):
+        """ Retrieve SMTP data from configuration file
+        Parameters
+        ---------
+        smtpfile : str,
+            name of configuration file,
+
+        Returns
+        --------
+        mailconfig : dict,
+                    dictionary containing SMTP configuration data
+
+        """        
         try:
             # get report config data from json
             fileobj = open(smtpfile, "r")
@@ -115,6 +184,21 @@ class Email():
         return mailconfig
 
     def ok_report_flagged(self, maildata, filename="", etype="plot"):
+        """ Build email text in case of report flagged successfully
+        Parameters
+        ---------
+        maildata : list,
+                list of info to put in email
+        filename : str,
+                name of report filename,
+        etype : str,
+                type of experiment (plot, report,...)
+
+        Returns
+        --------
+        text : str,
+              email text
+        """         
         user = maildata[0]
         status = maildata[1].upper()
         comment_exp = maildata[2]
@@ -137,8 +221,22 @@ class Email():
         text+="""</p></body></html>"""
         return text      
       
-      
     def ok_flagged(self, maildata, filename="", etype="plot"):
+        """ Build email text in case of experiment flagged successfully
+        Parameters
+        ---------
+        maildata : list,
+                list of info to put in email
+        filename : str,
+                name of experiment filename,
+        etype : str,
+                type of experiment (plot, report,...)
+
+        Returns
+        --------
+        text : str,
+              email text
+        """         
         user = maildata[0]
         save = maildata[1].upper()
         source = maildata[2].upper()
@@ -165,6 +263,21 @@ class Email():
         return text
 
     def ok_img_text(self, maildata, plotid, source):
+        """ Build email text in case of successful image analysis
+        Parameters
+        ---------
+        maildata : list,
+                list of info to put in email
+        plotid : int,
+                id assigned to the experiment,
+        source : str,
+                system source under analysis
+
+        Returns
+        --------
+        text : str,
+              email text
+        """         
         webappdir = util.repConfig().data['webapp_dir']    
         ploturl = "http://"+maildata[4]+"/"+webappdir+"/view_results.php?id="+str(plotid)+"&s="+source        
         
@@ -186,9 +299,24 @@ class Email():
     </html>
     """
         return text
-
       
     def ok_plot_text(self, maildata, plotid, source):
+        """ Build email text in case of successful offline plot generation
+        Parameters
+        ---------
+        maildata : list,
+                list of info to put in email
+        plotid : int,
+                id assigned to the experiment,
+        source : str,
+                system source under analysis
+
+        Returns
+        --------
+        text : str,
+              email text
+        """
+        
         webappdir = util.repConfig().data['webapp_dir']    
         ploturl = "http://"+maildata[7]+"/"+webappdir+"/view_plot.php?id="+str(plotid)+"&s="+source        
         
@@ -230,6 +358,24 @@ class Email():
         return text
       
     def ok_report_text(self, maildata, period, fullfile, pdf_ok):
+        """ Build email text in case of successful report generation
+        Parameters
+        ---------
+        maildata : list,
+                list of info to put in email
+        period : str,
+                periodicity of the report,
+        fullfile : str,
+                full name (with relative path) of report file
+        pdf_ok  : boolean,
+                if True, PDF has been correctly create, otherwise only XML is available.
+
+        Returns
+        --------
+        text : str,
+              email text
+        """        
+        
         if pdf_ok:
             p_pdf = """<p>Click <a href='"""+fullfile+""".pdf' download='"""+fullfile+""".pdf'>here</a>  to download it in PDF version or visit AIDA portal to list available reports</p>"""       
         else:
@@ -259,6 +405,13 @@ class Email():
         return text
       
     def send_mail(self, message):
+        """ Send email to user and/or admin(s)
+        Parameters
+        ---------
+        message : MIME object,
+                it contains email to send
+        """         
+        
         if self.port==465:
             server=smtplib.SMTP_SSL(self.host, self.port)
         else:
@@ -274,6 +427,26 @@ class Email():
         server.quit()      
       
     def set_message(self, subject, fromuser, touser, text, cc=""):
+        """ Create email to send
+        Parameters
+        ---------
+        subject : str,
+                email subject
+        fromuser : str,
+                user running experiment and creating email                    
+        touser : str,
+                email main recipient
+        text : str,
+                email text
+        cc   : list or str,
+                further recipient(s)
+                
+        Returns
+        -------
+        message : MIME object,
+                it contains email to send
+                
+        """         
         message = MIMEMultipart("alternative")
         message['Subject'] = subject
         message["From"] = fromuser
@@ -288,6 +461,22 @@ class Email():
         return message
         
     def stop_report_text(self, user, errorlist, runid):
+        """ Build email text in case of report generation manually stop
+        Parameters
+        ---------
+        user : str,
+              user stopping report
+        errorlist : dict,
+                dictionary containing further info about report warnings,
+        runid : int,
+                id of report experiment
+
+        Returns
+        --------
+        text : str,
+              email text
+        """        
+        
         text = """\
     <html>
       <body>

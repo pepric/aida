@@ -99,7 +99,7 @@ class dbIO():
         return counts      
       
     def close(self):
-        """Close the connection"""      
+        """Close connection"""      
         self.connection.close()
         self.connection = None
         
@@ -127,10 +127,8 @@ class dbIO():
             query by "experiment" or by "parameter"
         archive: string, "stored" or "user"
             query public archive or private archive
-        
         keep_open : boolean,
             if True, keep the connection open for next operation
-
 
         Returns
         ---------
@@ -157,6 +155,25 @@ class dbIO():
         return res
 
     def get_local_files(self, source,tmp_dir, ts = None,te=None,keep_open = False):
+        """ Get list of data files already downloaded for analysis.
+        Parameters
+        ---------
+        source : str,
+                system source under analysis    
+        tmp_dir : str,
+                user temporary directory to search in 
+        ts : int or None,
+            timestamp of search start date
+        te : int or None,
+            timestamp of search end date
+        keep_open : boolean,
+            if True, keep the connection open for next operation
+
+        Returns
+        ---------
+        locfiles : list,
+            list of stored files
+        """
         sql = "SELECT filename FROM local_files WHERE ("
         if ts is not None and te is not None:
             sql+="date_start <= '"+te+"' AND date_stop >= '"+ts+"' AND "
@@ -175,6 +192,17 @@ class dbIO():
         return locfiles
         
     def get_opmode(self,keep_open = False):
+        """ Get the current operation mode.
+        Parameters
+        ---------
+        keep_open : boolean,
+            if True, keep the connection open for next operation
+
+        Returns
+        ---------
+        res : dict,
+            single entry dictionary, {"mode" : <current operational mode>}
+        """        
         sql = "SELECT mode FROM operation_modes WHERE enable = 1"
         if self.connection is None:
             self.connect()        
@@ -192,10 +220,8 @@ class dbIO():
         ---------
         status : int,
             0 to select "pending", 1 for "active" or 2 for "deactive" users
-        
         keep_open : boolean,
             if True, keep the connection open for next operation
-
 
         Returns
         ---------
@@ -213,7 +239,6 @@ class dbIO():
             self.close()
 
         return res
-
 
     def get_report_status(self, runid):
         """Get status of current report record within running_reports table in local DB
@@ -345,7 +370,6 @@ class dbIO():
         """
         sql_newrep = "INSERT INTO report_files (filename, username, upload_date, period, config_file, start_date, end_date) VALUES ('"+fname+"', '"+user+"', '"+creation+"', '"+period+"', '"+configfile+"', '"+tstart+"', '"+tstop+"')"
         self._commit_query(sql_newrep, keep_open)
-
 
     def insert_temp_plot(self, pdata, usecase, plot, username, labels, stats, stat_res, plot_name, ts, te, tokeep):
         """Insert a new temporary plot experiment into the local DB

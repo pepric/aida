@@ -3690,7 +3690,7 @@ function get_parameter_group($sys, $origin, $subs){
 	$dbpwd = $config['password'];
 	$dbname = $config['dbname'];	
 	$mysqli = new mysqli($host, $dbuser, $dbpwd, $dbname); 
- 	$sql = "SELECT extra FROM ".$origin."_".strtolower($sys)."_params WHERE subsystem='".$subs."' GROUP BY extra";
+ 	$sql = "SELECT extra FROM ".$origin."_".strtolower($sys)."_params WHERE subsystem='".$subs."' GROUP BY extra ORDER BY extra ASC";
 
 	$qresult = $mysqli->query($sql);
 	$out = "";

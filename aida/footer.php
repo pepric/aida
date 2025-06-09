@@ -12,6 +12,9 @@
 			<div class = "col-md-2">
 				<h3>Useful Links</h3>
 				<ul>
+					<li><a href="https://rubinobservatory.org/" target="_blank">Rubin-LSST Official</a></li>
+					<li><a href="https://www.lsst.org/scientists/in-kind-program" target="_blank">Rubin-LSST In-Kind Program</a></li>
+					<li><a href="https://rubinobservatory.org/for-scientists/resources/community-forum" target="_blank">Rubin Community Forum</a></li>
 					<li><a href="https://www.inaf.it/" target="_blank">INAF</a></li>
 				</ul>
 			</div>
@@ -32,7 +35,6 @@
 					<li><a href="mailto://giuseppe.riccio@inaf.it">G. Riccio - giuseppe.riccio@inaf.it</a></li>
 					<li><a href="mailto://massimo.brescia@inaf.it">M. Brescia - massimo.brescia@inaf.it</a></li>
 					<li><a href="mailto://stefano.cavuoti@gmail.com">S. Cavuoti - stefano.cavuoti@gmail.com</a></li>
-                    <li><a href="mailto://silvia.pietroni@inaf.it">S. Pietroni - silvia.pietroni@inaf.it</a></li>
 				</ul>
 			</div>
 			<div class = "col-md-2"></div>
