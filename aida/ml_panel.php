@@ -76,7 +76,7 @@
 								<div class="form-group" id="hidden-fields">
 									<input type="hidden" name="det-type" id = "det-type" value="None"></input>
 									<input type="hidden" name="n_ypar" id = "n_ypar" value=1></input>
-									<input type="hidden" name="plot_type" id = "plot_type" value="scatter" disabled></input>
+									<input type="hidden" name="plot_type" id = "plot_type" value="ml" disabled></input>
 									<input type="hidden" name="stats_enable" id = "stats_enable" value="global" disabled></input>
 									<input type="hidden" name="stats_list" id = "stats_list" value=""></input>
 									<input type="hidden" name="usecase" id = "usecase" value="<?php echo $_GET['s']; ?>" disabled></input>
@@ -112,7 +112,8 @@
 							</script>
 							<div class="col-md-12" style="text-align:right">
 							<button class="btn btn-primary" id = "submit_button">Submit</button>
-							<button type="reset" class="btn btn-default" onClick="window.location.reload();">Reset</button>
+							<button type="reset" class="btn btn-default" onClick="window.location.href='ml_train.php?s=hktm';">Change Model</button>
+							<button type="reset" class="btn btn-default" onClick="window.location.reload();">Reset Parameters</button>
 							</div>
 						</div>
 					</section>
@@ -121,6 +122,15 @@
 	
 	<?php include("loader.html"); ?>
 	<div id="plot_img" style="display:none"><img id = "png_img"></img></div>
-	<?php include("modalbox.php"); ?>
+	<?php include("modalbox.php"); show_modal("exp"); ?>
 </section>	
-			
+
+<script>
+function back2main(){
+	window.location = window.location.href.split('?')[0];
+	window.location.reload()
+	
+}
+</script>
+
+

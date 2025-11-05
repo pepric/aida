@@ -47,21 +47,21 @@ services:
       - 3307
     cpus: 1    
     
-  phpmyadmin_fake:
-    image: phpmyadmin/phpmyadmin:5.0.1
-    restart: always
-    environment:
-      PMA_HOST: aida-fake
-      PMA_USER: lota
-      PMA_PASSWORD: VerdiLoTA2024!
-    ports:
-      - "8080:80"
+  # phpmyadmin_fake:
+    # image: phpmyadmin/phpmyadmin:5.0.1
+    # restart: always
+    # environment:
+      # PMA_HOST: aida-fake
+      # PMA_USER: lota
+      # PMA_PASSWORD: VerdiLoTA2024!
+    # ports:
+      # - "8080:80"
 
-  phpmyadmin_app:
-    image: phpmyadmin/phpmyadmin:5.0.1
-    restart: always
-    environment:
-      PMA_HOST: mysql-aida
-    ports:
-      - "8082:80"
+  # phpmyadmin_app:
+    # image: phpmyadmin/phpmyadmin:5.0.1
+    # restart: always
+    # environment:
+      # PMA_HOST: mysql-aida
+    # ports:
+      # - "8082:80"
    

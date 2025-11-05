@@ -167,6 +167,21 @@ class Render{
 
 
 /*Plot classes*/
+
+class ML{
+  
+	public function call_source($source, $origin, $settings, $repo_set){
+		//Instantiate source class
+    	$s = new ReflectionClass(ucfirst($source));
+      	$object = $s->newInstanceWithoutConstructor();
+		//Render plot form
+      	$result = $object -> render_ml_form($origin, $settings, $repo_set);
+    	return $result;
+    } 
+
+}
+
+
 class Trend{
 
 	public function call_source($source, $origin, $settings, $repo_set){
@@ -234,6 +249,52 @@ class Image{
 
 
 class EFD extends Render{
+
+	function render_ml_form($origin, $settings, $repo_set){
+		$keys = array_keys($repo_set["required"]);      
+		ob_start();
+		populate_dropdown($origin."_efd_params", "extra", "extra NOT LIKE 'full_%'", $distinct = 1);
+		$extra = ob_get_clean(); 
+		$dd = create_option($repo_set, 0);      
+		$result = $this->create_div("params");
+		$result.=$this->add_label("","","display:block","col-md-2 control-label","Label");
+		$result .= $this->create_div("x-par-form","col-md-10");
+		$result .= $this->render_main_select("x-ic", true, "set_sys_options(this,true)", "Select ".ucfirst($keys[0]), false, $dd);																				
+		$result .= $this->render_main_select("x-sys", false, "set_par_options(this)", "Select Field", false,"");		
+
+		$result .= $this->render_params_select("x", "populate_values(this)");
+		$result .= $this->render_values_select("x");
+		$result .= $this->render_extra_btns("x",$settings["extra"]);							
+		$result .= $this->create_div("x_extra_filters","col-md-12 extra_filters","display:none");					
+		$result .= $this->render_extra_filters("x_DataSetRelease", "DataSetRelease", "input", "display:".$settings["dsr"]);
+		$result .= $this->close_div(3);
+		
+		
+		$result .= $this->create_div("yparams");
+		$result.=$this->add_label("y-label","","display:block","col-md-2 control-label","Features");
+					/* <label style="display:block" class="col-md-2 control-label" id = "y-label">Y axis parameters</label> */
+		//$result .= '<div id="y0-par-form" class="col-md-10">';
+		$result .= $this->create_div("y0-par-form","col-md-10");
+		$result .= $this->render_main_select("y0-ic", true, "set_sys_options(this,true)", "Select ".ucfirst($keys[0]), false, $dd);																				
+		$result .= $this->render_main_select("y0-sys", false, "set_par_options(this)", "Select Field", false,"");
+		$result .= $this->render_partype("y0", $extra);
+		$result .= $this->render_params_select("y0", "populate_values(this)");
+		$result .= $this->render_values_select("y0");
+		$result .= $this->render_extra_btns("y0",$settings["extra"]);							
+		$result .= $this->render_more_btns("1");
+		//$result .= '<div id="y0_extra_filters" class="col-md-12 extra_filters" style="display:none">';
+		$result .= $this->create_div("y0_extra_filters","col-md-12 extra_filters","display:none");
+		$result .= $this->render_extra_filters("y0_DataSetRelease", "DataSetRelease", "input", "display:".$settings["dsr"]);
+/* 						<span style="display:'.$settings["dsr"].'">
+						<label id="y0l" for="y0_DataSetRelease">DataSetRelease</label><input type="text" cols="30" id="y0_DataSetRelease" name="y0_DataSetRelease" value=""></input>
+						</span> */
+		$result .= $this->close_div(3);/* '</div> 						
+				</div>
+			</div>'; */
+    	return $result;
+    }
+
+
 
 	function render_hist_form($origin, $settings, $repo_set){
 		$keys = array_keys($repo_set["required"]);       

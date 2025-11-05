@@ -3,6 +3,7 @@ function run_py(e) {
 	var system = document.getElementById("hktm_source").value;
 	var plot = $("#plot_type").val()	
 	var stats = $("#stats_enable").val();	
+	var usecase = $("#usecase").val();	
 	var go = true
 
 	
@@ -23,10 +24,15 @@ function run_py(e) {
 		out = prepare_data(ny, plot);
 
 		params = out[0];
+		ny = out[2];
+		console.log(params)
 		labels = out[1];
+		var labels = out[1];
+		params.labels = labels;
 		pyscript = "scripts/get_data.py";
 		console.log(params)
 		params.isonline = 1
+		params.plot_type="scatter"
 		var op = "Machine Learning";
 		$.ajax({
 			
@@ -45,6 +51,16 @@ function run_py(e) {
 			success: function(returndata){
 				results = JSON.parse(returndata)
 				console.log(results)
+				document.getElementById("modal-labels").value = labels
+				document.getElementById("modal-tstart").value = params['tstart']     
+				document.getElementById("modal-tstop").value = params['tend']
+				document.getElementById("modal-pid").value = params['pid']
+
+				//operation name
+				var op2hist
+				//parameters
+				var l2hist = labels.slice(1).join(",")
+				
 				var errstatus = results['errstatus']
 				var warningstatus = results['warningstatus']
 				var datastatus = results['datastatus']
@@ -69,7 +85,7 @@ function run_py(e) {
 					
 					if (datastatus == 0){
 						switch(plot) {
-							case "scatter":
+							case "ml":
 								scatterplot(returndata, ny, labels);
 								op = "Machine Learning";
 								break;
@@ -126,7 +142,7 @@ function run_py(e) {
 };	
 
 
-function prepare_data(ny,plot){
+/* function prepare_data(ny,plot){
 	
 	var y0sys = $("#y0-sys").val();
 	
@@ -236,10 +252,532 @@ function prepare_data(ny,plot){
 	
 }
 
+ */
+
+function prepare_data(ny,plot){
+	var source_settings ={
+		"NISP" : {"nrows" : 4, "ncols" : 4},
+		"NIR" : {"nrows" : 4, "ncols" : 4},
+		"SIR" : {"nrows" : 4, "ncols" : 4},
+		"VIS" : {"nrows" : 6, "ncols" : 6}
+	}
+	var adu_flag, alt_tbl_div,  coeff_arr
+	var first_coeff = "None"
+	var y0sys = $("#y0-sys").val();
+
+	//extra parameters  
+  	var extra={}
+    $.each($('input', '#y0_extra_filters'),function(){
+        extra[$(this).attr('id')] = $(this).val();
+    });
+    $.each($('input', '#x_extra_filters'),function(){
+        extra[$(this).attr('id')] = $(this).val();
+    });
+    $.each($('textarea', '#y0_extra_filters'),function(){
+        extra[$(this).attr('id')] = $(this).val();
+    });
+    $.each($('textarea', '#x_extra_filters'),function(){
+        extra[$(this).attr('id')] = $(this).val();
+    });  
+	// parameter type (current/statistics/voltage etc), if present
+	alt_tbl = set_alt_tbl("y0")
+  
+	//checked box ADU/CALIBRATED, if present 
+	adu_flag = set_adu("y0")
+	var source = $("#hktm_source").val()
+    var usecase = $("#usecase").val()
+	var params = {
+		'plot_type' : plot,
+		'source': $("#hktm_source").val(),
+		'ysys0' : y0sys,
+		'ypar0' : $("#y0-params").val(),
+		'tstart' : $("#tstart").val(),
+		'tend' : $("#tend").val(),
+		'user' : document.getElementById("session-user").innerHTML,
+		'usecase' : $("#usecase").val(),
+		'yic0' : $("#y0-ic").val(),
+		'ytbl0' : alt_tbl,
+		'yadu0' : adu_flag,
+		'pid' : $("#pid").val(),
+	}
+	params.yval0 = $("#y0-values").val();
+	console.log(params)
+
+	var toduplicate = {}
+	var det = $("#det-type").val().split(",");
+	var ydetector = null
+	var det_type_arr = "None"
+	params.yrow0 = "None";
+	params.ycol0 = "None";
+	var dupli_row = false
+	var dupli_col = false	
+	if(det[1]!="None" && det[1]!=null){
+		var yrow = $("#y0-det-row").val()
+		var ycol = $("#y0-det-col").val();
+		if(yrow != null){
+			det_type_arr = det; 
+			if(yrow == "all"){
+				yrow = 1
+				dupli_row = true
+			}
+			params.yrow0 = yrow;
+			
+			if(ycol == "all"){
+				ycol = 1
+				dupli_col = true
+			}
+			params.ycol0 = ycol;
+			ydetector = collect_detectors(det[1], yrow, ycol, "#y0-quadrant")
+			params.ydet0 = ydetector;
+		}
+	}
+	if(dupli_row || dupli_col){
+		toduplicate.y0 = [dupli_row,dupli_col]
+	}
+    var order = set_special_param("y0-order")
+    var coeff = set_special_param("y0-coeff")
+    var group = "None"
+    if(source == "SIR"){
+		group = set_group(plot,0)
+    }
+    params.yorder0 = order	
+	var coeff2dupli = {}
+	coeff_res = set_coeffs(coeff)
+	first_coeff = set_1st_coeff(coeff_res[0])
+	coeff_arr = coeff_res[1]
+	if(!coeff_arr==[]){
+		coeff2dupli.y0 = coeff_arr
+	}
+	params.ycoeff0 = first_coeff
+	y0label = build_label("y0",y0sys, params.ypar0, adu_flag, source, usecase, params.yic0, params.yval0, ydetector, order, first_coeff, group)
+	// Create x label and add detector info (if any) if scatter plot 
+	if (plot == "ml"){
+		var xsys = $("#x-sys").val();
+		params.xsys = xsys;
+		params.xpar = $("#x-params").val();
+		params.xval = $("#x-values").val();
+      
+		alt_tbl = set_alt_tbl("x")
+		params.xtbl = alt_tbl;  
+
+		//checked box ADU/CALIBRATED, if present
+		adu_flag = set_adu("x")
+		params.xadu = adu_flag     
+      
+		var xdetector = null
+		var xic = $("#x-ic").val();
+		params.xic = xic;
+		params.xcol = "None";
+		params.xrow = "None";
+		params.xdet = "None";		
+ 		if(det[0]!="None" && det[0]!=null){
+			var xrow = $("#x-det-row").val();
+			var xcol = $("#x-det-col").val();
+			if(xrow!=null){
+				xdetector = collect_detectors(det[0], xrow, xcol, "#x-quadrant");
+				params.xcol = xcol;
+				params.xrow = xrow;
+				params.xdet = xdetector;
+			}
+		}
+        var order = set_special_param("x-order")
+        var coeff = set_special_param("x-coeff")
+        var group = "None"
+        if(source == "SIR"){
+			group = set_group(plot,"",true)
+        }       
+		xlabel = build_label("x", xsys, params.xpar, adu_flag, source, usecase, params.xic, params.xval, xdetector, order,coeff,group)      
+	}
+	else{
+		xlabel = "None"
+	}	
+
+	labels = [xlabel, y0label];
+	console.log(labels)
+	// COLLECT ALL Y PARAMS
+	var additional_y_sys = []
+	var additional_y_par = [];
+	var additional_y_val = [];
+	var additional_y_row = [];
+	var additional_y_col = [];
+	var additional_y_det = [];	
+	var additional_y_ic = [];	
+	var additional_y_tbl = [];
+	var additional_y_adu = []
+	var additional_y_order = []
+	var additional_y_coeff = []
+	for (i=1; i<ny; i++){
+		var new_y_sys = $("#y"+i+"-sys").val();
+		var new_y_par = $("#y"+i+"-params").val();
+		var new_y_ic = $("#y"+i+"-ic").val();
+		additional_y_sys.push(new_y_sys);
+		additional_y_par.push(new_y_par);
+		additional_y_ic.push(new_y_ic);
+		var new_y_val = $("#y"+i+"-values").val();  
+		additional_y_val.push(new_y_val);
+	  
+		alt_tbl = set_alt_tbl("y"+i)         
+		additional_y_tbl.push(alt_tbl);          
+
+		//checked box ADU/CALIBRATED, if present
+		adu_flag = set_adu("y"+i)
+		additional_y_adu.push(adu_flag)
+		
+		var new_ydetector = "None"
+		var new_y_row = "None";
+		var new_y_col = "None";		
+		//for forms with detectors
+
+		dupli_row = false
+		dupli_col = false
+		if(det[i+1]!="None" && det[i+1]!=null){
+			new_y_row = $("#y"+i+"-det-row").val();
+			new_y_col = $("#y"+i+"-det-col").val();
+			if(new_y_row!=null){
+				if(new_y_row == "all"){
+					new_y_row = 1
+					dupli_row = true
+				}
+				if(new_y_col == "all"){
+					new_y_col = 1
+					dupli_col = true
+				}
+				new_ydetector = collect_detectors(det[i+1], new_y_row, new_y_col, "#y"+i+"-quadrant");
+			}
+		}
+		additional_y_row.push(new_y_row);
+		additional_y_col.push(new_y_col);
+		additional_y_det.push(new_ydetector);				
+		if(dupli_row || dupli_col){
+			toduplicate["y"+i] = [dupli_row,dupli_col]
+		}
+		var order = set_special_param("y"+i+"-order")
+		var coeff = set_special_param("y"+i+"-coeff")
+		coeff_res = set_coeffs(coeff)
+		first_coeff = set_1st_coeff(coeff_res[0])
+		coeff_arr = coeff_res[1]
+		if(!coeff_arr==[]){
+			coeff2dupli["y"+i] = coeff_arr
+		}            
+		additional_y_order.push(order);
+		additional_y_coeff.push(first_coeff);
+		var group = "None"
+		if(source == "SIR"){
+			group = set_group(plot,i)
+		}
+
+		l = build_label("y"+i, new_y_sys, new_y_par, adu_flag, source, usecase, new_y_ic, new_y_val, new_ydetector, order, first_coeff,group)
+		labels.push(l);
+		// get additional filters
+		 $.each($('input', '#y'+i+'_extra_filters'),function(){
+			extra[$(this).attr('id')] = $(this).val();
+		 });
+		 $.each($('textarea', '#y'+i+'_extra_filters'),function(){
+			extra[$(this).attr('id')] = $(this).val();
+		 });          
+	}
+
+	//duplicate params in case of ALL det row/col
+	var ndupli = Object.keys(toduplicate).length
+	//var idx0 = ny-1
+	for(var i=0; i<ndupli;i++){
+		var det_list=[]
+		var p2dup = Object.keys(toduplicate)[i]
+		var dupl_row = toduplicate[p2dup][0]
+		var dupl_col = toduplicate[p2dup][1]
+		var maxrow,maxcol
+		if(source!="QLA"){
+			maxrow = source_settings[source]["nrows"]
+			maxcol = source_settings[source]["ncols"]
+		}
+		else{
+			var curr_sys = $("#"+p2dup+"-sys").val();
+			var curr_sub = curr_sys.split("-")[0]
+			maxrow = source_settings[curr_sub]["nrows"]
+			maxcol = source_settings[curr_sub]["ncols"]				
+		}
+		
+		if(dupl_row){
+			var r_arr = []
+			for(var n=1;n<maxrow+1;n++){r_arr.push(n)}
+		}
+		else{
+			var r_arr = [parseInt($("#"+p2dup+"-det-row").val())]
+		}
+		if(dupl_col){
+			var c_arr = []
+			for(var n=1;n<maxcol+1;n++){c_arr.push(n)}
+		}
+		else{
+			var c_arr = [parseInt($("#"+p2dup+"-det-col").val())]
+		}
+		r_arr.forEach(function(a1){
+		  c_arr.forEach(function(a2){
+			det_list.push(a1 +"-"+ a2);
+		  });
+		});			
+		
+		// get data to duplicate from form
+		for(var d=0;d<det_list.length;d++){
+			var curr = det_list[d].split("-")
+			var idx = parseInt(p2dup.replace("y",""))+1
+			var curr_dettype = det[idx]
+			var curr_det = collect_detectors(curr_dettype, curr[0], curr[1], "#"+p2dup+"-quadrant");
+			var curr_sys = $("#"+p2dup+"-sys").val()
+			var curr_par = $("#"+p2dup+"-params").val()
+			var curr_adu = set_adu(p2dup)
+			var curr_ic = $("#"+p2dup+"-ic").val()
+			var curr_val = $("#"+p2dup+"-values").val()
+			var curr_order = set_special_param(p2dup+"-order")
+			var curr_coeff = set_special_param(p2dup+"-coeff")	
+
+			group = "None"
+			if(source == "SIR"){
+				group = set_group(plot,idx-1)
+			}					
+			//build label
+			l = build_label(p2dup, curr_sys, curr_par, curr_adu, source, usecase, curr_ic, curr_val, curr_det, curr_order, curr_coeff,group)
+
+			if(!labels.slice(1).includes(l)){
+				additional_y_sys.push(curr_sys)
+				additional_y_par.push(curr_par)
+				additional_y_ic.push(curr_ic)
+				additional_y_tbl.push(set_alt_tbl(p2dup))
+				additional_y_adu.push(curr_adu)
+				additional_y_val.push(curr_val);
+				additional_y_order.push(curr_order);
+				additional_y_coeff.push(curr_coeff);					
+				additional_y_row.push(curr[0])
+				additional_y_col.push(curr[1])					
+				additional_y_det.push(curr_det)	
+
+				//duplicate extra filters		{y<i>_<extra_name>:<value>}
+				 $.each($('input', '#'+p2dup+'_extra_filters'),function(){
+					div_id = $(this).attr('id').split('_')[1]
+					extra['y'+ny+'_'+div_id] = $(this).val();
+				 });
+				 $.each($('textarea', '#'+p2dup+'_extra_filters'),function(){
+					div_id = $(this).attr('id').split('_')[1]
+					extra['y'+ny+'_'+div_id] = $(this).val();
+				 });
+				//duplicate det_type
+				var curr_dt = det_type_arr[idx]
+				det_type_arr.push(curr_dt)
+				labels.push(l);
+				ny = ny +1	
+			}
+		}
+	}
+		
+	//duplicate params in case of list of coeff (not concurrent with det duplication)
+	var cdupli = Object.keys(coeff2dupli)
+
+	for(var i=0; i<cdupli.length;i++){
+		p2dup = cdupli[i]
+		var coeffs = coeff2dupli[p2dup]
+		var idx = parseInt(p2dup.replace("y",""))+1
+		//TODO
+		var curr_sys = $("#"+p2dup+"-sys").val()
+		var curr_par = $("#"+p2dup+"-params").val()
+		var curr_ic = $("#"+p2dup+"-ic").val()
+		var curr_val = $("#"+p2dup+"-values").val()
+		var curr_order = set_special_param(p2dup+"-order")
+		var curr_adu = set_adu(p2dup)
+		group = "None"
+		if(source == "SIR"){
+			group = set_group(plot,idx-1)
+			console.log(group)
+		}			
+		coeffs.forEach(function(c){
+			//build label
+			l = build_label(p2dup, curr_sys, curr_par, "False", source, usecase, curr_ic, curr_val, null, curr_order, c,group)
+			if(!labels.slice(1).includes(l)){
+				additional_y_sys.push(curr_sys)
+				additional_y_par.push(curr_par)
+				additional_y_ic.push(curr_ic)
+				additional_y_tbl.push(set_alt_tbl(p2dup))
+				additional_y_adu.push("False")
+				additional_y_val.push(curr_val);
+				additional_y_order.push(curr_order);
+				additional_y_coeff.push(curr_coeff);					
+				labels.push(l);
+				ny++
+			}			
+		});
+	}
+	
+	params.ny = ny
+	params.det_type = det_type_arr
+	// add to data array
+	params.additional_y_sys = additional_y_sys;
+	params.additional_y_par = additional_y_par;
+	params.additional_y_ic = additional_y_ic;
+	params.additional_y_tbl = additional_y_tbl;
+	params.additional_y_adu = additional_y_adu;
+	params.additional_y_val = additional_y_val;
+	params.additional_y_row = additional_y_row;
+	params.additional_y_col = additional_y_col;
+	params.additional_y_det = additional_y_det;	
+	params.additional_y_order = additional_y_order;	
+	params.additional_y_coeff = additional_y_coeff;	            
+	params.extra = JSON.stringify(extra)
+
+	return [params,labels,ny]
+}
+
+function set_special_param(divname){
+    var div = document.getElementById(divname)
+    var val = "None"
+    if(div != null){
+        val = div.value
+        if(val == ""){val = "None"}
+    }    
+    return val
+}
+
+function set_coeffs(coeff){
+	var first_coeff
+	var coeff_arr = []
+	var isnumeric = !isNaN(coeff) && !isNaN(parseInt(coeff))
+	if(isnumeric){
+		split_coeff = false
+	}
+	else{
+		split_coeff = true
+	}
+	//create list of coeff
+	if(split_coeff){
+		var comma_coeff = coeff.split(",")
+		comma_coeff.forEach(function(item){
+			var split_item = item.split("-")
+			if(split_item.length==2){
+				for (var i = parseInt(split_item[0]); i <= parseInt(split_item[1]); i++) {
+					if(!coeff_arr.includes(i)){
+						coeff_arr.push(i);
+					}
+				}
+			}
+			else{
+				if(!coeff_arr.includes(parseInt(item))){				
+					coeff_arr.push(parseInt(item))
+				}
+			}
+		})
+		first_coeff = coeff_arr[0]
+	}
+	else{
+		first_coeff = coeff
+	}	
+	return [first_coeff, coeff_arr.slice(1)]
+}
+
+function set_1st_coeff(c){
+	first_coeff = "None"
+	if(!isNaN(c)){
+		first_coeff = c
+	}	
+	return first_coeff
+}
 
 
+function set_alt_tbl(p){
+	var alt_tbl_div = document.getElementById(p+"-partype");
+	if(alt_tbl_div == null){
+      var alt_tbl = ""
+    }
+  	else{
+      var alt_tbl = alt_tbl_div.value;	  
+    }	
+	return alt_tbl
+}
+
+function set_adu(p){
+	var adu_flag
+	adu_checked = $('input[name="'+p+'-adu_cal"]')         
+	if(adu_checked.length > 0){
+		if(adu_checked.prop('checked') == true){
+			adu_flag = "True"
+		}
+		else{
+			adu_flag = "False"        
+		}
+	}
+	else{
+		adu_flag = "None"
+	 }
+	return adu_flag
+}
 
 
+function set_group(plot, i, isX=false){
+	var group = "None"
+	var div = "y"+i+"-partype"
+	if(isX){
+		div = "x-partype"
+	}
+	if(plot!="pre-generated"){				
+		group = set_special_param(div)
+		if(group == "parameters"){
+			group = "None"
+		}                
+	}
+	return group
+}
+
+function set_labels(adu, par, source, origin){
+  return $.ajax({
+    url: 'scripts/cs_interface.py',
+    data: {
+      action: "set_labels",
+      adu	: adu,
+      par	: par,
+      s		: source,
+      o		: origin
+    }
+  });
+}
+
+function build_label(pvar, sys, par, adu, source, origin, ic=null, val=null, det=null, order=null, coeff=null, group=null){
+  	var label = ""
+    var syslabel = sys+"."
+	if(source=="VIS" && origin=="science"){
+    	syslabel = ""
+    }    
+	if(det!=null && det!="None"){
+		label = syslabel+det+"."+par;
+	}
+	else{
+		label = syslabel+par;
+	}
+	if(ic!=null){label = ic+"."+label}	
+	if(val!=null){label = label+"."+val}
+	if(order!="None"){label = label+".order"+order}
+	if(coeff!="None"){label = label+".coeff"+coeff}
+	if(group!="None"){label = label+"["+group.toUpperCase()+"]"}
+
+	var aduparent = $("#"+pvar+"-adu_check").parent().css('display');
+	if(aduparent != "none"){
+      switch(adu) {
+		  case "True":
+			  var units = $("#"+pvar+"-adu_check").find("#units").html()
+			  if(units != null && units != ""){
+				  var utxt = units
+			  }
+			  else{
+				  var utxt = "no units"
+			  }
+			  label = label+" ("+utxt+")";
+
+			  break;
+		  case "False":
+			  label = label+" (ADU)";
+			  break;
+		  case "None":
+			  break;      
+      }
+    }
+	return label
+}
 
 
 function prepare_qla_data(ny, plot){
@@ -558,7 +1096,7 @@ function calculate_stats(pydata, ny, plot, stats, labels){
 
 
 function render_stats(pydata, ny, labels, plot, stats){
-	try {
+/* 	try { */
 	    var results = JSON.parse(pydata);
 
 
@@ -569,7 +1107,7 @@ function render_stats(pydata, ny, labels, plot, stats){
 	    ks = Object.keys(results)
 	    
 	    // create stats div
-	    if(plot == "scatter"){
+	    if((plot == "scatter") || (plot == "ml")){
 		    var node = document.createElement("div");
 		    node.setAttribute("class", "col-md-12");
 		    node.setAttribute("style", "font-size:20px; font-weight:bold");
@@ -586,6 +1124,8 @@ function render_stats(pydata, ny, labels, plot, stats){
 
 
 	    if (results.outputfilename != "None"){
+			console.log(results.outputfilename)
+			console.log(results)
     //    	document.getElementById('plot_container').innerHTML += document.write("<a href=\"" + results.outputfilename + "\"><p>output file</p></a>");
             var parent2= document.getElementById('linkContainer');
 		    document.getElementById('linkContainer').style='display:block;';
@@ -667,10 +1207,10 @@ function render_stats(pydata, ny, labels, plot, stats){
 		    modebar.style='display:block;';
 	    }
 	    $("#loader").hide();
-    }
+/*     }
     catch {
     	alert("Please check model configuration and input features");
-    }
+    } */
 }
 
 function create_stats_table(data, name, parent, id){
@@ -1261,14 +1801,50 @@ function get_now_string(){
 	return new_date
 }
 
-
-// PLOTS RESTYLE
-
-function prova(){
+function onclick_plot(){
+	$('#form-div').css('display', 'block');
+	$('#plot_stats').css('display', 'none');
+	$('#plot_files').css('display', 'none');
+	$('#custom_plot').css('display', 'block');
 	var dom = document.getElementById('chartContainer');
-	var update = {
-    opacity: 0.4,
-    'marker.color': 'red'
-};
-Plotly.restyle(dom, update, 0);
-}
+	
+	Plotly.relayout( dom, {
+		'xaxis.autorange': true,
+		'yaxis.autorange': true
+	});  
+}  
+
+function onclick_files(){
+
+  $('#form-div').css('display', 'none'); 
+  $('#plot_files').css('display', 'block'); 
+  //$('#plot_files').css('flex-wrap', 'wrap');
+  $('#plot_stats').css('display', 'none')
+  $('#custom_plot').css('display', 'none');
+
+$('#files_tbl').DataTable().columns.adjust().draw()
+  $('#plot_files').css('display', 'flex'); 
+  $('#plot_files').css('flex-wrap', 'wrap');	 
+} 
+
+function onclick_stats(){
+  var t = document.getElementById("plot_type").value
+  if(t != "stats"){
+    $('#form-div').css('display', 'none');
+    
+/*    if(t=="upload"){
+      	console.log($("#op").val())
+    	if($("#op").val()!="stats"){$('#plot_stats').removeClass('active');}
+    }*/
+  }
+  else{
+    $('#form-div').css('display', 'block');
+    $('#plot_tab').removeClass('active');
+  }
+  $('#plot_stats').css('display', 'flex'); 
+  $('#plot_stats').css('flex-wrap', 'wrap'); 
+  $('#plot_files').css('display', 'none');
+  $('#custom_plot').css('display', 'none');   
+} 
+
+

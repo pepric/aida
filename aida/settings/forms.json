@@ -1,5 +1,5 @@
 {
-	"efd_full" : {
+	"efd" : {
 		"usdf" : {
 			"hktm":{
               	"required" :{
@@ -12,7 +12,7 @@
 	 		
 		}
 	},
-	"efd" : {
+	"efd_test" : {
 		"usdf" : {
 			"hktm":{
               	"required" :{

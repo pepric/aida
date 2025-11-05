@@ -4,6 +4,7 @@
 		$title = "Machine Learning - ".$_GET["model"];
 		include("header.php"); 
 		include("ml_panel.php");
+
 	?>
 
 	<?php include("footer.php"); ?>
@@ -18,8 +19,8 @@
 		<script src="assets/vendor/bootstrap-datetimepicker/js/bootstrap-datetimepicker.js"></script>
 		<script src="assets/vendor/magnific-popup/magnific-popup.js"></script>
 		<script src="assets/vendor/jquery-placeholder/jquery.placeholder.js"></script>
-
-		<!-- Form-->
+	<?php include("form_scripts.html"); ?>
+		<!-- Form
 		<script src="assets/vendor/select2/select2.js"></script>
 		<script src="assets/vendor/bootstrap-multiselect/bootstrap-multiselect.js"></script>
 		<script src="assets/vendor/jquery-maskedinput/jquery.maskedinput.js"></script>
@@ -40,10 +41,10 @@
 		<script src="assets/vendor/codemirror/mode/css/css.js"></script>
 		<script src="assets/vendor/summernote/summernote.js"></script>
 		<script src="assets/vendor/bootstrap-maxlength/bootstrap-maxlength.js"></script>
-		<script src="assets/vendor/ios7-switch/ios7-switch.js"></script> 
+		<script src="assets/vendor/ios7-switch/ios7-switch.js"></script> -->
 
-		<!-- Form validation -->
-		<script src="assets/vendor/jquery-validation/jquery.validate.js"></script>
+		<!-- Form validation 
+		<script src="assets/vendor/jquery-validation/jquery.validate.js"></script>-->
 
 		<!-- IOT -->
 		<script src="assets/javascripts/lsst/ml.js"></script>

@@ -1,1 +1,1 @@
-error!
+error!(1364, "Field 'sourcename' doesn't have a default value")

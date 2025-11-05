@@ -1,0 +1,57 @@
+{
+	"General Info": {
+		"Start Time": "2025-01-01T00:00:00",
+	"Time Window": 1,
+	"Number of acquisitions": 1,
+	"Sampling": "full"
+	},
+	"EFD"	:	{
+		"HKTM"	:	{
+          "MTM2":{
+            "temperature.ring0":{
+              "Operation_1" : {
+                "Type" : "trend",
+                  "Additional Parameters" : ["MTM2.temperature.ring1"]
+              },
+              "Operation_2" : {
+                "Type" : "scatter",
+                  "X" : "MTM2.temperature.ring1"
+              }
+            },
+            "tangentForce.applied3":{
+              "Operation_1" : {
+                "Type" : "histogram",
+                  "Number of Bins" : 4
+              }
+            },
+            "temperature.ring1":{
+              "Operation_1" : {
+                "Type":"biweight mean",
+                "Parameters" : {"iterMax" : 1, "epsilon":1.0e-20}   
+              },
+              "Operation_2" : {
+                "Type" : "trend"
+              
+              },
+              "Operation_3" : {
+                "Type": "percentile",
+				"Parameters" : {"quantile" : 50, "interpolation":"linear"} 
+              },
+              "Operation_4" : {
+                "Type" : "min"
+              }
+            }
+          },
+            "MTM1M3TS" : {
+              "thermalData.absoluteTemperature0":{
+              		"Operation_1" : {
+                "Type" : "trend",
+                  "Additional Parameters" : ["MTM2.temperature.ring1"]
+              }
+              }
+            
+            }
+          
+        }
+	}
+}

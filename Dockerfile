@@ -26,7 +26,8 @@ cycler==0.10.0 \
 DBUtils==2.0.1 \
 h5py==3.2.1 \
 idna==3.3 \
-joblib==1.0.1 \
+#joblib==1.0.1 \
+joblib==1.5.1 \
 kiwisolver==1.3.1 \
 lxml==4.6.3 \
 matplotlib==3.4.1 \
@@ -43,12 +44,14 @@ pypdf2==3.0.1 \
 python-dateutil==2.8.1 \
 reportlab==3.5.67 \
 requests==2.26.0 \
-scikit-learn==0.24.1 \
+#scikit-learn==0.24.1 \
+scikit-learn==1.6.1 \
 scipy==1.6.2 \
 six==1.15.0 \
 sklearn==0.0 \
 svglib==1.1.0 \
-threadpoolctl==2.1.0 \
+#threadpoolctl==2.1.0 \
+threadpoolctl==3.6.0 \
 tinycss2==1.1.0 \
 urllib3==1.26.7 \
 webencodings==0.5.1 \
