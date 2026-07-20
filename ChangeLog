@@ -1,0 +1,45 @@
+1.0
+- Implemented ML tools online/offline
+	- History updated for ML
+	- new mail template
+	- different outputs for classification/regression and clustering
+	- new tab for ml experiments in dashboard
+	- new directory for ML exp
+	- ML experiments stored in backup
+- updated scikit-learn package (1.6.1)	
+- added webapp settings in json file
+- added automatic release version in landing page and sidebar
+- automatic history refresh
+- communication check with DB during installation
+- directories in /user/reports and .fits files in users/<user>/stored are not stored in backup data
+- bug import report directory containing subfolders from failed reports generation
+- Improved backup: now also running reports table is imported and status automatically set
+- exported config.json
+- Added column “label” to fake data for ML classification testing
+0.6
+- pre-installation flush now delete also cgi-logs, profiling and logs directories
+- added plot customization panels
+- added alert message before downloading backup
+0.2
+- removed custom css from signup.php
+- removed custom css from recovery.php
+BUG SOLVED: mail not sent to user during registration
+ - changed $mail_admin to $user in register.php/send_user_email
+Moved EFD to FAKE
+- forms.json (added)
+- defaults/settings/forms.json (copied)
+- fake.conf (created)
+- defaults/fake.conf (copied)
+- repos.py (FAKE class)
+- forms.php (FAKE class)
+- systems.py (FAKE class)
+- added FAKE record in aida_local.systems table in DB
+modified iot.js to get parameter group by query on DB
+- set_params, added arg fromdb
+- added functions
+- set_sys_options
+- set_par_options
+Modified DockerFile
+- added pandas
+- added lsst_efd_client
+Copied DockerFile in aida_docker/installation
