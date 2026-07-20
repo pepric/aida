@@ -1,5 +1,5 @@
 		<!-- start: page -->
-			<?php include("plotcontainer.php"); ?>
+			<?php include("plotcontainer_ml.php"); ?>
 			<div class="row">
 				<div class="col-xs-12" id = "form-div">
 					<section class="panel">
@@ -81,6 +81,7 @@
 									<input type="hidden" name="stats_list" id = "stats_list" value=""></input>
 									<input type="hidden" name="usecase" id = "usecase" value="<?php echo $_GET['s']; ?>" disabled></input>
 									<input type="hidden" name="model" id = "model" value="<?php echo $_GET['model']; ?>" disabled></input>
+									<input type="hidden" name="technique" id="technique" value="<?php echo $_GET['technique'] ?>" />
 									<span id="plotdata" ></span>
 								</div>
 							</form>
@@ -109,13 +110,20 @@
 							slider.oninput = function() {
 							  output.innerHTML = this.value;
 							}
+							var tech = document.getElementById("technique").value;
+							if(tech == "cluster"){
+								output.innerHTML = 100;
+								slider.value = 100;
+								document.getElementById('splitting').style.display = 'none';
+							}
 							</script>
+
+							</div>
 							<div class="col-md-12" style="text-align:right">
-							<button class="btn btn-primary" id = "submit_button">Submit</button>
+							<button class="btn btn-primary" id = "submit_button" >Submit</button>
 							<button type="reset" class="btn btn-default" onClick="window.location.href='ml_train.php?s=hktm';">Change Model</button>
 							<button type="reset" class="btn btn-default" onClick="window.location.reload();">Reset Parameters</button>
-							</div>
-						</div>
+							</div>							
 					</section>
 				</div>
 			</div>
@@ -131,6 +139,8 @@ function back2main(){
 	window.location.reload()
 	
 }
+
+
 </script>
 
 

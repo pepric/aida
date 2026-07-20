@@ -6,9 +6,12 @@ cgitb.enable(display=0, logdir="cgi-logs")   # for troubleshooting
 import functions as util
 import datautils as du
 import classes
-from calculate_statistics import get_global_stats, do_calculation
+import calculate_statistics as cs
+import calculate_ml as cml
+#from calculate_statistics import get_global_stats, do_calculation
 import db_io
 from send_mail import Email
+import os
 
 class listRemoteFiles():
     """ Class implementing methods and utilities to retrieve list of data files remotely stored"""
@@ -79,6 +82,96 @@ class listRemoteFiles():
             self.addstatement = "and " + db['condition']
         except : 
             self.addstatement = ""
+
+def ml_to_db(username, modelfile, outfile, recapfile, labels, source, creation, ts, te, config, stats):
+    """Store ML data into local DB.
+    
+    Parameters
+    ----------
+    username : str,
+              user who generated the plot
+    modelfile : str,
+              model filename
+    outfile : str,
+              output filename
+    recapfile : str,
+              experiment recap filename
+    labels : list,
+            list of plotted parameters              
+    source  : str,
+              source name
+    creation : str,
+              creation date
+    ts : str,
+        start datetime of experiment data
+    te : str,
+        end datetime of experiment data
+    config : dict,
+            experiment configuration : ML technique, model, model hyperparameters, split rate, split seed 
+       
+    Returns
+    -------
+    plotid : int,
+        row id of stored record in DB
+    """
+    #connect to DB
+    connconf = util.repConfig().data['local_db']
+    dbio = db_io.dbIO(connconf)
+    
+   
+    plotid = dbio.insert_ml_plot(username, modelfile, outfile, recapfile, labels, source, creation, ts, te, config, stats)    
+
+        
+    return plotid  
+
+def create_recap_file(username, modelfile, source, labels, ts, te, config):
+    recapfile = modelfile.replace("model","recap").replace("joblib","txt").split(os.sep)[-1]
+    iodadir=(os.path.dirname(os.path.realpath(__file__)).replace("scripts",""))+'users'+os.sep+"ml"+os.sep
+    # with open("prova.txt","w") as xx:
+        # xx.write(str(recapfile))      
+    splitname = recapfile.split("recap-")[1].split(".")[0].split("-")
+    creation = splitname[0]+"-"+splitname[1]+"-"+splitname[2]+" "+splitname[3]+":"+splitname[4]+":"+splitname[5]
+    tech = config['tech']
+    model = config['model']
+    model_param = config['params']
+    split = config['split_rate']
+    seed = config['seed']
+    if int(split) <100:
+        s = split+"/"+str(100-int(split))
+        model_param.update({"split rate" : s, "random split seed" : seed})
+    else:
+        model_param.update({"split rate" : "NA"})
+    
+    
+    
+    interval = "["+ts+", "+te+"]"
+    target = labels[0]
+    if target == "undefined.undefined" or target == "None" or target=="null.null":
+        target = "-"
+    features = "\n\t".join(labels[1:])
+
+   
+    with open(iodadir+recapfile,"w") as f:
+        f.write("ML Experiment Data\n----------------------\n")
+        f.write("Creation Date : "+creation+"\n")
+        f.write("User : "+username+"\n")
+        f.write("Data Source : "+source+"\n")
+        f.write("Dates Interval : "+interval+"\n\n")
+        
+        f.write("Configuration\n----------------------\n")        
+        f.write("ML Technique : "+tech+"\n")
+        f.write("Model : "+model+"\n")
+        f.write("Hyperparameters : \n")
+        for x, y in model_param.items():
+            f.write("\t"+x+" : "+y+"\n")
+        f.write("Target : "+target+"\n")
+        f.write("Features : \n\t"+features+"\n")
+        
+
+    # with open("ciccio.txt","w") as xx:
+        # xx.write(str(splitname))
+
+    return iodadir.replace("/var/www/html","")+recapfile
         
 def plot_to_db(pdata, usecase, plot, username, labels, stats, stat_res, plot_name, ts, te, tokeep=0):
     """Store plot data into local DB.
@@ -117,7 +210,7 @@ def plot_to_db(pdata, usecase, plot, username, labels, stats, stat_res, plot_nam
     connconf = util.repConfig().data['local_db']
     dbio = db_io.dbIO(connconf)
     plotid = dbio.insert_temp_plot(pdata, usecase, plot, username, labels, stats, stat_res, plot_name, ts, te, tokeep)
-        
+       
     return plotid        
     
 def main(data):
@@ -207,13 +300,14 @@ def main(data):
     result.update({"infostatus" : status[3]})
     result.update({"msg" : e.error})
     result.update({"infomsg" : e.info})
-
     labels = data.getlist('labels[]')    
-   
+    # with open("ugo.txt","w") as xx:
+        # xx.write(str(result))
     # if plot is online, return result, else collect additional info and store experiment into the DB
     if isonline == "1":
         print(json.JSONEncoder().encode(result))
     else:
+        result.update({"mlerror" : 0})
         #get additional data to store
         try:
             binsize = data['binsize'].value
@@ -230,19 +324,36 @@ def main(data):
             except:
                 stats_list = {}
         else:
-            stats_list = get_global_stats(stats)
+            stats_list = cs.get_global_stats(stats)
         username = data['user'].value
 
         stat_res = ""
         if result['errstatus'] == 0 and result['datastatus'] == 0:
-            stat_res = do_calculation(result, plot, stats_list, len(labels)-1)
+            if plot == "ml":
+                tech = data['tech'].value
+                if tech == "cluster":
+                    ml_name = "Clustering"
+                elif tech == "regressor":
+                    ml_name = "Regression"
+                elif tech == "classifier":
+                    ml_name = "Classification"                
+                stat_res = cml.do_calculation(data, result, tech, stats_list, len(labels)-1)
+
+                mlerr =  json.loads(stat_res)["mlerror"]
+                result["mlerror"] = mlerr
+            else:
+                stat_res = cs.do_calculation(result, plot, stats_list, len(labels)-1)
+
 
         #set plot name  
         try:
             pclass = classes.plot_inst(plot)
             plot_name = pclass.name
         except:
-            plot_name = "Statistical Analysis"
+            if plot == "ml":
+                plot_name = "Machine Learning"
+            else:
+                plot_name = "Statistical Analysis"
             
         #change \n into another format to be stored in db
         msg = result['msg']
@@ -250,18 +361,69 @@ def main(data):
         result.update({"msg" : msg})
         msg = result['infomsg']
         msg = msg.replace("\n", "_RETCHAR_")        
-        result.update({"infomsg" : msg})        
+        result.update({"infomsg" : msg})
+
+
         #save data to DB
-        plotid = plot_to_db(str(result), usecase, plot, username, labels, stats, stat_res, plot_name, ts, te)
+        if result["mlerror"] == 0:
+            if plot == "ml":
+                jsonstats = json.loads(stat_res)
+              
+                now = util.utc_now()
+                creation = now.strftime("%Y-%m-%d %H-%M-%S")
+                model = data['model'].value
+                model_param = json.loads(data['model_param'].value)
+                seed = data['seed'].value
+                split = data['split'].value
+                modelfile = jsonstats['modelfilename']
+                outfile = jsonstats['outputfilename']
+                config = {}
+                config.update({"tech" : ml_name})
+                config.update({"model" : model})
+                config.update({"params" :model_param})
+                config.update({"split_rate" : split})
+                config.update({"seed" : seed})
+                del jsonstats['outputfilename']
+                del jsonstats['modelfilename']
+                del jsonstats['mlerror']
+                del jsonstats['model']
+                recapfile = create_recap_file(username, modelfile, source, labels, ts, te, config)
+
+                plotid = ml_to_db(username, modelfile, outfile, recapfile, labels, source, creation, ts, te, config, jsonstats)
+            else:
+                plotid = plot_to_db(str(result), usecase, plot, username, labels, stats, stat_res, plot_name, ts, te)
+        else:
+            plotid = None
         connconfig = util.repConfig().data['local_db']
         connection = util.connect_db(connconfig)        
         #update history
         if plotid is not None:
             data2store = '{"source" : "'+source+'", "dates range" : "['+str(ts)+', '+str(te)+']"}'
-            l = str(labels)[1:-1].replace("'","").replace("None,","")
-            settings = {"usecase" : usecase.upper(), "parameters" : l}         
+            l = str(labels)[1:-1].replace("'","").replace("None,","").replace("undefined.undefined, ","")
+            settings = {}
+            #settings = {"usecase" : usecase.upper(), "parameters" : l}         
             if labels[0] is not None:
-                settings.update({"X" : labels[0]})
+                if plot != "ml" :
+                    settings.update({"usecase" : usecase.upper()})
+                    if plot == "scatter" : 
+                        settings.update({"X" : labels[0]})
+                    settings.update({"parameters" : l})
+                else:
+
+                    settings.update({"ML Technique" : ml_name})
+                    settings.update({"Model" : data['model'].value})
+                    if labels[0] != "undefined.undefined":
+                       settings.update({"Label" : labels[0]})
+                    else:
+                       settings.update({"Label" : "None"})
+                    settings.update({"Features" : l})
+                    ml_param = json.loads(data['model_param'].value)
+                    settings.update({"Model Parameters" :ml_param})
+                    split_train = data['split'].value
+                    split_test = str(100-int(split_train))
+                    settings.update({"Split (train/test)" : split_train+"/"+split_test})                  
+                    settings.update({"Random seed" : data['seed'].value})
+                       
             if binsize is not None:
                 if bintype=="binnumber":
                     bin2hist = "Number of Bins"
@@ -270,7 +432,8 @@ def main(data):
                 settings.update({bin2hist : binsize})
             if len(stats_list)>0:
                 stats2hist = ",".join([k for k in stats_list.keys()])
-                settings.update({"Stats" : stats2hist})                
+                if plot != "ml":
+                    settings.update({"Stats" : stats2hist})                
             settings = str(settings).replace("'","\"")                               
             util.update_history(connection, username, plot_name, input="NA", output=data2store, config=settings)  
         else:
@@ -286,8 +449,13 @@ def main(data):
         maildata = [plot_name, usecase, source, labels, ts, te, stats_list, url]
         
         if plotid is not None:
-            subject = "New "+plot_name+" generated"          
-            text = mailconfig.ok_plot_text(maildata, plotid, source)
+            subject = "New "+plot_name+" generated"
+            if plot != "ml":
+                text = mailconfig.ok_plot_text(maildata, plotid, source)
+            else:
+                maildata.append(ml_name)
+                maildata.append(data['model'].value)
+                text = mailconfig.ok_ml_text(maildata, plotid, source)
         else:
             subject = "ATTENTION: Failed "+plot_name+" generation"          
             text = mailconfig.error_plot_text(maildata, "Impossible to store data in local DB")

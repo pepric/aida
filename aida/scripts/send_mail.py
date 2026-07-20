@@ -299,6 +299,52 @@ class Email():
     </html>
     """
         return text
+
+    def ok_ml_text(self, maildata, plotid, source):
+        """ Build email text in case of successful offline plot generation
+        Parameters
+        ---------
+        maildata : list,
+                list of info to put in email
+        plotid : int,
+                id assigned to the experiment,
+        source : str,
+                system source under analysis
+
+        Returns
+        --------
+        text : str,
+              email text
+        """
+        
+        webappdir = util.repConfig().data['webapp_dir']    
+        ploturl = "http://"+maildata[7]+"/"+webappdir+"/view_plot.php?id="+str(plotid)+"&s="+source+"&exp=ml"
+        
+        text = """\
+    <html>
+      <body>
+        <p>A new data analysis has been performed by AIDA:</p>
+        <p style="font-weight:bold; font-decoration:underline">SUMMARY</p>
+        <p>
+        Experiment : """+str(maildata[0])+"""<br/>
+        Learning Technology : """+str(maildata[8])+"""<br/>
+        Model : """+str(maildata[9])+"""<br/>
+        Data Origin : """+maildata[2]+"""<br/>"""
+        
+        if maildata[3][0]!="None" and maildata[3][0]!="undefined.undefined":
+            text += """Label: """+maildata[3][0]+"""<br/>"""
+        pars = maildata[3][1:]
+        p_text = ",".join(pars)     
+        text += """Features : """+p_text+"""<br/>"""        
+        
+        text += """        
+        Date Range : """+maildata[4]+""" - """+maildata[5]+"""<br/></p>
+        
+        <p>Click <a href='"""+ploturl+"""'>here</a>  to view results.</p>
+      </body>
+    </html>
+    """
+        return text
       
     def ok_plot_text(self, maildata, plotid, source):
         """ Build email text in case of successful offline plot generation

@@ -17,7 +17,9 @@
 								<div class="form-group" id="hidden-fields">
 									<input type="hidden" name="det-type" id = "det-type" value="None"></input>
 									<input type="hidden" name="n_ypar" id = "n_ypar" value=1></input>
-									<input type="hidden" name="plot_type" id = "plot_type" value="" disabled></input>
+									<?php 
+  										if(isset($_GET['exp'])){$exp = $_GET['exp'];} else {$exp="none";}?> 											
+									<input type="hidden" name="plot_type" id = "plot_type" value="<?php echo $exp; ?>" disabled></input>
 									<input type="hidden" name="stats_enable" id = "stats_enable" value="global" disabled></input>
 									<input type="hidden" name="stats_list" id = "stats_list" value=""></input>
           							<input type="hidden" name="hktm_source" id = "hktm_source" value="<?php echo $_GET['s']; ?>"></input>
@@ -91,6 +93,7 @@
 <script>
 	document.addEventListener("DOMContentLoaded", function(){
       	var id = document.getElementById("plotid").value
+      	var exp = document.getElementById("plot_type").value
 		//if id is defined, then data must be retrieve from local DB
 		if(id != "none"){
 		   	$.ajax({
@@ -99,6 +102,7 @@
 			url : 'scripts/cs_interface.py',
 			data : {
 				plotid: id,
+				exptype : exp,
 	           	action : "view_plot_from_db",
 			},
 			beforeSend: function(){
@@ -106,65 +110,14 @@
 				$("#loader").show();
 			},              
 			success : function(response){
-              	//update title
-              	$('#plot-title').text(response['plot_name']);
-              	var plot = response['plot_type']
-				var usecase = response['usecase']
-              	// get output data
-				var jsondata = JSON.parse(response['plot_data'])
-
-				if(jsondata["errstatus"]==0){
-						// get labels
-						var labels = response['labels'].split(",")
-						document.getElementById("plot_type").value = plot
-						document.getElementById("modal-labels").value = labels
-						document.getElementById("modal-tstart").value = response['tstart']     
-						document.getElementById("modal-tstop").value = response['tstop']
-						document.getElementById("plotdata").innerHTML = response['plot_data']
-						document.getElementById("usecase").value = usecase
-						// get number of y parameters
-						var ny = labels.length - 1 
-
-                        if(usecase != "pre-generated"){
-                            render_plot(jsondata, plot, ny, labels, usecase)
-                            //get stats
-                            var statres = response['stats_list']
-
-                            var stattype = response['stats_enable']
-                            if(stattype != "None"){
-                            //visualize stats as tables
-                                render_stats(statres, ny, labels, plot, stattype,1)     
-                                document.getElementById("stats_results").innerHTML = statres
-                                if(usecase != "hktm"){
-                                    render_files_tbl(jsondata, ny, labels, plot)            
-                                }
-                                else{
-                                    $("#tab-files1").css('display', 'none');
-                                }
-
-
-                            }
-                            else{
-                                $("#tab-stats1").css('display', 'none');
-                                $("#tab-files1").css('display', 'none');
-                                var modebar = document.getElementsByClassName("modebar")[0]
-                                if(typeof modebar != 'undefined'){
-                                    modebar.style='display:block;';
-                                }
-
-                            }
-                        }
-                        else{
-                            render_pregenerated(jsondata, plot, labels[1])
-                        }
+				if(exp=="ml"){
+					render_ml_offline(response)
 				}
 				else{
-					var msg = jsondata["msg"].replace(/_RETCHAR_/g,"\n")
-					alert(msg)
-					window.close()
+					render_plot_offline(response)
 				}
-              
-			$('#plot_files').css('display', 'none');              
+				
+             
               
               
             },

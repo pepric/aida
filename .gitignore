@@ -2,3 +2,5 @@
 ###########
 mysqlData/
 mysqlFakeData/
+scripts/__pycache__/
+scripts/__pycache__/*

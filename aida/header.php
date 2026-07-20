@@ -31,6 +31,9 @@
 		$ishome=true;
 	}else{$ishome = false;}
 
+	// read app settings
+	$webapp_settings = read_webapp_settings();
+
 	// for debug: $check = true
 	if($check== true or $ishome==true) {
  

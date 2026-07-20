@@ -6,7 +6,17 @@ $(document).ready(function(){
 	get_tree("config", "#treeConfig", ["json", "ini"], 1)
 	get_history(name, "treeUserHist");
 	get_history("global", "treeGlobalHist");
+	
+	$("#pwdin").keypress(function(event) { 
+		if (event.keyCode === 13) { 
+			return false
+		} 
+	});	
 });	
+
+setInterval(function(){
+	refresh_history();
+}, 180000);
 
 function open_tab(page){
 	var opmode = document.getElementById("opmode").innerHTML.toLowerCase()
@@ -115,6 +125,41 @@ $( document ).ready(function() {
 	freptable.ajax.reload(null, false);
 	}, 600000);
 }); 
+
+
+//refresh ML experiment table  
+$( document ).ready(function() {
+		var cols = [
+			{ mData: 'ID' } ,
+			{ mData: 'ML Technique' },
+			{ mData: 'Model' },
+			{ mData: 'Data Source' },
+			{ mData: 'Dates Interval' },
+			{ mData: 'User' },
+			{ mData: 'Generation Date' },
+			{ mData: 'Actions' },
+		]  
+ 
+	var freptable = $('#datatable-ml_stored').DataTable( {
+		"ajax": {
+			"type": "POST",
+          	"url": "scripts/cs_interface.py",
+			"data": {
+				"action" : "mlstored",
+			}
+		},
+      	autoWidth : false,
+		"language": {"emptyTable": "No Machine Learning experiments stored into DB"},
+      	"columns": cols,
+      	"columnDefs" :[ {orderable:false, targets : [7]}]
+	});
+	setInterval( function () {
+	freptable.ajax.reload(null, false);
+	}, 600000);
+}); 
+
+
+
   
 //refresh pending requests table  
 $( document ).ready(function() {
@@ -206,8 +251,16 @@ $( document ).ready(function() {
 
 
 $( document ).ready(function() {
+	  //refresh config files and reports trees
+  	  update_tree('config', '#treeConfig', ['json', 'ini'], 1)
+  	  setInterval(update_tree, 600000, 'config', '#treeConfig', ['json', 'ini'], 1);
+  	  setInterval(update_tree, 600000, 'report', '#treeReports', ['pdf','xml'], 1);
+	  // refresh flagged tables
   	  build_flagged_tables()
   	  setInterval(build_flagged_tables, 600000);
+	  // refresh history
+	  setInterval(refresh_history, 600000);
+  
 });
 
 function build_flagged_tables(){
@@ -332,6 +385,24 @@ function build_flagged_filters(cols, tbl, data){
 			}			
 		}
 	}
+}
+
+
+$(document).ready(function() { 
+	$('#admin_remrepo_set').click(function() { 
+		reset_repo_modal()
+	});
+
+});
+
+function reset_repo_modal(){
+	$('#form_settings').hide()
+	$('#form_opmode').hide()
+	$('#repo_opmode').val("")
+	$('#form_origin').hide()
+	$('#repo_origin').val("")
+	$('#repo_source').val("")
+	
 }
 
 $(document).ready(function() { 

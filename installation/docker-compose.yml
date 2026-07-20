@@ -2,7 +2,7 @@ version: "2.4"
 
 services:
   aida:
-    image: httpd  
+    image: httpd:bullseye  
     build: .
     ports:
       - "80:80"

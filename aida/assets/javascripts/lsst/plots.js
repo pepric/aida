@@ -1446,7 +1446,7 @@ function trend(results, ny, labels) {
 	}
 
 	if(hasdata > 0){  
-      var layout = {
+/*       var layout = {
           xaxis: {
               tickangle : -45,
 			  title : {
@@ -1532,7 +1532,14 @@ function trend(results, ny, labels) {
       ];
 
       Plotly.newPlot(dom, data, layout, {responsive:true, editable:true, displaylogo: false, scrollZoom: true, modeBarButtons: modeBarButtons, displayModeBar : true});
-    }
+     */
+	 
+		var layout = render_layout(xangle=-45)
+		let modeBarButtons = render_modebar("trend_"+fname, true, true, n_exp, labels, results)
+		Plotly.newPlot(dom, data, layout, {responsive:true, editable:true, displaylogo: false, scrollZoom: true, modeBarButtons: modeBarButtons, displayModeBar : true});
+    	 
+	 
+	 }
   
   	return hasdata
 }
@@ -1635,7 +1642,7 @@ function preg_histogram(results, data, label){
 		}		
 	}		
 
-	var layout = {
+/* 	var layout = {
 	  barmode: 'overlay',
 	  bargap : 0,
 	  hovermode: 'closest',
@@ -1711,7 +1718,11 @@ function preg_histogram(results, data, label){
 	  ] 
 	];
     Plotly.newPlot(dom, data, layout, {responsive:true, editable:true, displaylogo: false, scrollZoom: true, modeBarButtons: modeBarButtons, displayModeBar : true});
-	
+ */
+	var layout = render_layout(xangle=0, xtext="", hist=true)
+	let modeBarButtons = render_modebar("pregenerated_histogram_"+fname, true, false, n_exp, labels)
+    Plotly.newPlot(dom, data, layout, {responsive:true, editable:true, displaylogo: false, scrollZoom: true, modeBarButtons: modeBarButtons, displayModeBar : true});
+ 
 }
 
 function histogram(results, ny, labels) {
@@ -1784,8 +1795,12 @@ function histogram(results, ny, labels) {
 			}
 		data.push(trace) 
 		}
+		var layout = render_layout(xangle=0, xtext="", hist=true)
+		let modeBarButtons = render_modebar("histogram_"+fname, true, true, n_exp, labels, JSON.parse(pydata))
 
-		var layout = {
+		Plotly.newPlot(dom, data, layout, {responsive:true, editable:true, displaylogo: false, scrollZoom: true, modeBarButtons: modeBarButtons, displayModeBar : true});
+
+/* 		var layout = {
 		  barmode: 'overlay',
 		  bargap : 0,
 		  hovermode: 'closest',
@@ -1873,7 +1888,7 @@ function histogram(results, ny, labels) {
 
 		Plotly.newPlot(dom, data, layout, {responsive:true, editable:true, displaylogo: false, scrollZoom: true, modeBarButtons: modeBarButtons, displayModeBar : true});
 
-		var tabstats = document.getElementById("tab-stats1")
+ */		var tabstats = document.getElementById("tab-stats1")
 		if(tabstats.style.display == "none"){hide_pdf()}
 	})
 }	
@@ -1907,8 +1922,12 @@ function scatterplot(results, ny, labels) {
 		}
 		data.push(trace)
 	}
-	if(hasdata > 0){	
-      var layout = {
+	if(hasdata > 0){
+		var layout = render_layout(xangle=0, xtext=labels[0])
+		let modeBarButtons = render_modebar("scatter_"+fname, true, true, n_exp, labels, results)	  
+		Plotly.newPlot(dom, data, layout, {responsive:true, editable:true, displaylogo: false, scrollZoom: true, modeBarButtons: modeBarButtons, displayModeBar : true});
+    		
+/*       var layout = {
           xaxis: {
 			  title : {
 				  text : labels[0],
@@ -1994,6 +2013,7 @@ function scatterplot(results, ny, labels) {
 		  ] 
 		];
     Plotly.newPlot(dom, data, layout, {responsive:true, editable:true, displaylogo: false, scrollZoom: true, modeBarButtons: modeBarButtons, displayModeBar : true});
+ */
     }
   
   	return hasdata
@@ -2071,6 +2091,135 @@ function get_now_string(){
 	return new_date
 }
 
+function render_layout(xangle=0,xtext="",hist=true){
+      var layout = {
+          xaxis: {
+			  title : {
+				  font : {
+						family : "Open Sans",
+						size : "12",
+						color: "#000000"
+				  }
+			  }
+          },
+          yaxis: {
+			  title : {
+				  font : {
+						family : "Open Sans",
+						size : "12",
+						color: "#000000"
+				  }
+			  }
+          },		  
+          showlegend : true,
+          legend : {
+
+              x : 0,
+              y : 1,
+              font: {
+                family: 'Open Sans',
+                size: 12,
+                color: '#000',
+              },         
+			  bgcolor: '#E2E2E2',
+			  bordercolor: '#000000',
+			  borderwidth: 0,
+          }
+
+      };
+	
+	if(xangle!=0){
+		layout["xaxis"]["tickangle"]=xangle
+	}
+	if(xtext!=""){
+		layout["xaxis"]["title"]["text"]=xtext
+	}	
+
+	if(hist){
+		layout["barmode"] = 'overlay'
+		layout["bargap"] = 0
+		layout["hovermode"] = 'closest'
+	}
+	
+
+	return layout
+}
+
+
+function render_modebar(fname, showPDF=true, showCSV=true, n_exp=null, labels=null, results=null){
+    var modeBarButtons = [ 
+		[
+			{ 
+				name: 'Download Plot as Image',
+				icon: Plotly.Icons.camera,
+				click: function (gd) {
+					Plotly.downloadImage(gd, {
+					  width: gd._fullLayout.width,
+					  height: gd._fullLayout.height,
+					  filename : fname
+					})
+				}
+			}
+		]
+	]
+
+	if(showPDF){
+		
+		var pdf_btn= [
+			{ 
+				name: 'Save experiment as PDF',
+				icon: Plotly.Icons.disk,
+				click: function(){
+					if(n_exp!=null && labels!=null){
+						select_download_dir("store_pdf", n_exp, labels);
+					}
+					else{
+						alert("Missing information bug. Please contact developers")
+					}
+				}
+			}
+		]
+		
+		modeBarButtons.push(pdf_btn)
+	}
+	
+	if(showCSV){
+		var csv_btn = [
+			{ 
+				name: 'Save results as CSV',
+				icon: csv,
+				click: function(){
+					if(results!=null && labels!=null){
+						save_csv(labels, results);
+					}
+					else{
+						alert("Missing information bug. Please contact developers")
+					}
+				}
+			}
+		]
+		modeBarButtons.push(csv_btn)		
+	}
+
+	var base_btn = ["zoom2d", "pan2d", "select2d", "zoomIn2d", "zoomOut2d", "autoScale2d", "resetScale2d",  "toggleSpikelines", "hoverClosestCartesian", "hoverCompareCartesian"]
+	modeBarButtons.push(base_btn)
+	var custom_btn = [
+        { 
+            name: 'Customize Plot',
+            icon: pencil,
+            click: function(){
+				show_custom_plot();
+            }
+        }
+    ]     
+    modeBarButtons.push(custom_btn)  
+
+	return modeBarButtons
+	
+}
+
+
+
 function render_plot(results, plot, ny, labels, usecase=""){
 	if($('#chartContainer').is(':visible')){hide_custom_plot()}
 	var errstatus = results['errstatus']
@@ -2109,6 +2258,14 @@ function render_plot(results, plot, ny, labels, usecase=""){
 			$("#loader").hide();
 		}
 		if (datastatus == 0){
+/* 			var units = results["units"]
+			
+			for(var i=0;i<units.length;i++){
+				if(units[i] != ""){
+					labels[i] = labels[i]+" ("+units[i]+")"
+				}
+				
+			} */			
 			switch(plot) {
 				case "scatter":
 					hasdata = scatterplot(results, ny, labels);
@@ -2296,3 +2453,273 @@ $(document).keypress(
       event.preventDefault();
     }
 });
+
+function render_plot_offline(response){
+
+	//update title
+	$('#plot-title').text(response['plot_name']);
+	var plot = response['plot_type']
+	var usecase = response['usecase']
+	// get output data
+	var jsondata = JSON.parse(response['plot_data'])
+	
+	if(jsondata["errstatus"]==0){
+			// get labels
+			var labels = response['labels'].split(",")
+			document.getElementById("plot_type").value = plot
+			document.getElementById("modal-labels").value = labels
+			document.getElementById("modal-tstart").value = response['tstart']     
+			document.getElementById("modal-tstop").value = response['tstop']
+			document.getElementById("plotdata").innerHTML = response['plot_data']
+			document.getElementById("usecase").value = usecase
+			// get number of y parameters
+			var ny = labels.length - 1 
+
+			if(plot != "ml"){
+				if(usecase != "pre-generated"){
+					render_plot(jsondata, plot, ny, labels, usecase)
+					//get stats
+					var statres = response['stats_list']
+					var stattype = response['stats_enable']
+					if(stattype != "None"){
+					//visualize stats as tables
+						render_stats(statres, ny, labels, plot, stattype,1)     
+						document.getElementById("stats_results").innerHTML = statres
+						if(usecase != "hktm"){
+							render_files_tbl(jsondata, ny, labels, plot)            
+						}
+						else{
+							$("#tab-files1").css('display', 'none');
+						}
+
+
+					}
+					else{
+						$("#tab-stats1").css('display', 'none');
+						$("#tab-files1").css('display', 'none');
+						var modebar = document.getElementsByClassName("modebar")[0]
+						if(typeof modebar != 'undefined'){
+							modebar.style='display:block;';
+						}
+
+					}
+				}
+				else{
+					render_pregenerated(jsondata, plot, labels[1])
+				}
+			}
+			else{
+				console.log(response)
+				$("#tab-files1").css('display', 'none');
+				var parent = document.getElementById("plot_stats");
+				parent.style="display : flex; flex-wrap : wrap";
+				parent.innerHTML = "";
+				
+				var outdata = JSON.parse(response['stats_list'])
+				ks = Object.keys(outdata)	
+				modelname = outdata['model']
+
+				
+				if (outdata.outputfilename != "None"){
+					var parent2= document.getElementById('linkContainer');
+					document.getElementById('linkContainer').style='display:block; text-align: center;';
+					parent2.setAttribute("class", "col-md-12");
+					parent2.innerHTML="<p><button type='button' class='btn btn-primary' style='font-size: 35px; border-radius: 14px; margin: 20px 0px 40px 0px; width: 210px;' onclick='window.open(\""+outdata.outputfilename+"\")'>Output file</button></p>"
+				}	
+				if (outdata.modelfilename != "None"){
+					var parent2= document.getElementById('linkContainer');
+					parent2.innerHTML+="<p><button type='button' class='btn btn-primary' style='font-size: 35px; border-radius: 14px; width: 210px;' onclick='window.open(\""+outdata.modelfilename+"\")'>Model file</button></p>"
+					}								
+				
+				
+				if (outdata.x_stats != "None"){
+					xname = labels[0];
+					xdata = outdata.x_stats;
+					create_stats_table(xdata, xname + " (Label)", parent, "x_stats");
+				}
+
+				// y0 stats
+				y0name = labels[1]
+				y0data = outdata.y0_stats;
+				create_stats_table(y0data, y0name, parent, "y0_stats");
+				
+				// additional y stats
+				if (ny>1){
+					for (i=1; i<ny; i++){
+						if(plot == "scatter"){
+							var node = document.createElement("div");
+							node.setAttribute("class", "col-md-12");
+							node.setAttribute("style", "font-size:20px; font-weight:bold");
+							var num = i+1
+							node.innerHTML="DATASET "+num.toString()
+							parent.appendChild(node)
+						}
+						
+						name = labels[i+1]
+						data = outdata[ks[i+1]]
+
+						create_stats_table(data, name, parent, "y"+i+"_stats");
+					}
+					
+				}							
+
+
+				
+
+				
+				// Show Stats panel
+				document.getElementById('plot_container').style='display:block;';
+				var statstab = document.getElementById('tab-stats1')
+				var a = statstab.getElementsByTagName("a")[0];
+/* 							statstab.setAttribute("class", "active")
+				document.getElementById('plot_stats').setAttribute("class", "tab-pane active") */
+				a.innerHTML = "Global Statistics"
+
+				display_plot(modelname)
+
+				
+				var pDoc = document.getElementById("plot_tab");
+				parentDiv = pDoc.parentNode;
+				parentDiv.style = 'min-height : 260px; height:auto'
+
+				// Containers size
+				$("#chartContainer").css('height', 'auto');
+				$('#form-div').css('display', 'block');
+				$('#plot_stats').css('display', 'none');
+				$('#plot_files').css('display', 'none');
+				$('#custom_plot').css('display', 'block');
+				var dom = document.getElementById('chartContainer');
+
+
+				// create download stats button
+/* 							var divb = document.createElement("div");
+				divb.setAttribute("class", "col-md-12");
+				divb.setAttribute("style", "margin: 20px 0px; text-align:right");
+				divb.setAttribute("id", "download-btn");
+				parent.appendChild(divb) */
+				
+/* 							var b = document.createElement("button");
+				b.setAttribute("class", "btn btn-primary");
+				b.setAttribute("id", "download_stats");
+				b.setAttribute("onclick", "select_download_dir('store_pdf', 'Statistics', '"+labels+"')");
+				b.innerHTML = "Save Statistics";
+				divb.appendChild(b) */
+				
+				var modebar = document.getElementsByClassName("modebar")[0]
+				if(typeof modebar != 'undefined'){
+					modebar.style='display:block;';
+				}							
+				
+			}
+	}
+	else{
+		var msg = jsondata["msg"].replace(/_RETCHAR_/g,"\n")
+		alert(msg)
+		window.close()
+	}
+  
+	$('#plot_files').css('display', 'none'); 	
+	
+	
+}
+
+function render_ml_offline(response){
+	console.log(response)	
+	//update title
+	$('#plot-title').text("Machine Learning");
+
+	if(response != null){
+/* 		config = JSON.parse(response['config'].replaceAll("'","\"")) */
+		model = response["model"]
+		var labels = response['labels'].split(",")
+		//document.getElementById("plot_type").value = config["model"]
+		document.getElementById("modal-labels").value = labels
+		document.getElementById("modal-tstart").value = response['tstart']     
+		document.getElementById("modal-tstop").value = response['tstop']
+		//document.getElementById("plotdata").innerHTML = response['plot_data']
+		//document.getElementById("usecase").value = usecase
+		// get number of y parameters
+		var ny = labels.length - 1 
+
+		$("#tab-files1").css('display', 'none');
+		var parent = document.getElementById("plot_stats");
+		parent.style="display : flex; flex-wrap : wrap";
+		parent.innerHTML = "";
+				
+		var parent2= document.getElementById('linkContainer');
+		document.getElementById('linkContainer').style='display:block; text-align: center;';
+		parent2.setAttribute("class", "col-md-12");
+		parent2.innerHTML="<p><button type='button' class='btn btn-primary' style='font-size: 35px; border-radius: 14px; margin: 20px 0px 40px 0px; width: 400px;' onclick='window.open(\""+response.outputfile+"\")'>Output file</button></p>"
+
+		var parent2= document.getElementById('linkContainer');
+		parent2.innerHTML+="<p><button type='button' class='btn btn-primary' style='font-size: 35px; border-radius: 14px; margin: 0px 0px 40px 0px; width: 400px;' onclick='window.open(\""+response.modelfile+"\")'>Model file</button></p>"
+
+		parent2.innerHTML+="<p><button type='button' class='btn btn-primary' style='font-size: 35px; border-radius: 14px; width: 400px;' onclick='force_download(\""+response.recapfile+"\")'>Experiment Recap file</button></p>"
+		//Render stats tables
+		stats = JSON.parse(response['stats'].replaceAll("'",'"'))
+		ks = Object.keys(stats)
+	
+		if (stats.x_stats != "None"){
+			xname = labels[0];
+			xdata = stats.x_stats;
+			create_stats_table(xdata, xname + " (Label)", parent, "x_stats");
+		}
+
+		y0name = labels[1]
+		y0data = stats.y0_stats;
+		create_stats_table(y0data, y0name, parent, "y0_stats");
+		
+		// additional y stats
+		if (ny>1){
+			for (i=1; i<ny; i++){
+			
+				name = labels[i+1]
+				ydata = stats[ks[i+1]]
+				create_stats_table(ydata, name, parent, "y"+i+"_stats");
+			}
+			
+		}							
+
+		// Show Stats panel
+		document.getElementById('plot_container').style='display:block;';
+		var statstab = document.getElementById('tab-stats1')
+		var a = statstab.getElementsByTagName("a")[0];
+		a.innerHTML = "Global Statistics"
+		
+		display_plot(model)
+
+				
+		var pDoc = document.getElementById("plot_tab");
+		parentDiv = pDoc.parentNode;
+		parentDiv.style = 'min-height : 260px; height:auto'
+
+		// Containers size
+		$("#chartContainer").css('height', 'auto');
+		$('#form-div').css('display', 'block');
+		$('#plot_stats').css('display', 'none');
+		$('#plot_files').css('display', 'none');
+		$('#custom_plot').css('display', 'block');
+		var dom = document.getElementById('chartContainer');
+
+
+				
+			
+	
+		
+	}
+	else{
+		alert("ERROR! Impossible to perform ML analysis");
+		window.close()
+	}
+
+	
+}
+
+function force_download(url) {
+  const a = document.createElement('a')
+  a.href = url
+  a.download = url.split('/').pop()
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+}

@@ -43,7 +43,8 @@ pypdf2==3.0.1 \
 python-dateutil==2.8.1 \
 reportlab==3.5.67 \
 requests==2.26.0 \
-scikit-learn==0.24.1 \
+#scikit-learn==0.24.1 \
+scikit-learn==1.6.1 \
 scipy==1.6.2 \
 six==1.15.0 \
 sklearn==0.0 \
@@ -52,7 +53,7 @@ threadpoolctl==2.1.0 \
 tinycss2==1.1.0 \
 urllib3==1.26.7 \
 webencodings==0.5.1 \
-pandas \
+#pandas \
 lsst_efd_client
  
 

@@ -501,11 +501,18 @@ class Interfaces(object):
         return result        
         
     def view_plot_from_db(data):
+
         #get plot id        
         plotid = data["plotid"].value
+        exp = data["exptype"].value
+       
         connconfig = util.repConfig().data['local_db']
-        conn = util.connect_db(connconfig)        
-        result = util.db_query(conn, "stored_plots", "*", "WHERE id = "+plotid, res_type="one")               
+        conn = util.connect_db(connconfig)
+        if exp == "ml":
+            tbl = "stored_ml"
+        else:
+            tbl = "stored_plots"
+        result = util.db_query(conn, tbl, "*", "WHERE id = "+plotid, res_type="one")               
 
         return result
         
@@ -541,6 +548,53 @@ class Interfaces(object):
     def update_systems(data):
         out = {"data" : data}
         return data
+
+    def mlstored(*args):
+        data = []
+# #        maindir = "users/report"
+# #        extension = ".pdf"
+        try:
+            #get stored ml list        
+            connconfig = util.repConfig().data['local_db']
+            dbio = dbIO(connconfig)
+            mlexp = dbio.get_ml()
+            #render records
+            restable = []
+            for el in mlexp :
+                eid = el['id']
+              
+                # with open("prova.txt","a") as xx:
+                    # xx.write(str(eid)+" "+str(config)+" "+str(type(config))+"\n")
+
+                tech = el['tech']
+                model = el['model'] 
+
+            
+                source = el['source']
+                ts = el['tstart']
+                te = el['tstop']
+                interval = "["+ts+", "+te+"]"
+                
+                user = el['username']
+                cdate = el['creation']
+
+                modelfilename = el['modelfile']
+                outputfilename = el['outputfile']
+                recapfilename = el['recapfile']
+                view_link = '<a href="'+modelfilename+'" download><img src="assets/images/down_model_min.png" width="30" title="Download Model"/></a>'
+                view_link += '<a href="'+outputfilename+'" download><img src="assets/images/down_csv_min.png" width="30" title="Download Output"/></a>'                
+                view_link += '<a href="'+recapfilename+'" download><img src="assets/images/down_min.png" width="30" title="Download Experiment Recap"/></a>'
+
+                resdict = {'ID' : eid, 'ML Technique' : tech, 'Model' : model, 'Data Source' : source, 'Dates Interval' : interval, 'User' : user, 'Generation Date' : cdate, 'Actions':view_link}
+                restable.append(resdict)
+
+        except Exception as e:
+            # with open("prova.txt","w") as xx:
+                # xx.write(traceback.format_exc())
+            pass
+        out = {"sEcho":1,"iTotalRecords":len(data),"iTotalDisplayRecords":len(restable),"aaData":restable}   
+        return out 
+
 
 def set_status_img(status):
     imgdir = "assets/images/"

@@ -271,6 +271,7 @@ function show_modal($case){
             <div class="col-xs-12"><label class="col-xs-5 control-label ">Reports</label><div class="col-xs-2"><input type="checkbox" id="exp_reports" checked/></div></div>            
             <div class="col-xs-12"><label class="col-xs-5 control-label ">Report Configuration Files</label><div class="col-xs-2"><input type="checkbox" id="exp_repconf" checked/></div></div>
             <div class="col-xs-12"><label class="col-xs-5 control-label ">Stored Experiments</label><div class="col-xs-2"><input type="checkbox" id="exp_stored" checked/></div></div>
+            <div class="col-xs-12"><label class="col-xs-5 control-label ">ML Experiments</label><div class="col-xs-2"><input type="checkbox" id="exp_ml" checked/></div></div> 
             <div class="col-xs-12"><label class="col-xs-5 control-label ">Systems Configurations</label><div class="col-xs-2"><input type="checkbox" id="exp_sys" checked/></div></div>
             <div class="col-xs-12"><label class="col-xs-5 control-label ">History</label><div class="col-xs-2"><input type="checkbox" id="exp_history" checked/></div></div>    
             <div class="col-xs-12"><label class="col-xs-5 control-label ">SMTP settings</label><div class="col-xs-2"><input type="checkbox" id="exp_smtp" checked/></div></div>                

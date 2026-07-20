@@ -226,7 +226,15 @@ if(isset($_POST['action']) && !empty($_POST['action'])) {
 			//$result = get_parameter_group($sys,$origin,$subs);
 			//echo json_encode($result);
 			break; 
-		}		
+		}
+      	case 'ml_to_db':{
+        	$data = $_POST["d"];
+			store_ml_exp($data);
+			//$result = get_parameter_group($sys,$origin,$subs);
+			//echo json_encode($result);
+			break; 
+		}
+		
     }
 }
 
@@ -268,6 +276,10 @@ function remove_configfile_db($filename){
 	mysqli_close($con);
 }
 
+function read_webapp_settings(){
+	$config = read_json_file("settings/webapp.json");	
+	return $config;
+}
 
 function get_plot_title($p){
 
@@ -3057,10 +3069,10 @@ function select_items_json($opmode, $source, $origin){
         $settings = $data[strtolower($source)][$repo][$origin];  
     }  
 	
-	$myfile = fopen("prova.txt", "w") or die("Unable to open file!");
+/* 	$myfile = fopen("prova.txt", "w") or die("Unable to open file!");
 	$txt = $strJsonFileContents;
 	fwrite($myfile, $txt);
-	fclose($myfile);
+	fclose($myfile); */
 	
 	return $settings;
 }
@@ -3706,5 +3718,135 @@ function get_parameter_group($sys, $origin, $subs){
 	echo $out;
 }
 
+function store_ml_exp($data){
+	$con = new_conn_from_file("config.json");
+	$user = $data['username'];
+	$modelfile = $data['modelfile'];
+	$outfile = $data['outfile'];
+	$source = $data['source'];
+	$creation = $data['creation'];
+	$labels = $data['labels'];
+	$ts = $data['ts'];
+	$te = $data['te'];
+	$interval = "[".$ts.", ".$te."]";
+	$config = $data['config'];
+	$config_clean = str_replace("\\", "",$config);
+
+	$p = explode("params", $config_clean);
+	$part1 = $p[0];
+	$part1 = substr($part1, 0, -2);
+	$part1 .= "}";
+	$json_p1 = json_decode($part1,true);
+	
+	$part2 = $p[1];
+	$p_split = explode('","split_rate"', $part2);
+	$p2 = substr($p_split[0], 3);
+	$p3 = '{"split rate"'.$p_split[1];
+	$p3 = str_replace("seed", "random split seed", $p3);
+
+	$json_p3 = json_decode($p3,true);
+	$json_p2 = json_decode($p2,true);
+
+	$stats = $data['stats'];
+
+	$filepieces = explode("/", $modelfile);
+	$mfilemodel = end($filepieces);
+	$mfile = str_replace("model", "recap",$mfilemodel);
+	$mfile = str_replace("joblib", "txt",$mfile);
+	$fname = "users/ml/".$mfile;
+
+	$recapfile = fopen($fname, "w");
+/* 	fwrite($recapfile, $part1."\n");
+	fwrite($recapfile, $p2."\n");
+	fwrite($recapfile, $p3."\n"); */
+	
+	fwrite($recapfile, "ML Experiment Data\n----------------------\n");
+	fwrite($recapfile, "Creation Date : ".$creation."\n");
+	fwrite($recapfile, "User : ".$user."\n");
+	fwrite($recapfile, "Data Source : ".$source."\n");
+	fwrite($recapfile, "Dates Interval : ".$interval."\n\n");
+	
+	fwrite($recapfile, "Configuration\n----------------------\n");
+	
+	$tech = $json_p1["tech"];
+	$model = $json_p1["model"];
+	
+    fwrite($recapfile, "ML Technique : ".$tech."\n");
+    fwrite($recapfile, "Model : ".$model."\n");
+    
+	fwrite($recapfile, "HyperParameters :\n");
+	foreach ($json_p2 as $k=>$v) {
+		fwrite($recapfile, "\t".$k." : ".$v."\n");
+	}
+	$hassplit=0;
+	foreach ($json_p3 as $k=>$v) {
+		if($k == "split rate"){
+			if(intval($v)<100){
+				$v = $v."/".(100-intval($v));
+				$hassplit = 1;
+			}
+			else{
+				$v = "NA";
+			}
+		}
+		if($k == "random split seed"){
+			if($hassplit==1){
+				fwrite($recapfile, "\t".$k." : ".$v."\n");
+			}
+		}
+		else{
+			fwrite($recapfile, "\t".$k." : ".$v."\n");			
+		}
+
+	}	
+		
+    //fwrite($recapfile, "Hyperparameters : ".$json_p1["model"]."\n");	VEDI SPLIT LABELS SOTTO
+	
+	$split_l = explode(",", $labels);
+	$target = $split_l[0];
+	if($target == "undefined.undefined" || $target == "None" || $target=="null.null"){
+        $target = "-";
+	}
+	fwrite($recapfile, "Target : ".$target."\n");
+	fwrite($recapfile, "Features : \n");	
+
+	
+	foreach (array_slice($split_l, 1) as $l) {
+		fwrite($recapfile, "\t".$l."\n");
+	}
+/* 	foreach ($split_l[1] as $l) {
+		  fwrite($recapfile, "\".$l."\n");
+	} */
+
+
+
+
+/*         
+ 
+        f.write("ML Technique : "+tech+"\n")
+        f.write("Model : "+model+"\n")
+        f.write("Hyperparameters : \n")
+        for x, y in model_param.items():
+            f.write("\t"+x+" : "+y+"\n")
+        f.write("Target : "+target+"\n")
+        f.write("Features : \n\t"+features+"\n") */
+	
+	fclose($recapfile);
+	
+	$recapname = str_replace($mfilemodel,$mfile,$modelfile); 
+	
+/* 	$path = str_replace("var/www/html/","",__FILE__);
+	$fullname = str_replace("functions.php",$fname,$path); */
+	
+	
+	$sql="INSERT INTO stored_ml (modelfile, outputfile, recapfile, tech, model, labels, source, username, creation, tstart, tstop, stats ) VALUES ('$modelfile', '$outfile', '$recapname', '$tech', '$model', '$labels', '$source', '$user', '$creation', '$ts', '$te', '$stats')";
+	
+	$result = $con -> query($sql);
+	$id = mysqli_insert_id($con);
+	
+	
+	$con->close();
+	
+}
 
 ?>

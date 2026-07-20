@@ -77,7 +77,8 @@ class FAKE():
         #remote db configuration
         dbconfig = conf.dbconfig
         #if data must be retrieved from files
-        sysclass = classes.sys_inst(source)            
+        sysclass = classes.sys_inst(source)
+        
         if conf.sourcedata['source']=="file":
             try:
                 remconn = util.connect_db(dbconfig)

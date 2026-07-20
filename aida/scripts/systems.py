@@ -127,8 +127,6 @@ class Efd():
                 #define structure for additional parameters
                 add_tpl = "sub.field.par"       #DA VERIFICARE 
                 
-                
-                
                 subsystems_dict = util.get_subsystems_from_file("hktm", self.name, check.connection) 
 
                 #get required filters
@@ -192,317 +190,9 @@ class Efd():
                             checkf =  check.check_exp(s,k,req,k_el,currop, listpar=listpar, extra_tpl=add_tpl)
                             if not checkf['isvalid']:
                                 return checkf                        
-                        
-
-                        
-                    # listpar, listval = self.get_params_list(k, check.connection, "WHERE subsystem='"+req+"'")
-                    # pars, checkpar = check.check_params(s,k,req,listpar=listpar) #pars : parameters to check, listpar : list of all available parameters
-                    # if not checkpar['isvalid']:
-                        # return checkpar
-                    # for p in pars:
-                        # #check operation
-                        # nops, checkop = check.check_op(s,k,req,p)
-                        # if not checkop['isvalid']:
-                            # return checkop
-                        # for i in range(nops):
-                            # currop = "Operation_"+str(i+1)                  
-                            # checkf =  check.check_exp(s,k,req,p,currop, listpar=listpar, extra_tpl=add_tpl)
-                            # if not checkf['isvalid']:
-                                # return checkf
-            # else:
-                # add_tpl = "par"
-                # pars, checkpar = check.check_params(s,k,listpar=listpar) #pars : parameters to check, listpar : list of all available parameters
-                # if not checkpar['isvalid']:
-                    # return checkpar
-                # for p in pars:
-                    # #check operation
-                    # nops, checkop = check.check_op(s,k,p)
-                    # if not checkop['isvalid']:
-                        # return checkop
-                    # for i in range(nops):
-                        # currop = "Operation_"+str(i+1)
-                        # checkf =  check.check_exp(s,k,p,currop, listpar=listpar, extra_tpl=add_tpl)
-                        # if not checkf['isvalid']:
-                            # return checkf                
 
         return {'isvalid':isvalid, 'msg':msg}
 
-    # def copylocal(self, f2use, orig_path, final_path, usecase = "report"):
-        # """ Copy files from local repository to temporary directory
-
-        # Parameters
-        # --------
-            # f2use: list
-                # list of files to copy
-            # orig_path: string
-                # path of local repository (from configuration)
-            # final_path: string
-                # path of destination (temporary path)
-            # usecase : string, optional
-                # experiment from which the call is done ("report", "plot"...), Deafult is "report"
-
-        # Returns
-        # -------
-            # file_ok: boolean
-                # True if all the files in the list f2use have been successfully copied, False otherwise
-
-        # """
-        # orig_path = orig_path.replace("/", sep)
-        # file_ok_arr = []
-        # fullpath = final_path+sep+self.name
-        # for f in f2use:
-            # runid = util.extract_runid(f)
-            # fullname = orig_path + sep+runid + sep + f
-            # if path.isfile(fullname):
-                # copyfile(fullname, fullpath+sep+f)
-            # #check if copy has been completed correctly
-            # if path.isfile(fullpath+sep+f):
-                # file_ok_arr.append(True)
-            # else:
-                # file_ok_arr.append(False)
-        # file_ok = all(file_ok_arr)
-
-        # return file_ok
-
-    # def count_params(self, conf, sub):
-        # """ Return the number of main parameters for the selected sub.
-
-        # Parameters
-        # --------
-            # conf: class
-                # class generate_report.reportConfig() containing report configuration from configuration file
-            # sub : string
-                # second level key ("HKTM"/"SCIENCE") as defined in the report configuration file.
-
-        # Returns
-        # -------
-            # npar : int
-                # number of parameters
-        # """
-
-        # npar = 0
-        # sub_params = conf.repdata[self.source][sub].keys()
-        # npar += len(sub_params)
-        # return npar
-
-    # def db_statement_filelist(self, addstatement, tstart, tstop):
-        # """Set the MYSQL WHERE statement to get the list of files to download from the metadata archive
-
-        # Parameters
-        # --------
-            # addstatement : string
-                # "condition" defined in the system configuration file
-            # tstart : string
-                # start datetime in the form compliant to the metadata db format (YYYY-MM-DD HH:mm:ss)
-            # tstop : string
-                # end datetime in the form compliant to the metadata db format (YYYY-MM-DD HH:mm:ss)
-
-        # Returns
-        # -------
-            # statement: string
-                # MYSQL WHERE statement
-
-        # """
-
-        # statement = "WHERE startdate <= '"+tstop+"' AND enddate >= '"+tstart+"' "+addstatement+" AND swcomponentid <> 1"
-        # return statement
-
-    # def download_file(self, fname, conf, ftp, tmp_dir, repo):
-        # tmppath = tmp_dir+self.name+sep
-        # completed = repo.download_file(fname, tmppath)
-         
-        # return completed
-        
-    # def get_data_from_db(self, data, conf, e):
-        # #Import data parameters
-        # source, plot, n_ypar, tstartdb, tenddb = du.get_base_data(data)
-        # try:
-            # extraf = json.loads(data['extra'].value)
-        # except:
-            # extraf = {}
-
-        # t0 = data['tstart'].value#.replace(" ","T")
-        # t1 = data['tend'].value#.replace(" ","T")
-        
-        # #import y0 parameter data
-        # y0 = du.inData(data,source,"y0")
-        # y0_data = ["y0", y0.sys, y0.par ,y0.row+y0.col,y0.ic]
-        
-        # sql = self.__build_science_query(y0_data, conf["tabname"], t0, t1, extraf, colfile = "FILENAME") 
-
-        # connection = util.connect_db(conf)
-        # with connection.cursor() as cursor:
-            # # Execute query.
-            # cursor.execute(sql)
-            # out_y0 = cursor.fetchall()        
-        
-        # dates=[]
-        # y0_vals = []
-        # flist = []
-        # for item in out_y0:
-            # dates.append(item['timestamp'])
-            # try:            
-                # y0_vals.append(item[y0.par])
-            # except:
-                # y0_vals.append(item[y0.par+"_phys"])
-
-        # # If scatter plot, x param exists
-        # if plot == "scatter":
-            # #Import x parameter data
-            # x = du.inData(data,source,"x")
-            # x_data = ["x", x.sys, x.par,x.row+x.col,x.ic]
-            # out_x_dict = {}
-            # sql = self.__build_science_query(x_data, conf["tabname"], t0, t1, extraf, colfile = "FILENAME") 
-            # with connection.cursor() as cursor:
-                # # Execute query.
-                # cursor.execute(sql)
-                # out_x = cursor.fetchall() 
-
-            # for item in out_x:
-                # curr_d = item['timestamp']
-                # try:            
-                    # curr_val = item[x.par]
-                # except:
-                    # curr_val = item[x.par+"_phys"]
-                # out_x_dict.update({curr_d:curr_val})                                
-                # if curr_d not in dates:
-                    # dates.append(curr_d)
-                    # y0_vals.append(-999)            
-        # #Import additional y data
-        # if n_ypar > 1:
-            # yadd = du.yAdditional(data,source)
-            # yadd_out={}
-            # for i in range(n_ypar-1):
-                # y_add_dates = []
-                # out_yadd_dict = {}
-                # yadd_data = ["y"+str(i+1), yadd.syss[i], yadd.pars[i],"",""]
-
-                # sql = self.__build_science_query(yadd_data, conf["tabname"], t0, t1, extraf, colfile = "FILENAME") 
-                # with connection.cursor() as cursor:
-                # # Execute query.
-                    # cursor.execute(sql)
-                    # curr_out = cursor.fetchall()                 
-
-                # for item in curr_out:
-                    # curr_d = item['timestamp']
-                    # try:            
-                        # curr_val = item[yadd.pars[i]]
-                    # except:
-                        # curr_val = item[yadd.pars[i]+"_phys"]      
-                    # out_yadd_dict.update({curr_d:curr_val})
-                    # if curr_d not in dates:
-                        # dates.append(curr_d)
-                        # y0_vals.append(-999)
-                # yadd_out.update({"y"+str(i+1) : out_yadd_dict})
-        # connection.close()
-        # if len(dates) > 0:
-            # final_files = []
-            # final_dates, final_y0 = (list(t) for t in zip(*sorted(zip(dates, y0_vals))))
-        # else:
-            # final_dates = []
-            # final_y0 = []
-            # final_files = []
-        # # If scatter plot, x param exists
-        # if plot == "scatter":
-            # x_vals = []
-            # for d in final_dates:
-                # try:
-                    # x_vals.append(out_x_dict[d])
-                # except:
-                    # x_vals.append(-999)             
-        # else:
-            # x_vals = [0]*len(final_dates)
-            
-        # not_valid = [final_y0.count(-999) == len(final_y0)]
-        # if len(final_dates) > 0 and x_vals.count(-999) != len(x_vals):
-            # result = {"date" : final_dates, "x" : x_vals, "y0" : final_y0}
-            # if n_ypar > 1:
-                # for y, v in yadd_out.items():
-                    # curr_y = []
-                    # for d in final_dates:
-                        # try:
-                            # curr_y.append(v[d])
-                        # except:
-                            # curr_y.append(-999)
-                    # not_valid.append(curr_y.count(-999) == len(curr_y))
-                    # result.update({y : curr_y})
-            # if all(not_valid):
-                # e.datastatus = 1
-                # result = {}
-        # else:
-            # e.datastatus = 1
-            # result = {}
-
-        # return result      
-    
-    # def get_files2use(self,report_conf, origin, pars, remotelist):
-        # """ Select useful files from the list of all files in the selected period taken from the metadata archive
-
-        # Parameters
-        # --------
-            # report_conf: class
-                # class generate_report.reportConfig() containing report configuration from configuration file
-            # origin: string
-                # second level key ("hktm"/"science") as defined in the system configuration file .conf
-            # pars: list
-                # list of parameters to analyze for the selected system/origin
-            # remotelist: list
-                # list of files to consider in the defined period, obtained from metadata archive
-
-        # Returns
-        # -------
-            # f2use: list
-                # list of files to use for the analysis, after cleaning
-
-        # """
-        # f2use = []
-        # fwithf = []        
-        # f2use_plf = util.get_plf(report_conf.root+sep+origin+"_plf.dat", pars, remotelist)
-        # for f in f2use_plf:
-            # flag_f = f.split("_")[1]
-            # if flag_f == "f":
-                # fwithf.append(f)
-            # else:
-                # f2use.append(f)
-        # for f in fwithf:
-            # f0 = f.replace("_f_","_0_")
-            # pos = np.where(np.array(f2use) == f0)[0]
-            # if len(pos)>0:
-                # i=pos[0]
-                # f2use[i] = f
-              
-        # return f2use
-    
-    # def get_par_info(self, listpar, conn, sub):
-        # """ Retrieve parameters info from AIDA db
-
-        # Parameters
-        # --------
-            # listpar: list
-                # list of main keys parameters for which getting info
-            # conn: class
-                # opened connection to AIDA db
-            # sub: string
-                # second level key ("HKTM"/"SCIENCE") as defined in the report configuration file.
-
-        # Returns
-        # -------
-            # infopar: list of dictionaries
-                # list of dictionaries containing all parameters info directly from AIDA db table "<sub.lower()>_<self.name>_params" (for instance "hktm_nisp_params")
-
-        # """
-
-        # infopar = []
-        # statement = "WHERE "
-        # for i in range(len(listpar)):
-            # if i == 0:
-                # statement += "param = '"+listpar[i]+"'"
-            # else:
-                # statement += " OR param = '"+listpar[i]+"'"
-        # #get parameters info from DB
-        # infopar = util.db_query(conn, sub.lower()+"_"+self.name+"_params", "*", statement, "all")
-
-        # return infopar
 
     def get_params_list(self, subsys, connection, stat=""):
         """ Retrieve the list of all available parameters and (optionally) the related list of values for the selected subsystem from AIDA db
@@ -590,12 +280,17 @@ class Efd():
         t_start = Time(tstart, scale="utc", format="isot")
         t_end = Time(tend, scale="utc", format="isot")
         labels_list = data.getlist('labels[]')
+
+        try:
+            tech = data['tech'].value
+        except:
+            tech = "none"
  
 
         input_dict = {}
         #add x settings for scatter
         label_x = "None"
-        if plot=="scatter":
+        if plot=="scatter" or (plot == "ml" and tech != "cluster"):
             xsys = data['xic'].value             #i.e. MTM2
             xpar = data['xpar'].value             #i.e. ring0
             xsub = data['xsys'].value             #i.e. temperature
@@ -1365,8 +1060,13 @@ class Fake():
             except:
                 y0_vals.append(item[y0.par+"_phys"])
 
+        try:
+            tech = data['tech'].value
+        except:
+            tech = "none"
+
         # If scatter plot, x param exists
-        if plot == "scatter":
+        if plot == "scatter" or (plot=="ml" and tech != "cluster"):
             #Import x parameter data
             x = du.inData(data,source,"x")
             x_data = ["x", x.sys, x.par,x.row+x.col,x.ic]
@@ -1422,7 +1122,7 @@ class Fake():
             final_y0 = []
             final_files = []
         # If scatter plot, x param exists
-        if plot == "scatter":
+        if plot == "scatter" or (plot=="ml" and tech != "cluster"):
             x_vals = []
             for d in final_dates:
                 try:
@@ -1602,8 +1302,13 @@ class Fake():
         #hktm/science
         sub = data['usecase'].value
 
+        try:
+            tech = data['tech'].value
+        except:
+            tech = "none"
+
         # If scatter plot, x param exists
-        if plot == "scatter":
+        if plot == "scatter" or (plot=="ml" and tech != "cluster"):
             #Import x parameter data
             x = du.inData(data,source,"x")
 
@@ -1612,7 +1317,7 @@ class Fake():
 
         listdet = None     
         
-        if plot == "scatter":
+        if plot == "scatter" or (plot=="ml" and tech != "cluster"):
             listsys = [x.sys, y0.sys]       #list of systems for each variable
             listparams = [x.par, y0.par]    #list of params for each variable
             listadu = [x.adu, y0.adu]
@@ -1747,7 +1452,7 @@ class Fake():
                         dates.append(datetime.utcfromtimestamp(k).strftime('%Y-%m-%d %H:%M:%S'))                     
                     else:
                         dates.append(k)
-                    if plot!="scatter":
+                    if plot!="scatter" and plot != "ml":
                         tmp_row.append("0")
                     for i in v:
                         tmp_row.append(str(i))

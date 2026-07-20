@@ -1,3 +1,54 @@
+function run_plot_offline(e){
+	var ny = parseInt($("#n_ypar").val());
+	var system = document.getElementById("hktm_source").value;
+	var plot = $("#plot_type").val()
+
+	var username = document.getElementById("session-user").innerHTML    
+	var stats = $("#stats_enable").val();
+  	var stats_list = get_stats_list()
+	//prepare_data
+	out = prepare_data(ny, plot);
+	params = out[0];
+	ny = out[2]
+	params.isonline = 0
+	params.plot_type = plot
+	params.stats = stats
+	params.stats_list = JSON.stringify(stats_list)
+	params.url = window.location.host
+	labels = out[1];
+	params.labels = labels
+
+	params.model =	document.getElementById("model").value,
+	params.tech =	document.getElementById("technique").value,
+	params.model_param=JSON.stringify(FormDataToJSON(document.getElementById('stats_form'))),
+	params.split=document.getElementById("traintest").value,
+	params.username = document.getElementById("session-user").innerHTML,			
+	params.seed=document.getElementById("splitRandomState").value
+  
+	if(plot == "histogram"){    
+		var binsize = document.getElementById('binsize').value;
+		var bintype = $('input[name=bintype]:checked').val();
+      	params.binsize = binsize
+      	params.bintype = bintype
+    }  
+  
+	pyscript = "scripts/get_data.py"; 
+  	// perform offline analysis
+	$.ajax({
+		type: "POST",
+		url: pyscript,
+		data: params ,
+		dataType: "html",
+		cache: false,
+		async:'asynchronous'
+	});
+	e.preventDefault();
+	
+
+}
+
+
+
 function run_py(e) {
 	var ny = parseInt($("#n_ypar").val());
 	var system = document.getElementById("hktm_source").value;
@@ -5,34 +56,29 @@ function run_py(e) {
 	var stats = $("#stats_enable").val();	
 	var usecase = $("#usecase").val();	
 	var go = true
-
+	const tech = $("#technique").val();
 	
 	if(go==true){
-/* switch(system){
-	
-	case "QLA":
-		out = prepare_data(ny, plot);
-		//out = prepare_data(ny, plot);
-		break;
-	case "NISP":
-		//out = prepare_nisp_data(ny, plot);
-		out = prepare_data(ny, plot);
-		break;
-	
-} */
-
 		out = prepare_data(ny, plot);
 
 		params = out[0];
 		ny = out[2];
-		console.log(params)
+		
 		labels = out[1];
 		var labels = out[1];
 		params.labels = labels;
 		pyscript = "scripts/get_data.py";
-		console.log(params)
+		
 		params.isonline = 1
-		params.plot_type="scatter"
+		params.tech = tech
+		if(tech=="cluster"){
+			params.plot_type="trend"
+		}
+		else
+		{
+			params.plot_type="scatter"
+		}
+		console.log(params)
 		var op = "Machine Learning";
 		$.ajax({
 			
@@ -50,7 +96,7 @@ function run_py(e) {
 			},
 			success: function(returndata){
 				results = JSON.parse(returndata)
-				console.log(results)
+				//console.log(results)
 				document.getElementById("modal-labels").value = labels
 				document.getElementById("modal-tstart").value = params['tstart']     
 				document.getElementById("modal-tstop").value = params['tend']
@@ -65,6 +111,8 @@ function run_py(e) {
 				var warningstatus = results['warningstatus']
 				var datastatus = results['datastatus']
 				var infostatus = results['infostatus']
+				
+				
 				if (errstatus == 1){
 					alert(results['msg']);
 					document.getElementById("plot_container").style=("display : none");
@@ -84,30 +132,82 @@ function run_py(e) {
 					}
 					
 					if (datastatus == 0){
-						switch(plot) {
-							case "ml":
-								scatterplot(returndata, ny, labels);
-								op = "Machine Learning";
-								break;
-							case "trend":
-								trend(returndata, ny, labels);
-								op = "Trend analysis";
-								break;
-							case "histogram":
-								histogram(returndata, ny, labels);
-								op = "Histogram";
-								break;
-						}
-						var modebar = document.getElementsByClassName("modebar")[0]
-						if(typeof modebar != 'undefined'){
-							modebar.style='display:none;';
-						}
-						
-						console.log(stats_list)
-						stat_results=calculate_stats(returndata, ny, plot, stats, labels)
+						var numstatus = 0
+						//check if label are integers in classification exp
+						if(tech=="classifier"){
+							labels_arr = results['x']
+							var i = 0, len = labels_arr.length;
+							var isnum
+							//var num_of_int = 0
+							var nummsg = ""
+							while (i < len) {
+								curr = labels_arr[i]
+								if (typeof curr === 'number') {
+									isnum = Number.isInteger(curr)
+								}						
+								else{
+									const num = Number(curr);
+									isnum = Number.isInteger(num)
+								}
+								if(!isnum){
+									//num_of_int++
+									numstatus = 1
+									nummsg = "Error! Labels for a classifier must be only integers. Chosen Label parameter array contains floats or strings."
+									break;
+								}								
+								i++
+							}
+/* 							if(num_of_int<len){
+								numstatus = 1
+								nummsg = "Error! Labels for a classifier must be only integers. Label parameter contains floats"
+							} */
+							
+						}		
+						if(numstatus == 0){
+							op = "Machine Learning";
+							n_exp = tech
+							display_plot(n_exp)
 
+	/*						var dom = document.getElementById('chartContainer');
+							var modebar = document.getElementsByClassName("modebar")[0]
+							if(typeof modebar != 'undefined'){
+								modebar.style='display:none;';
+							} */
+							
+							//console.log(stats_list)
+							stat_results=calculate_stats(returndata, ny, tech, stats, labels)
+						}
+						else{
+							alert(nummsg);
+							document.getElementById("plot_container").style=("display : none");							
+							
+						}
+					f = labels.slice(1).join(",")
+					if(tech == "cluster"){
+						l = null
+						t = "Clustering"
+					}
+					else {
+						l = params.labels[0]
+						t = String(tech).charAt(0).toUpperCase() + String(tech).slice(1)
+					}
 					
 					//Store data in history
+					/*update history*/
+					out_hist = {
+						"source" : params['source'],
+						"dates range" : "["+params['tstart']+", "+params['tend']+"]",
+						"ML technique" : t,
+						"model" : document.getElementById("model").value,
+						"label" : l,
+						"features" : f
+					}
+					config_hist = {
+						"model paramaters" : FormDataToJSON(document.getElementById('stats_form')),
+						"split (Train/Test)" : document.getElementById("traintest").value+"/"+(100-document.getElementById("traintest").value),
+						"random seed" : document.getElementById("splitRandomState").value
+					}
+
 					$.ajax({
 						type: "POST",
 						url: "functions.php",
@@ -116,8 +216,9 @@ function run_py(e) {
 							username : document.getElementById("session-user").innerHTML,
 							operation : op,
 							infile :	"NA",
-							out	: returndata,
-							config : JSON.stringify(params)
+							out	: JSON.stringify(out_hist),
+							//config : JSON.stringify(params)
+							config : JSON.stringify(config_hist)
 							},
 						error : function (obj, textstatus) {
 							alert("Impossible to store the operation in History")
@@ -141,118 +242,6 @@ function run_py(e) {
 	}
 };	
 
-
-/* function prepare_data(ny,plot){
-	
-	var y0sys = $("#y0-sys").val();
-	
-	var params = {
-				'plot_type' : plot,
-				'ny' : ny,
-				'source': $("#hktm_source").val(),
-				'ysys0' : y0sys,
-				'ypar0' : $("#y0-params").val(),
-				'tstart' : $("#tstart").val(),
-				'tend' : $("#tend").val(),
-				'user' : document.getElementById("session-user").innerHTML,
-				'usecase' : $("#usecase").val()
-			}
-	
-	var det = $("#det-type").val().split(",");
-	if(det[1]!="None"){
-		var yrow = $("#y0-det-row").val()
-		var ycol = $("#y0-det-col").val();
-		params.det_type = det;
-		params.yrow0 = yrow;
-		params.ycol0 = ycol;
-		params.yval0 = $("#y0-values").val();
-		ydetector = collect_detectors(det[1], yrow, ycol, "#y0-quadrant")
-		params.ydet0 = ydetector;
-		// CREATE Y LABEL FOR PLOT
-		y0label = y0sys+"."+ydetector+"."+params.ypar0+"."+params.yval0;
-
-	}
-	else{
-		y0label = y0sys+"."+params.ypar0;
-	}
-	
-	// Create x label and add detector info (if any) if scatter plot 
-	if ((plot == "scatter") || (plot == "ml")){
-		var xsys = $("#x-sys").val();
-		params.xsys = xsys;
-		params.xpar = $("#x-params").val();
- 		if(det[1]!="None"){
-			var xrow = $("#x-det-row").val();
-			var xcol = $("#x-det-col").val();
-			xdetector = collect_detectors(det[0], xrow, xcol, "#x-quadrant");
-			params.xcol = xcol;
-			params.xrow = xrow;
-			params.xval = $("#x-values").val();
-			params.xdet = xdetector;
-			xlabel = xsys+"."+xdetector+"."+params.xpar+"."+params.xval;
-		}
-		else{
-			xlabel = xsys+"."+params.xpar;
-		}
-	}
-	else{
-		xlabel = "None"
-	}	
-
-	labels = [xlabel, y0label];
-	
-	// COLLECT ALL Y PARAMS
-	if (ny>1) {
-		var additional_y_sys = []
-		var additional_y_par = [];
-		var additional_y_val = [];
-		var additional_y_row = [];
-		var additional_y_col = [];
-		var additional_y_det = [];	
-		
-		for (i=1; i<ny; i++){
-			new_y_sys = $("#y"+i+"-sys").val();
-			new_y_par = $("#y"+i+"-params").val();
-			additional_y_sys.push(new_y_sys);
-			additional_y_par.push(new_y_par);
-			//for forms with detectors
-			if(det[1]!="None"){
-				new_y_val = $("#y"+i+"-values").val();
-				new_y_row = $("#y"+i+"-det-row").val();
-				new_y_col = $("#y"+i+"-det-col").val();	
-				additional_y_val.push(new_y_val);
-				additional_y_row.push(new_y_row);
-				additional_y_col.push(new_y_col);
-				// COLLECT DETECTOR PARAMETERS AND CREATE DETECTOR STRING
-				new_ydetector = collect_detectors(det[i+1], new_y_row, new_y_col, "#y"+i+"-quadrant");
-				additional_y_det.push(new_ydetector);
-				//update labels
-				labels.push(new_y_sys+"."+new_ydetector+"."+new_y_par+"."+new_y_val);				
-				
-			}
-			else{		
-				//update labels
-				labels.push(new_y_sys+"."+new_y_par);
-			}
-		}
-		// add to data array
-		params.additional_y_sys = additional_y_sys;
-		params.additional_y_par = additional_y_par;
-		if(det[1]!="None"){
-			params.additional_y_val = additional_y_val;
-			params.additional_y_row = additional_y_row;
-			params.additional_y_col = additional_y_col;
-			params.additional_y_det = additional_y_det;			
-		}
-	
-	}	
-	
-	return [params,labels]
-	
-	
-}
-
- */
 
 function prepare_data(ny,plot){
 	var source_settings ={
@@ -301,7 +290,7 @@ function prepare_data(ny,plot){
 		'pid' : $("#pid").val(),
 	}
 	params.yval0 = $("#y0-values").val();
-	console.log(params)
+
 
 	var toduplicate = {}
 	var det = $("#det-type").val().split(",");
@@ -625,6 +614,69 @@ function prepare_data(ny,plot){
 	return [params,labels,ny]
 }
 
+function get_stats_list(){
+	var stats_data = {}
+	// list of selected stats
+	var stats_list = document.getElementById("stats_list").value;
+	var list_arr = stats_list.split(",")
+	// for each stat
+	for (var i=0; i<list_arr.length-1; i++){
+		// values from form related to the current stat
+		var curr_name = list_arr[i];
+		var curr_func = document.getElementById(curr_name).value;
+		var divmore = document.getElementById("more-"+curr_name);
+		var addmore = parseInt(divmore.getAttribute("addmore"));
+		// get number of config rows if addmore = 1
+ 		if(addmore == 1){
+			var nexp = parseInt(document.getElementById("par-hidden-"+curr_name).value);
+		} 
+		else {
+			var nexp = 0;
+		}
+		// json containing general data about stat parameters
+		var valdiv = divmore.value;
+		// valdiv = "" implies no additional configuration => store stat name and func
+ 		if (valdiv==""){
+			stats_data[curr_name] = curr_func
+		}
+		else{
+			// params is a json containing all the additional configuration parameters
+			var params = {}
+			var jsonval = JSON.parse(valdiv);
+			// names of config parameters
+			var keys = Object.keys(jsonval);
+			var npar = keys.length;
+			// for each configuration row
+			for(var k = 0; k<nexp+1; k++){
+				// for each parameter of each row
+				for(var j=0; j<npar; j++){
+					// general name of parameter from json
+					var curr_id = jsonval[keys[j]]['id'];
+					// if it is the first row, related divs and params do not have the suffix _0
+					var index = "";
+					if(k > 0){
+						index = "_"+k;
+					}
+					// get value from form
+					var expdiv = document.getElementById("par-others-"+curr_name+"_"+k);
+					var expval = $(expdiv).find('#'+curr_id+index).val();						
+					// add key, value to params
+					params[curr_id+index] = expval;
+				}
+			}
+			// append to output json name of function, list of configuraion parameters and number of parameters for each row
+			stats_data [curr_name] = {
+				"func" : curr_func,
+				"params" : params,
+				"npar" : npar
+			}
+		}
+	}
+
+  	return stats_data
+}
+
+
 function set_special_param(divname){
     var div = document.getElementById(divname)
     var val = "None"
@@ -779,105 +831,6 @@ function build_label(pvar, sys, par, adu, source, origin, ic=null, val=null, det
 	return label
 }
 
-
-function prepare_qla_data(ny, plot){
-	var det = $("#det-type").val().split(",");
-	var yrow = $("#y0-det-row").val()
-	var ycol = $("#y0-det-col").val();
-	var y0sys = $("#y0-sys").val();
-
-	// PARAMS FROM FORM
-	var params = {
-				'det_type' : det,
-				'plot_type' : plot,
-				'ny' : ny,
-				'source': $("#hktm_source").val(),
-				'ysys0' : y0sys,
-				'yrow0' : yrow,
-				'ycol0' : ycol,			
-				'ypar0' : $("#y0-params").val(),
-				'yval0' : $("#y0-values").val(),
-				'tstart' : $("#tstart").val(),
-				'tend' : $("#tend").val(),
-				'user' : document.getElementById("session-user").innerHTML,
-				'usecase' : $("#usecase").val()
-
-			}
-
-	// Store x data if scatter plot
-	if ((plot == "scatter") || (plot == "ml")){
-		var xrow = $("#x-det-row").val();
-		var xcol = $("#x-det-col").val();
-		var xsys = $("#x-sys").val();
-		xdetector = collect_detectors(det[0], xrow, xcol, "#x-quadrant");
-		params.xcol = xcol;
-		params.xrow = xrow;
-		params.xsys = xsys;
-		params.xpar = $("#x-params").val();
-		params.xval = $("#x-values").val();
-		params.xdet = xdetector;
-		xlabel = xsys+"."+xdetector+"."+params.xpar+"."+params.xval;
-	}
-	else{
-		xlabel = "None"
-	}
-		
-	
-	
-	// COLLECT DETECTOR PARAMETERS AND CREATE DETECTOR STRING
-	ydetector = collect_detectors(det[1], yrow, ycol, "#y0-quadrant")
-	params.ydet0 = ydetector;
-	
-	
-	// CREATE LABELS FOR PLOT
-	y0label = y0sys+"."+ydetector+"."+params.ypar0+"."+params.yval0;
-	labels = [xlabel, y0label];
-	
-
-	// COLLECT ALL Y PARAMS
-	if (ny>1) {
-		var additional_y_sys = []
-		var additional_y_par = [];
-		var additional_y_val = [];
-		var additional_y_row = [];
-		var additional_y_col = [];
-		var additional_y_det = [];
-		
-		for (i=1; i<ny; i++){
-			new_y_sys = $("#y"+i+"-sys").val();
-			new_y_par = $("#y"+i+"-params").val();
-			new_y_val = $("#y"+i+"-values").val();
-			new_y_row = $("#y"+i+"-det-row").val();
-			new_y_col = $("#y"+i+"-det-col").val();
-			
-			additional_y_sys.push(new_y_sys);
-			additional_y_par.push(new_y_par);
-			additional_y_val.push(new_y_val);
-			additional_y_row.push(new_y_row);
-			additional_y_col.push(new_y_col);
-			// COLLECT DETECTOR PARAMETERS AND CREATE DETECTOR STRING
-			new_ydetector = collect_detectors(det[i+1], new_y_row, new_y_col, "#y"+i+"-quadrant");
-			additional_y_det.push(new_ydetector);
-			//update labels
-			labels.push(new_y_sys+"."+new_ydetector+"."+new_y_par+"."+new_y_val);
-		}
-		// add to data array
-		params.additional_y_sys = additional_y_sys;
-		params.additional_y_par = additional_y_par;
-		params.additional_y_val = additional_y_val;
-		params.additional_y_row = additional_y_row;
-		params.additional_y_col = additional_y_col;
-		params.additional_y_det = additional_y_det;
-	}
-	console.log(params)
-	console.log(labels)
-		
-	return [params,labels]
-
-	
-	
-}
-
 function prepare_nisp_data(ny, plot){
 	var y0sys = $("#y0-sys").val();
 	var det = $("#det-type").val().split(",");
@@ -964,15 +917,25 @@ function display_plot(name){
 	var plotdiv = document.getElementById('tab1')
 	plotdiv.setAttribute("class", "active");
 	var a = plotdiv.getElementsByTagName("a")[0];
-	a.innerHTML = name;
+	a.innerHTML = document.getElementById('model').value;
 	plotdiv.style="display : inline-block";
-	document.getElementById('chartContainer').style='height: 570px; width: 100%; display:block;';
+	//document.getElementById('chartContainer').style='height: 570px; width: 100%; display:block;';
 	var plottab = document.getElementById('plot_tab')
 	//plottab.style='display:block;';
 	plottab.setAttribute("class", "tab-pane active")
 
 }
 
+function FormDataToJSON(FormElement){    
+	var formData = new FormData(FormElement);
+	var ConvertedJSON= {};
+	for (const [key, value]  of formData.entries())
+	{
+		ConvertedJSON[key] = value;
+	}
+
+	return ConvertedJSON
+}
 
 function calculate_stats(pydata, ny, plot, stats, labels){
 	var stats_data = {}
@@ -1038,16 +1001,7 @@ function calculate_stats(pydata, ny, plot, stats, labels){
 		}
 	}
 	
-	function FormDataToJSON(FormElement){    
-		var formData = new FormData(FormElement);
-		var ConvertedJSON= {};
-		for (const [key, value]  of formData.entries())
-		{
-			ConvertedJSON[key] = value;
-		}
 
-		return ConvertedJSON
-	}
 	
 	
 	// input data for Python/CGI
@@ -1084,10 +1038,73 @@ function calculate_stats(pydata, ny, plot, stats, labels){
 				//store stats results in a hidden div
 				var div = document.getElementById('stats_results');
 				div.innerHTML = data;
-				//visualize stats as tables
-				render_stats(data, ny, labels, plot, stats)
+				var results = JSON.parse(data);
+				var mlerror = results["mlerror"]
+				if (mlerror == 1){
+					alert("ERROR! Impossible to perform ML analysis");
+					document.getElementById("plot_container").style=("display : none");
+				}				
+				else{
+					//visualize stats as tables
+					render_stats(data, ny, labels, plot, stats)
+					
+					//store data into db for tables
+					switch(plot){
+					  case "classifier":
+						  t = "Classification"
+						  break;
+					  case "regressor":
+						  t = "Regression"
+						  break;
+					  case "cluster":
+						  t = "Clustering"
+						  break; 						
+					}
+					config = {
+						"tech" : t,
+						"model" : datain['model'],
+						"params" : datain['model_param'],
+						"split_rate" : datain['split'],
+						"seed" : datain['seed']
+					}
+					var strconf = JSON.stringify(config).replaceAll('"','\\"')//.replaceAll('"',"'")
+					statsdata = JSON.parse(data)
+					delete statsdata["outputfilename"]
+					delete statsdata["modelfilename"]
+					delete statsdata["mlerror"]
+					delete statsdata["model"]
+					c = results['modelfilename'].split("model-")[1].split(".")[0].split("-")
+					creation = c[0]+"-"+c[1]+"-"+c[2]+" "+c[3]+":"+c[4]+":"+c[5]
+					dbdata = {
+						"username" : document.getElementById("session-user").innerHTML,
+						"modelfile" : results['modelfilename'],
+						"outfile" : results['outputfilename'],
+						"source" : document.getElementById("hktm_source").value,
+						"creation" : creation,
+						"labels" : labels.toString(),
+						"ts" : document.getElementById("tstart").value,
+						"te" : document.getElementById("tend").value,
+						"config" :  strconf,
+						"stats" : JSON.stringify(statsdata)
+					}
+					
+					$.ajax({
+						type: "POST",
+						url: "functions.php",
+						data: {
+							action: "ml_to_db",
+							d : dbdata
+							},
+						error : function (obj, textstatus) {
+							alert("Impossible to store the experiment into DB")
+							}
+					})
+										
+
+
 				
-				})
+				}
+			})
 			.fail(function(obj, textstatus) {
 							alert("Some error occurred with your model configuration")
 							})
@@ -1107,38 +1124,42 @@ function render_stats(pydata, ny, labels, plot, stats){
 	    ks = Object.keys(results)
 	    
 	    // create stats div
-	    if((plot == "scatter") || (plot == "ml")){
+/* 	    if((plot == "scatter") || (plot == "ml")){
 		    var node = document.createElement("div");
 		    node.setAttribute("class", "col-md-12");
 		    node.setAttribute("style", "font-size:20px; font-weight:bold");
 		    node.innerHTML="DATASET 1"
 		    parent.appendChild(node)
-	    }
-	    
+	    } */
+
 	    // x stats if present
-	    if (results.x_stats != "None"){
+	    if (labels[0] != "null.null" && labels[0] != "undefined.undefined"){
 		    xname = labels[0];
 		    xdata = results.x_stats;
 		    create_stats_table(xdata, xname, parent, "x_stats");
 	    }
 
-
+		console.log(results)
 	    if (results.outputfilename != "None"){
-			console.log(results.outputfilename)
+
 			console.log(results)
     //    	document.getElementById('plot_container').innerHTML += document.write("<a href=\"" + results.outputfilename + "\"><p>output file</p></a>");
             var parent2= document.getElementById('linkContainer');
-		    document.getElementById('linkContainer').style='display:block;';
+		    document.getElementById('linkContainer').style='display:block; text-align: center;';
 		    parent2.setAttribute("class", "col-md-12");
-		    parent2.innerHTML="<a href=\"" + results.outputfilename + "\" style=\"font-size:20px; font-weight:bold\"><p>output file</p></a>"
+		    parent2.innerHTML="<p><button type='button' class='btn btn-primary' style='font-size: 35px; border-radius: 14px; margin: 20px 0px 40px 0px; width: 400px;' onclick='window.open(\""+results.outputfilename+"\")'>Output file</button></p>"
 	    }	
 	    if (results.modelfilename != "None"){
             var parent2= document.getElementById('linkContainer');
-		    parent2.innerHTML+="<a href=\"" + results.modelfilename + "\"style=\"font-size:20px; font-weight:bold\"><p>model file</p></a>"
+		    parent2.innerHTML+="<p><button type='button' class='btn btn-primary' style='font-size: 35px; border-radius: 14px; margin: 0px 0px 40px 0px; width: 400px;;' onclick='window.open(\""+results.modelfilename+"\")'>Model file</button></p>"
 		    }	
 
-	    
-	    
+	    if (results.recapfilename != "None"){
+            var parent2= document.getElementById('linkContainer');
+		    parent2.innerHTML+="<p><button type='button' class='btn btn-primary' style='font-size: 35px; border-radius: 14px; width: 400px;' onclick='force_download(\""+results.recapfilename+"\")'>Experiment Recap file</button></p>"
+		    }
+
+
 	    // y0 stats
 	    y0name = labels[1]
 	    y0data = results.y0_stats;
@@ -1150,25 +1171,25 @@ function render_stats(pydata, ny, labels, plot, stats){
 	    if (ny>1){
 		    for (i=1; i<ny; i++){
 			    
-				    if ((plot == "scatter") || (plot == "ml")){ 
+/* 				    if ((plot == "scatter") || (plot == "ml")){ 
 				    var node = document.createElement("div");
 				    node.setAttribute("class", "col-md-12");
 				    node.setAttribute("style", "font-size:20px; font-weight:bold");
 				    var num = i+1
 				    node.innerHTML="DATASET "+num.toString()
 				    parent.appendChild(node)
-			    }
+			    } */
 			    
 			    name = labels[i+1]
 			    data = results[ks[i+1]]
 			    
-			    if ((plot == "scatter") || (plot == "ml")){
+/* 			    if ((plot == "scatter") || (plot == "ml")){
 
 				    xname = labels[0];
 				    xdata = results[ks[i+ny]];
     //				console.log(xdata)
 				    create_stats_table(xdata, xname, parent, "x_stats"+i);
-			    }
+			    } */
 			    create_stats_table(data, name, parent, "y"+i+"_stats");
 			    //console.log(name)
 			    //console.log(data)
@@ -1186,18 +1207,18 @@ function render_stats(pydata, ny, labels, plot, stats){
 	    a.innerHTML = stats.charAt(0).toUpperCase() + stats.slice(1)+" Statistics";;
 
 	    // create download stats button
-	    var divb = document.createElement("div");
+/* 	    var divb = document.createElement("div");
 	    divb.setAttribute("class", "col-md-12");
 	    divb.setAttribute("style", "margin: 20px 0px; text-align:right");
 	    divb.setAttribute("id", "download-btn");
-	    parent.appendChild(divb)
+	    parent.appendChild(divb) */
 	    
-	    var b = document.createElement("button");
+/* 	    var b = document.createElement("button");
 	    b.setAttribute("class", "btn btn-primary");
 	    b.setAttribute("id", "download_stats");
 	    b.setAttribute("onclick", "select_download_dir('store_pdf', 'Statistics', '"+labels+"')");
 	    b.innerHTML = "Save Statistics";
-	    divb.appendChild(b)
+	    divb.appendChild(b) */
 	    
 	    if(plot!="stats"){
 		    $('#plot_stats').css('display', 'none');
@@ -1276,7 +1297,23 @@ var csv = {
 	width:875,height:1e3, path:"M0,22.261v467.478h512V22.261H0z M155.826,456.348H33.391v-77.913h122.435V456.348z M155.826,345.043H33.391V267.13	h122.435V345.043z M155.826,233.739H33.391v-77.913h122.435V233.739z M322.783,456.348H189.217v-77.913h133.565V456.348z M322.783,345.043H189.217V267.13h133.565V345.043z M322.783,233.739H189.217v-77.913h133.565V233.739z M478.609,456.348H356.174 v-77.913h122.435V456.348z M478.609,345.043H356.174V267.13h122.435V345.043z M478.609,233.739H356.174v-77.913h122.435V233.739z M478.609,122.435H33.391V55.652h445.217V122.435z", transform:"scale(1.8, 1.9)"
 };
 
-
+$("input[type='radio'][name=optflag]").change(function(){
+	$('#description').html('');
+	if($(this).val()!="nd")
+	{
+		populate_flags();
+		$("#description").show();
+		$("#parflag").show();
+		$("#alert-email").show();
+	}
+	else
+	{
+		$("#description").hide();
+		$("#parflag").hide();
+		$("#email-to").val('')
+		$("#alert-email").hide();
+	}
+});
 
 function trend(pydata, ny, labels) {
 
@@ -1847,4 +1884,48 @@ function onclick_stats(){
   $('#custom_plot').css('display', 'none');   
 } 
 
+function populate_ml(ml){
+	//console.log(ml)
+	$.ajax({
+			   method:"POST",
+			   url: 'scripts/listMlModels.py',
+			   data:{
+				   ml_type : ml
+			   }
+			})
+			.success(function(resultdata){
+				error = resultdata["error"]
+				if(error==1){
+					out = '<label class="col-md-2 control-label">Machine Learning Model</label><p>'+resultdata["out"]+'</p>'
+				}
+				else{
+					//console.log(resultdata["out"])
+					out = '<label class="col-md-2 control-label">Machine Learning Model</label><select name="model" id="model">'
+					for (var i=0; i<resultdata["out"].length; i++){
+/* 						var option = document.createElement("option");
+option.text = "Text";
+option.value = "myvalue";
+var select = document.getElementById("id-to-my-select-box");
+select.appendChild(option); */
+						out += '<option value="'+resultdata["out"][i]+'">'+resultdata["out"][i]+'</option>'
+					}
+					out+='</select>'
+					
+					out+='<button class="btn btn-primary" formaction="modelHelp.php" id="submit_button" formtarget="_blank" style="margin-left: 5px;">Help</button>'
+					$('#submit_button').show();
+					$('#ml_model_div').html(out)
+					$('#ml_model_div').show();
+				}
+				
+			})
 
+}
+
+function force_download(url) {
+  const a = document.createElement('a')
+  a.href = url
+  a.download = url.split('/').pop()
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+}

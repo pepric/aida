@@ -29,6 +29,11 @@
 				<li>
 					<a href="#anomalies-panel" data-toggle="tab">Stored Experiments</a>
 				</li>              
+				<li>
+					<a href="#ml-stored" data-toggle="tab">Machine Learning Experiments</a>
+				</li>  
+				
+				
 				<?php if ($_SESSION["role"]=="admin"){?>
 					<li>
 						<a href="#admin-users-panel" data-toggle="tab">Administration - Users</a>
@@ -55,7 +60,11 @@
 			<div class="tab-pane" id="anomalies-panel">
 				<?php include("anomalies-panel.php");?>
 
-			</div>          
+			</div>
+			<div class="tab-pane" id="ml-stored">
+				<?php include("ml-stored.php");?>
+			</div> 
+			
 			<?php if ($_SESSION["role"]=="admin"){?>
 				<div id="admin-users-panel" class="tab-pane">
 					<?php include("admin-users-panel.php");?>

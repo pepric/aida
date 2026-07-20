@@ -8,7 +8,10 @@
 	?>
 
 	<?php include("footer.php"); ?>
-			
+
+
+
+		
 		<!-- Vendor-->
 		<script src="assets/vendor/jquery/jquery.js"></script> 
 		<script src="assets/vendor/jquery-browser-mobile/jquery.browser.mobile.js"></script>
@@ -20,6 +23,13 @@
 		<script src="assets/vendor/magnific-popup/magnific-popup.js"></script>
 		<script src="assets/vendor/jquery-placeholder/jquery.placeholder.js"></script>
 	<?php include("form_scripts.html"); ?>
+	
+	
+		<script src="assets/vendor/jquery-datatables/media/js/jquery.dataTables.js"></script>
+		<script src="assets/vendor/jquery-datatables/extras/TableTools/js/dataTables.tableTools.min.js"></script>
+		<!--<script src="assets/vendor/jquery-datatables-bs3/assets/js/datatables.js"></script>-->
+		<script src="assets/vendor/DataTables/datatables.min.js"></script>
+	
 		<!-- Form
 		<script src="assets/vendor/select2/select2.js"></script>
 		<script src="assets/vendor/bootstrap-multiselect/bootstrap-multiselect.js"></script>

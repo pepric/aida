@@ -12,7 +12,12 @@
 					<div class = "col-md-2"></div>
 					<div class = "description col-md-8">
 					<!--	<p style="margin-top:20px"><img src="assets/images/logoAIDA.png" height="150" alt="" /></p>-->
-						<h2>What is AIDA?</h2>
+						<p style="margin-top:20px">
+							<img src="assets/images/logo_aida.png" height="100" alt="" />
+							<img src="assets/images/vera.png" height="100" alt="" />
+							<img src="assets/images/lsstback2.png" height="100" alt="" />
+						</p>
+						<h2>Welcome to AIDA <?php echo "v".$webapp_settings["version"];?></h2>
 						<p>AIDA is a Rubin LSST monitoring, analysis & visualization web app fully accessible through network connection</p>
 					</div>
 					<div class = "col-md-2"></div>

@@ -10,27 +10,30 @@ import cgi, cgitb
 #cgitb.enable()  # for troubleshooting
 import functions as util
 from iotstats   import Data
+from datetime import datetime
+import traceback
+import pandas as pd
 
-
-def data_to_db(filename, filepath, username, date_exp, ext, filetype, status_exp, comment_exp):
-#    logFileSql=open("/data/exp/www/aida/logSQL.txt","w")
-#    logFileSql.write("Open connection\n")
-    conf = util.repConfig()
-    connection = util.connect_db(conf.data['local_db'])
-#    logFileSql.write("conn aperta\n")   
-    sql = "INSERT INTO user_files (filename, filepath, username, date_exp, ext, filetype, status_exp, comment_exp) VALUES ('"+filename+"', '"+filepath+"', '"+username+"', '"+date_exp+"', '"+ext+"', \""+filetype+"\", \""+status_exp+"\", \""+comment_exp+"\")"
-#    logFileSql.write(sql+"\n")
-    if sql!="":
-        with connection.cursor() as cursor:
-            cursor.execute(sql)
-        connection.commit()
-    connection.close()
-#    logFileSql.write("All done\n")
+# def data_to_db(filename, filepath, username, date_exp, parinfo, source):
+# #    logFileSql=open("/data/exp/www/aida/logSQL.txt","w")
+# #    logFileSql.write("Open connection\n")
+    # conf = util.repConfig()
+    # connection = util.connect_db(conf.data['local_db'])
+# #    logFileSql.write("conn aperta\n")   
+    # sql = "INSERT INTO user_files (filename, filepath, username, date_exp, ext, filetype, status_exp, comment_exp, parinfo, sourcename) VALUES ('"+filename+"', '"+filepath+"', '"+username+"', '"+date_exp+"', '', 'ml', '', '', '"+parinfo+"', '"+source+"')"
+# #    logFileSql.write(sql+"\n")
+    # if sql!="":
+        # with connection.cursor() as cursor:
+            # cursor.execute(sql)
+        # connection.commit()
+    # connection.close()
+# #    logFileSql.write("All done\n")
 
 
 def calc_stat(datain, stats):
+ 
     data = Data(datain)
-    
+        
     res_dict = {}
     for name, curr_conf in stats.items():
         if type(curr_conf) == str:
@@ -72,7 +75,208 @@ def calc_stat(datain, stats):
 
     return(res_dict)
 
-def main(data, nthreads):
+# def main_ORIG(data, nthreads):
+
+    # ################ ONLY FOR DEBUG
+    # #inputdata = {"date":["2019-04-02T00:00:00","2019-04-03T00:00:00","2019-04-04T00:00:00","2019-04-05T00:00:00","2019-04-06T00:00:00","2019-04-07T00:00:00","2019-04-08T00:00:00","2019-04-09T00:00:00","2019-04-10T00:00:00","2019-04-11T00:00:00","2019-04-12T00:00:00","2019-04-13T00:00:00","2019-04-14T00:00:00","2019-04-15T00:00:00","2019-04-16T00:00:00","2019-04-17T00:00:00","2019-04-18T00:00:00"],"x":["0.0","0.0","0.0","0.0","0.0","0.0","0.0","0.0","0.0","0.0","0.0","0.0","0.0","0.0","0.0","0.0","0.0"],"y0":["69.21638615708184","66.90556109487454","74.86118241313928","71.6018307941061","67.81558432328869","60.09820784655503","57.408907477035314","56.09788043084232","60.74220931535447","58.2045622334014","60.949381362632735","61.733764651602804","73.47909124804964","68.19246446907782","79.29795339446473","79.2173762510978","85.02872002141123"],"y1":["26.19946778456455","24.740152103656357","25.942341677301876","25.01894580068024","25.339957672764275","27.35162662005517","29.627224389818927","30.60641279251202","28.615047863502838","25.91886894195879","24.17286993421325","22.209690482642966","20.98046994535836","19.962610264943457","20.71634789245237","20.512296870267498","20.606760793675477"]}
+    
+    # #ny = 2
+    # #plot = "stats"
+    # #stats = "advanced"
+    # ################
+    
+    
+    # inputdata = json.loads(data['inputdata'].value)
+    # ny = int(data['ny'].value)
+    # plot = data["plot_type"].value
+    # stats = data["stats_type"].value    
+
+    # if stats == "global" :
+        # conf = util.repConfig()
+        # connection = util.connect_db(conf.data['local_db'])
+        # query_globals = util.db_query(connection, "statistics", "stat_name, stat_function", "WHERE stat_type='global'")
+        # stats_config = {}
+        # for item in query_globals:
+            # stats_config.update({item['stat_name'] : item['stat_function']})
+    # elif stats == "advanced" : 
+        # ################ ONLY FOR DEBUG
+        # #stats_config= {"Min":"dqc_min","Max":"dqc_max","Percentile":{"func":"dqc_percentile","params":{"q":"50","interpolation":"linear","q_1":"50","interpolation_1":"linear"},"npar":2},"Sigma_Clip":{"func":"dqc_sigma_clip","params":{"sigma":"3","function":"mean"},"npar":2}}
+        
+        # stats_config = json.loads(data['stats_config'].value)
+
+    # result = {}
+    # resultx = {}
+    # # Calculate statistics
+    # toremove_x=np.array([], dtype=int)
+    
+    # # x data if existing
+    # if plot != "cluster":
+        # datax = np.array(inputdata["x"], dtype = float)
+        # toremove_x = np.where(datax == -999)[0]
+
+    # # y0 data
+    # datay0 = np.array(inputdata["y0"], dtype = float)
+    # toremove_y = np.where(datay0 == -999)[0]
+
+    # toremove = np.append(toremove_x, toremove_y)
+    # toremove = np.asarray(toremove, dtype="int")
+   
+    
+    # if plot != "cluster":
+        # if len(toremove) > 0:      
+            # datax0 = np.delete(datax, toremove)
+        # else:
+            # datax0 = datax
+        # stats_x = calc_stat(datax0, stats_config)
+        # result.update({"x_stats" : stats_x})    
+    # else:
+        # result.update({"x_stats" : "None"})
+    
+    # if len(toremove) > 0:
+        # datay0 = np.delete(datay0, toremove)
+    # stats_y0 = calc_stat(datay0, stats_config)
+    # result.update({"y0_stats" : stats_y0})
+ 
+  
+    # # a=open("infoml.txt", "a")
+    # # a.write(data['stats_config'].value+"\n")
+    # # a.write(data['inputdata'].value+"\n")
+
+    # dataFeat=np.zeros((len(inputdata['y0']),ny))
+    # dataLabel=np.array(inputdata["x"], dtype = float)
+    
+    # # additional y data
+    # if ny > 1:
+        # dataFeat=np.zeros((len(inputdata['y0']),ny))
+        # for i in range(ny-1):
+            
+            # dataFeat[:,i+1]=np.array(inputdata["y"+str(i+1)], dtype = float)
+            # datay = np.array(inputdata["y"+str(i+1)], dtype = float)
+            # toremove_y = np.where(datay == -999)[0]
+            # toremove = np.append(toremove_x, toremove_y)
+            # toremove = np.asarray(toremove, dtype="int")
+            # if plot != "cluster":
+                # if len(toremove) > 0:              
+                    # dataxi = np.delete(datax, toremove)
+                # else:
+                    # dataxi = datax
+                # stats_x = calc_stat(dataxi, stats_config)
+                # resultx.update({"x_stats"+str(i+1) : stats_x})  
+            # else: 
+                # result.update({"x_stats" : "None"})
+            # if len(toremove) > 0:                
+                # datay = np.delete(datay, toremove)
+            # stats_y = calc_stat(datay, stats_config)
+            # result.update({"y"+str(i+1)+"_stats" : stats_y})    
+  
+    # modelname=data['model'].value
+    # # a.write(modelname+"\n")
+    # username=data['username'].value     
+    # # a.write(username+"\n")
+    # # a.write("Boh\n")
+  
+    # from sklearn.utils import all_estimators
+    # estimators = all_estimators()
+     
+    # def tryeval(val):
+        # try:
+            # val = ast.literal_eval(val)
+        # except ValueError:
+            # pass
+        # except SyntaxError:
+            # val = str(val)
+        # return val
+ 
+    # kwargs=json.loads(data['model_param'].value)
+    # # a.write(str(kwargs)+"\n")  
+    # for key in kwargs.keys():
+        # # a.write(str(key)+"----------")
+        # kwargs[key]=tryeval(kwargs[key])
+        # # a.write(str(kwargs[key])+"\n")  
+    # try:
+        # for name, class_ in estimators:
+            # if name==modelname:
+                # modelObj=class_(**kwargs)
+                # break
+        # # a.write(data['split'].value+' \n')
+        # splitRate=int(data['split'].value)/100
+        # # a.write(str(splitRate)+'\n')
+        # try:
+            # seedSplit=int(data['split'].value)
+        # except:
+            # seedSplit=None
+        # # a.write(str(seedSplit)+'\n')
+        # if splitRate==1:
+            # # a.write('sr=1\n')
+            # dataFeatTrain=dataFeat
+            # dataFeatTest=dataFeat
+            # dataLabelTrain=dataLabel
+            # dataLabelTest=dataLabel
+        # else:
+            # # a.write(str(splitRate)+'sr!=1\n')
+            # from sklearn.model_selection import train_test_split
+            # dataFeatTrain, dataFeatTest, dataLabelTrain, dataLabelTest=  train_test_split(dataFeat, dataLabel, random_state=seedSplit, train_size=splitRate)
+            
+        # # a.write('datasetsplittato\n')
+        # # a.write(str(dataFeatTrain.shape)+" " +str(dataLabelTrain.shape)+" " +"\n")
+        # try:
+            # modelObj.fit(dataFeatTrain,dataLabelTrain)
+            # # a.write('trained\n')
+        # except Exception as err:
+            # pass
+            # # a.write(str(err))
+        
+        # dataOut=np.zeros((dataLabelTest.shape[0],3))
+        # # a.write('outputbase\n')
+
+        # dataOut[:,0]=dataLabelTest
+        # # a.write('outputprimacol\n')
+        # predicted=modelObj.predict(dataFeatTest)
+        # dataOut[:,1]=predicted
+        # # a.write('\n\n\n'+str(predicted.shape)+" "+str(dataLabelTest.shape)+'\n\n\n')
+        # dataOut[:,2]=dataLabelTest-predicted
+        
+        # from joblib import dump, load
+        # now = util.utc_now()
+        # # a.write("utcnow\n")
+        # creation = now.strftime("%Y-%m-%d-%H-%M-%S")
+        
+        # # a.write(creation+"\n")
+        # iodadir=(os.path.dirname(os.path.realpath(__file__)).replace("scripts",""))+'users'+os.sep+username+os.sep
+        # modelfilename=modelname+"-model-"+creation+'.joblib'
+        # # a.write(modelfilename+"\n")
+        # outputfilename=modelname+"-output-"+creation+'.csv'
+        # # a.write(outputfilename+"\n")
+
+
+        # np.savetxt(iodadir+outputfilename,dataOut,delimiter=',', header="target,output,difference")
+        # dump(modelObj, iodadir+modelfilename)
+        # # a.write("db call 1\n")
+# # #        data_to_db(outputfilename, username, username, creation, 'csv', 'data', 'ok', 'ok')
+        # # a.write("db call 2\n")
+# # #        data_to_db(modelfilename, username, username, creation, 'joblib', 'model', 'ok', str(ny))               
+        # # a.write("db done 1\n")
+        # webdir = iodadir.replace("var/www/html/","")
+        # result.update({"outputfilename" : webdir+outputfilename})
+        # result.update({"modelfilename" : webdir+modelfilename})
+
+        
+        
+    # except Exception as err:
+        # errfile=open(os.path.dirname(os.path.realpath(__file__)).replace("scripts","")+"errlog.txt", "w")
+        # errfile.write("error!" + str(err)+"\n")
+        
+        # errfile.close()
+
+    # result.update(resultx)
+    # result = str(result).replace("'",'"')
+    # print(result)
+    # # a.write(result)
+    # # a.close()
+    
+    
+    
+def do_calculation(data, inputdata, plot, stats_config, ny):
 
     ################ ONLY FOR DEBUG
     #inputdata = {"date":["2019-04-02T00:00:00","2019-04-03T00:00:00","2019-04-04T00:00:00","2019-04-05T00:00:00","2019-04-06T00:00:00","2019-04-07T00:00:00","2019-04-08T00:00:00","2019-04-09T00:00:00","2019-04-10T00:00:00","2019-04-11T00:00:00","2019-04-12T00:00:00","2019-04-13T00:00:00","2019-04-14T00:00:00","2019-04-15T00:00:00","2019-04-16T00:00:00","2019-04-17T00:00:00","2019-04-18T00:00:00"],"x":["0.0","0.0","0.0","0.0","0.0","0.0","0.0","0.0","0.0","0.0","0.0","0.0","0.0","0.0","0.0","0.0","0.0"],"y0":["69.21638615708184","66.90556109487454","74.86118241313928","71.6018307941061","67.81558432328869","60.09820784655503","57.408907477035314","56.09788043084232","60.74220931535447","58.2045622334014","60.949381362632735","61.733764651602804","73.47909124804964","68.19246446907782","79.29795339446473","79.2173762510978","85.02872002141123"],"y1":["26.19946778456455","24.740152103656357","25.942341677301876","25.01894580068024","25.339957672764275","27.35162662005517","29.627224389818927","30.60641279251202","28.615047863502838","25.91886894195879","24.17286993421325","22.209690482642966","20.98046994535836","19.962610264943457","20.71634789245237","20.512296870267498","20.606760793675477"]}
@@ -81,191 +285,229 @@ def main(data, nthreads):
     #plot = "stats"
     #stats = "advanced"
     ################
-    
-    
-    inputdata = json.loads(data['inputdata'].value)
-    ny = int(data['ny'].value)
-    plot = data["plot_type"].value
-    stats = data["stats_type"].value    
-
-    if stats == "global" :
-        conf = util.repConfig()
-        connection = util.connect_db(conf.data['local_db'])
-        query_globals = util.db_query(connection, "statistics", "stat_name, stat_function", "WHERE stat_type='global'")
-        stats_config = {}
-        for item in query_globals:
-            stats_config.update({item['stat_name'] : item['stat_function']})
-    elif stats == "advanced" : 
-        ################ ONLY FOR DEBUG
-        #stats_config= {"Min":"dqc_min","Max":"dqc_max","Percentile":{"func":"dqc_percentile","params":{"q":"50","interpolation":"linear","q_1":"50","interpolation_1":"linear"},"npar":2},"Sigma_Clip":{"func":"dqc_sigma_clip","params":{"sigma":"3","function":"mean"},"npar":2}}
-        
-        stats_config = json.loads(data['stats_config'].value)
+    # with open("prova.txt","w") as xx:
+        # xx.write(str(data))    
 
     result = {}
     resultx = {}
     # Calculate statistics
-    toremove_x=np.array([])
+    toremove_x=np.array([], dtype=int)
+    dataDate = np.array(inputdata["date"])
     
     # x data if existing
-    if plot == "ml":
+    if plot != "cluster":
         datax = np.array(inputdata["x"], dtype = float)
         toremove_x = np.where(datax == -999)[0]
+        
 
     # y0 data
     datay0 = np.array(inputdata["y0"], dtype = float)
     toremove_y = np.where(datay0 == -999)[0]
 
     toremove = np.append(toremove_x, toremove_y)
- 
-    if plot == "ml":
-        if len(toremove) > 0:      
-            datax0 = np.delete(datax, toremove)
-        else:
-            datax0 = datax
-        stats_x = calc_stat(datax0, stats_config)
-        result.update({"x_stats" : stats_x})    
-    else:
-        result.update({"x_stats" : "None"})
-    
-    if len(toremove) > 0:
-        datay0 = np.delete(datay0, toremove)
-    stats_y0 = calc_stat(datay0, stats_config)
-    result.update({"y0_stats" : stats_y0})
-   
-    a=open("infoml.txt", "a")
-    a.write(data['stats_config'].value+"\n")
-    a.write(data['inputdata'].value+"\n")
 
-    dataFeat=np.zeros((len(inputdata['y0']),ny))
-    dataLabel=np.array(inputdata["x"], dtype = float)
-    
-    # additional y data
+    datay_full = np.zeros((len(datay0),ny))
+    datay_full[:,0] = datay0
+
+    # append toremove_yi to toremove for additional y data
     if ny > 1:
-        dataFeat=np.zeros((len(inputdata['y0']),ny))
         for i in range(ny-1):
-            
-            dataFeat[:,i+1]=np.array(inputdata["y"+str(i+1)], dtype = float)
             datay = np.array(inputdata["y"+str(i+1)], dtype = float)
-            toremove_y = np.where(datay == -999)[0]
-            toremove = np.append(toremove_x, toremove_y)
-            if plot == "ml":
-                if len(toremove) > 0:              
-                    dataxi = np.delete(datax, toremove)
-                else:
-                    dataxi = datax
-                stats_x = calc_stat(dataxi, stats_config)
-                resultx.update({"x_stats"+str(i+1) : stats_x})  
-            else: 
-                result.update({"x_stats" : "None"})
-            if len(toremove) > 0:                
-                datay = np.delete(datay, toremove)
-            stats_y = calc_stat(datay, stats_config)
-            result.update({"y"+str(i+1)+"_stats" : stats_y})    
+            datay_full[:,i+1] = datay
+            toremove_yi = np.where(datay == -999)[0]
+            toremove = np.append(toremove, toremove_yi)
+    toremove = np.unique(toremove)
+    # toremove = np.asarray(toremove, dtype="int")    
+
+    if len(toremove) > 0:
+        if plot != "cluster":
+            datax_clean = np.delete(datax, toremove)
+            stats_x = calc_stat(datax_clean, stats_config)
+            result.update({"x_stats" : stats_x})
+        datay_clean = np.delete(datay_full, toremove, axis=0)
+        datadate_clean = np.delete(dataDate, toremove)
+    else:
+        if plot != "cluster":
+            datax_clean = datax
+        datay_clean = datay_full
+        datadate_clean = dataDate         
+        
+    #calculate stats
+    if plot != "cluster":
+        stats_x = calc_stat(datax_clean, stats_config)
+        result.update({"x_stats" : stats_x})
+        dataLabel = datax_clean
+    else:
+        dataLabel = np.zeros(len(datay_clean))
+        result.update({"x_stats" : "None"})        
+        
+    for i in range(ny):    
+        stats_y = calc_stat(datay_clean[:,i], stats_config)
+        result.update({"y"+str(i)+"_stats" : stats_y})
+    
+    if ny > 1:
+        dataFeat = datay_clean
+    else:
+        dataFeat = datay_clean[:,0]
   
     modelname=data['model'].value
-    a.write(modelname+"\n")
+    # a.write(modelname+"\n")
     username=data['username'].value     
-    a.write(username+"\n")
-    a.write("Boh\n")
+    # a.write(username+"\n")
+
   
     from sklearn.utils import all_estimators
-    a.write("Boh\n")
     estimators = all_estimators()
-    a.write("Boh\n")
      
     def tryeval(val):
         try:
             val = ast.literal_eval(val)
         except ValueError:
             pass
+        except SyntaxError:
+            val = str(val)
         return val
-    a.write("Boh\n")    
+ 
     kwargs=json.loads(data['model_param'].value)
-    a.write("Boh\n")
+    # a.write(str(kwargs)+"\n")  
     for key in kwargs.keys():
+        # a.write(str(key)+"----------")
         kwargs[key]=tryeval(kwargs[key])
+        # a.write(str(kwargs[key])+"\n")  
     try:
-        a.write("Boh2\n")
         for name, class_ in estimators:
             if name==modelname:
                 modelObj=class_(**kwargs)
                 break
-        a.write(data['split'].value+' \n')
-        
+        # a.write(data['split'].value+' \n')
         splitRate=int(data['split'].value)/100
-        a.write(str(splitRate)+'\n')
+        # a.write(str(splitRate)+'\n')
         try:
             seedSplit=int(data['split'].value)
         except:
             seedSplit=None
-        a.write(str(seedSplit)+'\n')
+        # a.write(str(seedSplit)+'\n')
         if splitRate==1:
-            a.write('sr=1\n')
+            # a.write('sr=1\n')
             dataFeatTrain=dataFeat
             dataFeatTest=dataFeat
             dataLabelTrain=dataLabel
             dataLabelTest=dataLabel
+            dataDateTrain = datadate_clean
+            dataDateTest = datadate_clean
         else:
-            a.write(str(splitRate)+'sr!=1\n')
+            # a.write(str(splitRate)+'sr!=1\n')
             from sklearn.model_selection import train_test_split
-            dataFeatTrain, dataFeatTest, dataLabelTrain, dataLabelTest=  train_test_split(dataFeat, dataLabel, random_state=seedSplit, train_size=splitRate)
-            
-        a.write('datasetsplittato\n')
-        a.write(str(dataFeatTrain.shape)+" " +str(dataLabelTrain.shape)+" " +"\n")
+            dataFeatTrain, dataFeatTest, dataLabelTrain, dataLabelTest,dataDateTrain, dataDateTest=  train_test_split(dataFeat, dataLabel, datadate_clean, random_state=seedSplit, train_size=splitRate)
+        
+        # a.write('datasetsplittato\n')
+        # a.write(str(dataFeatTrain.shape)+" " +str(dataLabelTrain.shape)+" " +"\n")
         try:
             modelObj.fit(dataFeatTrain,dataLabelTrain)
-            a.write('trained\n')
+            # a.write('trained\n')
         except Exception as err:
-            a.write(str(err))
-        
-        dataOut=np.zeros((dataLabelTest.shape[0],3))
-        a.write('outputbase\n')
+            pass
+            # a.write(str(err))
 
-        dataOut[:,0]=dataLabelTest
-        a.write('outputprimacol\n')
-        predicted=modelObj.predict(dataFeatTest)
-        dataOut[:,1]=predicted
-        a.write('\n\n\n'+str(predicted.shape)+" "+str(dataLabelTest.shape)+'\n\n\n')
-        dataOut[:,2]=dataLabelTest-predicted
+        #create output file
+        #utcdates = [int(datetime.utcfromtimestamp(el).strftime('%Y%m%d%H%M%S')) for el in dataDateTest]        
+        utcdates = dataDateTest   
         
+        if plot != "cluster":
+            predicted=modelObj.predict(dataFeatTest)
+            df = pd.DataFrame({
+                'dateID' : utcdates,
+                'target' : dataLabelTest,
+                'output' : predicted,
+                'difference' : dataLabelTest-predicted
+            })
+        else:
+            df = pd.DataFrame({
+                'dateID' : utcdates,
+                'cluster' : dataLabelTest.astype(np.int64)
+            })
+        
+ 
         from joblib import dump, load
         now = util.utc_now()
-        a.write("utcnow\n")
+        # a.write("utcnow\n")
         creation = now.strftime("%Y-%m-%d-%H-%M-%S")
-
         
-        a.write(creation+"\n")
-        iodadir=(os.path.dirname(os.path.realpath(__file__)).replace("scripts",""))+'users'+os.sep+username+os.sep
+        # a.write(creation+"\n")
+        iodadir=(os.path.dirname(os.path.realpath(__file__)).replace("scripts",""))+'users'+os.sep+"ml"+os.sep
         modelfilename=modelname+"-model-"+creation+'.joblib'
-        a.write(modelfilename+"\n")
+        # a.write(modelfilename+"\n")
         outputfilename=modelname+"-output-"+creation+'.csv'
-        a.write(outputfilename+"\n")
+        
+        # a.write(outputfilename+"\n")
+        #np.savetxt(iodadir+"test.csv",dataFeat,delimiter=',')
+        recapfilename=modelname+"-recap-"+creation+'.txt'
 
-
-        np.savetxt(iodadir+outputfilename,dataOut,delimiter=',', header="target,output,difference")
+        #np.savetxt(iodadir+outputfilename,dataOut,delimiter=',', header=h, fmt=outformat)
+        df.to_csv(iodadir+outputfilename, index=False)
         dump(modelObj, iodadir+modelfilename)
-        a.write("db call 1\n")
-#        data_to_db(outputfilename, username, username, creation, 'csv', 'data', 'ok', 'ok')
-        a.write("db call 2\n")
-#        data_to_db(modelfilename, username, username, creation, 'joblib', 'model', 'ok', str(ny))               
-        a.write("db done 1\n")
+        
+        # a.write("db call 1\n")
+# #        data_to_db(outputfilename, username, username, creation, 'csv', 'data', 'ok', 'ok')
+        # a.write("db call 2\n")
+# #        data_to_db(modelfilename, username, username, creation, 'joblib', 'model', 'ok', str(ny))               
+        # a.write("db done 1\n")
         webdir = iodadir.replace("var/www/html/","")
         result.update({"outputfilename" : webdir+outputfilename})
         result.update({"modelfilename" : webdir+modelfilename})
+        result.update({"recapfilename" : webdir+recapfilename})
+        result.update({"mlerror" : 0})
+        result.update({"model" : modelname})
+        
 
         
         
     except Exception as err:
-        errfile=open(os.path.dirname(os.path.realpath(__file__)).replace("scripts","")+"errlog.txt", "w")
-        errfile.write("error!" + str(err)+"\n")
+        result.update({"mlerror" : 1})
+        # errfile=open(os.path.dirname(os.path.realpath(__file__)).replace("scripts","")+"errlog.txt", "w")
         
-        errfile.close()
+        # errfile.write("error!" + str(traceback.format_exc())+"\n")
+        
+        # errfile.close()
 
     result.update(resultx)
     result = str(result).replace("'",'"')
+    
+
+    
+    return result
+    # a.write(result)
+    # a.close()
+    
+def main(data, nthreads):
+    """Start a new ml analysis.
+    Parameters
+    ----------
+    data : cgi.FieldStorage,
+        Contains all data coming from client side script: input data, number of parameters, plot type, basic/advanced operation flag, statistics to perform
+    
+    Returns
+    -------
+    result : dict,
+            result of statistical analysis in the form: {y0_stats : {<stats 1 name> : value, ... <stats N name> : value}, ... , y<i>_stats : {...}, ML model filename, ML exp output}
+    """
+    #read data
+    inputdata = json.loads(data['inputdata'].value)
+    ny = int(data['ny'].value)
+    plot = data["plot_type"].value
+#    stats = data["stats_type"].value    
+
+    #load list of advanced analysis to perform if configured
+    conf = util.repConfig()
+    connection = util.connect_db(conf.data['local_db'])
+    query_globals = util.db_query(connection, "statistics", "stat_name, stat_function", "WHERE stat_type='global'")
+    stats_config = {}
+    for item in query_globals:
+        stats_config.update({item['stat_name'] : item['stat_function']})    
+        
+    #calculate
+    result = do_calculation(data, inputdata, plot, stats_config, ny)
     print(result)
-    a.write(result)
-    a.close()
 
 if __name__ == "__main__":
     print("Content-Type: application/json")

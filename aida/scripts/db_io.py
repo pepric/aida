@@ -190,6 +190,32 @@ class dbIO():
         locfiles = [f.get('filename') for f in res]
         
         return locfiles
+
+    def get_ml(self, keep_open = False):
+        """ Get list of ML experiments from DB.
+        Parameters
+        ---------
+        keep_open : boolean,
+            if True, keep the connection open for next operation
+
+        Returns
+        ---------
+        res : list of dictionaries,
+            list of dicts containing flagged experiments records
+        """
+
+        sql = "SELECT * FROM stored_ml ORDER BY id DESC"
+       
+        if self.connection is None:
+            self.connect()
+        #commit query
+        with self.connection.cursor() as cursor:
+            cursor.execute(sql)
+            res = cursor.fetchall()
+        if not keep_open:        
+            self.close()
+
+        return res
         
     def get_opmode(self,keep_open = False):
         """ Get the current operation mode.
@@ -345,6 +371,57 @@ class dbIO():
 
         sql_newf = "INSERT INTO local_files (filename, data_source, username, filetype) VALUES ('"+fname+"', '"+source+"', '"+user+"', '"+ftype+"')"
         self._commit_query(sql_newf, keep_open)      
+
+    def insert_ml_plot(self, username, modelfile, outfile, recapfile, labels, source, creation, ts, te, config, stats):
+        """Insert a new ml experiment into the local DB
+        
+        Parameters
+        ----------
+        username : str,
+                  user who generated the plot
+        modelfile : str,
+                  model filename
+        outfile : str,
+                  output filename
+        recapfile : str,
+                  experiment recap filename
+        labels : list,
+                list of plotted parameters                   
+        source  : str,
+                  source name
+        ts : str,
+            start datetime of experiment data
+        te : str,
+            end datetime of experiment data
+        config : dict,
+                experiment configuration : ML technique, model
+           
+        Returns
+        -------
+        plotid : int,
+            row id of stored record in DB
+        """
+        if self.connection is None:
+            self.connect()
+
+        tech = config["tech"]
+        model = config["model"]
+        #convert labels to string
+        l = str(labels)[1:-1].replace("'","")        
+        #convert stats dict to str
+        s = str(stats)
+                
+        sql = 'INSERT INTO stored_ml (modelfile, outputfile, recapfile, tech, model, labels, source, username, creation, tstart, tstop, stats) VALUES ("'+modelfile+'", "'+outfile+'", "'+recapfile+'", "'+tech+'", "'+model+'", "'+l+'", "'+source+'", "'+username+'", "'+creation+'", "'+ts+'", "'+te+'", "'+s+'")'
+
+        try:
+            with self.connection.cursor() as cursor:
+                cursor.execute(sql)   
+            self.connection.commit()
+            plotid = cursor.lastrowid
+        except:
+            plotid = None
+        self.close()
+        return plotid
       
     def insert_report_file(self, fname, user, creation, period, configfile, tstart, tstop, keep_open = False):
         """Insert a new report file into the local DB

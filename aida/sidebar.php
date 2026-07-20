@@ -99,7 +99,7 @@
 											<span>Statistics</span>
 										</a>
 									</li>
-									<!--<li class="nav-parent">
+									<li class="nav-parent">
 										<a>
 											<i class="fa fa-cogs" aria-hidden="true"></i>
 											<span>Machine Learning</span>
@@ -109,7 +109,7 @@
 												<a href="ml_train.php?s=hktm" target="_blank">
 													 Train a model
 												</a>
-											</li> -->
+											</li>
 								<!--			<li>
 												<a href="under_construction.php" target="_blank">
 													 Apply
@@ -172,7 +172,7 @@
 									</li>
 								</ul>
 							</nav>
-                          <div class="version"><p>v0.6</p></div>
+                          <div class="version"><p><?php echo "v".$webapp_settings["version"];?></p></div>
 					</div>
 				                      	
 				</aside>

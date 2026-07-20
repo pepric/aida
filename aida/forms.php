@@ -3,7 +3,7 @@
 $plot = $_POST["p"];
 $origin = $_POST["o"];
 $source = $_POST["s"];
-
+$ml_tech = $_POST["t"];
 
 class Render{
 	
@@ -170,12 +170,12 @@ class Render{
 
 class ML{
   
-	public function call_source($source, $origin, $settings, $repo_set){
+	public function call_source($source, $origin, $settings, $repo_set, $ml_tech){
 		//Instantiate source class
     	$s = new ReflectionClass(ucfirst($source));
       	$object = $s->newInstanceWithoutConstructor();
 		//Render plot form
-      	$result = $object -> render_ml_form($origin, $settings, $repo_set);
+      	$result = $object -> render_ml_form($origin, $settings, $repo_set, $ml_tech);
     	return $result;
     } 
 
@@ -184,7 +184,7 @@ class ML{
 
 class Trend{
 
-	public function call_source($source, $origin, $settings, $repo_set){
+	public function call_source($source, $origin, $settings, $repo_set, $ml_tech){
 		//Instantiate source class
     	$s = new ReflectionClass(ucfirst($source));
       	$object = $s->newInstanceWithoutConstructor();
@@ -196,7 +196,7 @@ class Trend{
 
 class Scatter{
   
-	public function call_source($source, $origin, $settings, $repo_set){
+	public function call_source($source, $origin, $settings, $repo_set, $ml_tech){
 		//Instantiate source class
     	$s = new ReflectionClass(ucfirst($source));
       	$object = $s->newInstanceWithoutConstructor();
@@ -209,7 +209,7 @@ class Scatter{
 
 class Histogram{
   
-	public function call_source($source, $origin, $settings, $repo_set){
+	public function call_source($source, $origin, $settings, $repo_set, $ml_tech){
 		//Instantiate source class
     	$s = new ReflectionClass(ucfirst($source));
       	$object = $s->newInstanceWithoutConstructor();
@@ -223,7 +223,7 @@ class Histogram{
 
 class Stats{
   
-	public function call_source($source, $origin, $settings, $repo_set){
+	public function call_source($source, $origin, $settings, $repo_set, $ml_tech){
 		//Instantiate source class
     	$s = new ReflectionClass(ucfirst($source));
       	$object = $s->newInstanceWithoutConstructor();
@@ -236,7 +236,7 @@ class Stats{
 
 class Image{
   
-	public function call_source($source, $origin, $settings, $repo_set){
+	public function call_source($source, $origin, $settings, $repo_set, $ml_tech){
 		//Instantiate source class
     	$s = new ReflectionClass(ucfirst($source));
       	$object = $s->newInstanceWithoutConstructor();
@@ -250,25 +250,26 @@ class Image{
 
 class EFD extends Render{
 
-	function render_ml_form($origin, $settings, $repo_set){
+	function render_ml_form($origin, $settings, $repo_set, $ml_tech){
 		$keys = array_keys($repo_set["required"]);      
 		ob_start();
 		populate_dropdown($origin."_efd_params", "extra", "extra NOT LIKE 'full_%'", $distinct = 1);
 		$extra = ob_get_clean(); 
-		$dd = create_option($repo_set, 0);      
-		$result = $this->create_div("params");
-		$result.=$this->add_label("","","display:block","col-md-2 control-label","Label");
-		$result .= $this->create_div("x-par-form","col-md-10");
-		$result .= $this->render_main_select("x-ic", true, "set_sys_options(this,true)", "Select ".ucfirst($keys[0]), false, $dd);																				
-		$result .= $this->render_main_select("x-sys", false, "set_par_options(this)", "Select Field", false,"");		
+		$dd = create_option($repo_set, 0);
+		if($ml_tech != "cluster"){		
+			$result = $this->create_div("params");
+			$result.=$this->add_label("","","display:block","col-md-2 control-label","Label");
+			$result .= $this->create_div("x-par-form","col-md-10");
+			$result .= $this->render_main_select("x-ic", true, "set_sys_options(this,true)", "Select ".ucfirst($keys[0]), false, $dd);																				
+			$result .= $this->render_main_select("x-sys", false, "set_par_options(this)", "Select Field", false,"");		
 
-		$result .= $this->render_params_select("x", "populate_values(this)");
-		$result .= $this->render_values_select("x");
-		$result .= $this->render_extra_btns("x",$settings["extra"]);							
-		$result .= $this->create_div("x_extra_filters","col-md-12 extra_filters","display:none");					
-		$result .= $this->render_extra_filters("x_DataSetRelease", "DataSetRelease", "input", "display:".$settings["dsr"]);
-		$result .= $this->close_div(3);
-		
+			$result .= $this->render_params_select("x", "populate_values(this)");
+			$result .= $this->render_values_select("x");
+			$result .= $this->render_extra_btns("x",$settings["extra"]);							
+			$result .= $this->create_div("x_extra_filters","col-md-12 extra_filters","display:none");					
+			$result .= $this->render_extra_filters("x_DataSetRelease", "DataSetRelease", "input", "display:".$settings["dsr"]);
+			$result .= $this->close_div(3);
+		}
 		
 		$result .= $this->create_div("yparams");
 		$result.=$this->add_label("y-label","","display:block","col-md-2 control-label","Features");
@@ -431,7 +432,52 @@ class EFD extends Render{
 
 
 
-class Fake{
+class Fake extends Render{
+	function render_ml_form($origin, $settings, $repo_set){
+		$keys = array_keys($repo_set["required"]);      
+		$options = create_option($repo_set, 0);
+			$result = '';
+			if($ml_tech != "cluster"){
+				$result.='<div class="form-group" id="params" style="display:block">
+							<label style="display:block" class="col-md-2 control-label" >Label</label>
+							<div id="x-par-form" class="col-md-10">
+								<select id = "x-sys" class="form-control" onchange = "set_params(this)" required>
+									<option value="" disabled selected>Select Subsytem</option>'.$options.'</select>
+								<select id = "x-params" name="x-params" class="form-control" style="display:none" onchange="populate_values(this); show_adu_checkbox(this)" required>
+									<option value="" disabled selected>Select Field</option>
+								</select>
+									<select id="x-values" name="x-values" style="display:none"></select>
+									<div style="display:'.$settings["adubox"].'">
+										<div id="x-adu_check" style="display:none; margin-right: 30px;">
+											<input type="checkbox" id="x-adu_cal" name="x-adu_cal" value="" onchange="set_units(this)"><span>ADU/Calib</span><div class="stats-tooltip"><img src="assets/images/tooltip120.png" width="16/"><span class="tooltiptext">Check to use calibrated/physical data, uncheck for ADU data</span></div>
+											<div id="units" style="display:none"></div>
+										</div>
+									</div>
+							</div>
+						</div>';
+			}
+			$result .= '<div class="form-group" id="yparams" style="display:block">
+						<label style="display:block" class="col-md-2 control-label" id = "y-label">Features</label>
+						<div id="y0-par-form" class="col-md-10">
+							<select id = "y0-sys" name="y0-sys" class="form-control" onchange="set_params(this)" required>
+                               	<option value="" disabled selected>Select Subsytem</option>'.$options.'</select>
+							<select id = "y0-params" name="y0-params" class="form-control" style="display:none" onchange="populate_values(this); show_adu_checkbox(this)" required>
+								<option value="" disabled selected>Select Field</option>
+							</select>
+							<select id="y0-values" name="y0-values" style="display:none"></select>
+                            <div style="display:'.$settings["adubox"].'">
+                            	<div id="y0-adu_check" style="display:none; margin-right: 30px;">
+                               		<input type="checkbox" id="y0-adu_cal" name="y0-adu_cal" value="" onchange="set_units(this)"><span>ADU/Calib</span><div class="stats-tooltip"><img src="assets/images/tooltip120.png" width="16/"><span class="tooltiptext">Check to use calibrated/physical data, uncheck for ADU data</span></div>
+                                	<div id="units" style="display:none"></div>
+								</div>
+                            </div>
+							<button type="button" class="mb-xs mt-xs mr-xs btn btn-primary btn-sm" id = "addmore" style="display:none;" onclick="addmore_btn(1)">Add more...</button>
+							<button type="button" class="mb-xs mt-xs mr-xs btn btn-danger btn-sm" id = "remove" style="display:none;" onclick="remove_btn()">Remove Last...</button>
+						</div>
+					</div>';
+    	return $result;
+    }
+
 
 	function render_hist_form($origin, $settings, $repo_set){
 		$keys = array_keys($repo_set["required"]);       
@@ -1006,6 +1052,6 @@ $repo_set = select_items_json(strtolower($opmode), $source, $origin);
 $plot_cls = new ReflectionClass(ucfirst($plot));
 $object = $plot_cls->newInstanceWithoutConstructor();
 //Run rendering
-$result = $object->call_source($source, $origin, $settings, $repo_set);
+$result = $object->call_source($source, $origin, $settings, $repo_set, $ml_tech);
 echo $result;
 ?>

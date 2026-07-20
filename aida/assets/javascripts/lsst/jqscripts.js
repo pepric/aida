@@ -49,6 +49,10 @@ $(document).ready(function(){
     var usecase = $("#usecase").val();
     var source = $("#hktm_source").val();
     var stats = $("#stats_enable").val();
+	var tech =  $("#technique").val();
+	if(tech==null){
+		tech = "none";
+	}
     $("#params").remove();
     $("#yparams").remove();
     if($("#bins").length > 0){
@@ -61,9 +65,10 @@ $(document).ready(function(){
       data:{
         p : plot,
         o : usecase,
-        s : source
+        s : source,
+		t : tech
       },
-      success :	function(resultdata){
+      success : function(resultdata){
         $( resultdata ).insertBefore( "#daterange" );
         if($("#bins").length > 0){
           $("#bins").show();
@@ -79,19 +84,26 @@ $(document).ready(function(){
           var coord=document.getElementById('y0-sys')
           coord.value="ALL"
           set_params(coord)
-        }                     				
+        }
+		if(tech=="cluster"){
+			//$("#x-par-form") settare valore a None da trattare poi nel py
+			$("#x-ic").prop("selectedIndex", 5).val();
+			$("#params").hide()
+			
+			
+		}
       }
-    });          	
+    });             
   });
 });
 
 function set_bins(){
-	
+    
   $("input[type='radio'][name=bintype]").change(function(){
     var valuebox = document.getElementById("binsize");
     if($(this).val()=="binsize")
     {
-      valuebox.setAttribute("placeholder", "Set bin size...");				
+      valuebox.setAttribute("placeholder", "Set bin size...");              
       valuebox.setAttribute("min", "0.000000000000001");
       $('label[for=binsize]').remove();
       $('#bins').removeClass('has-error');                  
@@ -118,28 +130,28 @@ $('#change_op').on("click", function(){
     data:{
       action : "update_opmode",
       new : new_op,
-	  user : document.getElementById("session-user").innerHTML
+      user : document.getElementById("session-user").innerHTML
     },
     success:function(data){
       var res = JSON.parse(data)["error"];
-	  var msg
-	  switch(res){
-		  case true:
-		  {
-			msg="Operating Mode successfully updated."
-			break;
-		  }
-		  case false:
-		  {
-			msg="ERROR! Impossible to update settings. Please, retry later or contact AIDA Admin."
-			break;			
-		  }
-		  case "None":
-		  {
-			msg="INFO: Operating mode unchanged. Nothing to do."  
-			break;			  
-		  }
-	  }
+      var msg
+      switch(res){
+          case true:
+          {
+            msg="Operating Mode successfully updated."
+            break;
+          }
+          case false:
+          {
+            msg="ERROR! Impossible to update settings. Please, retry later or contact AIDA Admin."
+            break;          
+          }
+          case "None":
+          {
+            msg="INFO: Operating mode unchanged. Nothing to do."  
+            break;            
+          }
+      }
       box = alert(msg)
       if(box){} else {
         $("#loader").hide();
@@ -162,6 +174,11 @@ $('#export-btn').on("click", function(){
   var exp_sys = document.getElementById("exp_sys").checked ? 1:0      
   var exp_history = document.getElementById("exp_history").checked ? 1:0  
   var exp_smtp = document.getElementById("exp_smtp").checked ? 1:0  
+  
+  
+  var exp_ml = document.getElementById("exp_ml").checked ? 1:0  
+  
+  
 
   var list_req = []
   if(exp_users){list_req.push("Users data")}
@@ -171,9 +188,12 @@ $('#export-btn').on("click", function(){
   if(exp_sys){list_req.push("Systems configuration")}
   if(exp_history){list_req.push("History")}
   if(exp_smtp){list_req.push("SMTP settings")}  
+  
+  if(exp_ml){list_req.push("ML Experiments")}  
+
   out_hist = {"Requested" : list_req.join(", ")}  
   //check if at least on item is checked  
-  if(exp_users || exp_reports || exp_repconf || exp_stored || exp_sys || exp_history || exp_smtp){  
+  if(exp_users || exp_reports || exp_repconf || exp_stored || exp_sys || exp_history || exp_smtp || exp_ml){  
     // call subcategory ajax here 
     $.ajax({
       method:"POST",
@@ -187,16 +207,18 @@ $('#export-btn').on("click", function(){
         systems : exp_sys,
         hist : exp_history,
         smtp : exp_smtp,
+		ml : exp_ml,
         username : document.getElementById("session-user").innerHTML
       },
       success:function(data){
-		var path = window.location.href.replace("dashboard.php", "").replace("#","")
+        var path = window.location.href.replace("dashboard.php", "").replace("#","")
         switch(data["error"])
         {
           case 0:
             {
+              alert("Backup file has been created successfully. Download will start shortly.")
               //start download and remove remote tar
-			  downloadPDF(path+"tmp/"+data["file"], data["file"], 0, 'application/gzip');
+              downloadPDF(path+"tmp/"+data["file"], data["file"], 0, 'application/gzip');
               break;
             }
           case 1:
@@ -207,35 +229,36 @@ $('#export-btn').on("click", function(){
           case 2:
             {
               alert("WARNING! Backup file has been generated but the following items have been not exported: \n" + data["msg"] +"This could cause an incomplete data import.\n It is suggested to retry later or contact AIDA Admin.")
-			  conf_hist = {"Failed" : data["msg"].replace(/\n/g,", ")}
-			  console.log(conf_hist)
+              conf_hist = {"Failed" : data["msg"].replace(/\n/g,", ")}
+              console.log(conf_hist)
               //start download and remove tar
-			  downloadPDF(path+"tmp/"+data["file"], data["file"], 0, 'application/gzip');             
-              break;			
+              downloadPDF(path+"tmp/"+data["file"], data["file"], 0, 'application/gzip');             
+              break;            
             }
-        }         
-		//update history
-		$.ajax({
-			type: "POST",
-			url: "functions.php",
-			data: {
-				action: "update_history",
-				username : document.getElementById("session-user").innerHTML,
-				operation : "Data exported",
-				infile :	"NA",
-				out	: JSON.stringify(out_hist),
-				config : JSON.stringify(conf_hist)
-				},
-			error : function (obj, textstatus) {
-				alert("Impossible to store the operation in History")
-			}
-		})        
-		$("#loader").hide();                  
-      }
+        }	
+        //update history
+        $.ajax({
+            type: "POST",
+            url: "functions.php",
+            data: {
+                action: "update_history",
+                username : document.getElementById("session-user").innerHTML,
+                operation : "Data exported",
+                infile :    "NA",
+                out : JSON.stringify(out_hist),
+                config : JSON.stringify(conf_hist)
+                },
+            error : function (obj, textstatus) {
+                alert("Impossible to store the operation in History")
+            }
+        })        
+        $("#loader").hide();                  
+      }	
+
     });      
   }
   else{
-  	alert("Nothing to backup. Please, select at least one item to backup.")
+    alert("Nothing to backup. Please, select at least one item to backup.")
   }
 }); 
 
@@ -250,11 +273,12 @@ $('#import-btn').on("click", function(){
   var imp_sys = document.getElementById("imp_sys").checked ? 1:0      
   var imp_history = document.getElementById("imp_history").checked ? 1:0  
   var imp_smtp = document.getElementById("imp_smtp").checked ? 1:0
+  var imp_ml = document.getElementById("imp_ml").checked ? 1:0
   var imp_file = document.getElementById("upfile-preview").innerHTML
 
   //check if at least on item is checked  
-  if(imp_users || imp_reports || imp_repconf || imp_stored || imp_sys || imp_history || imp_smtp){  
-	var toform = []
+  if(imp_users || imp_reports || imp_repconf || imp_stored || imp_sys || imp_history || imp_smtp || imp_ml){  
+    var toform = []
     // call subcategory ajax here 
     $.ajax({
       method:"POST",
@@ -268,111 +292,112 @@ $('#import-btn').on("click", function(){
         systems : imp_sys,
         hist : imp_history,
         smtp : imp_smtp,
+        ml : imp_ml,
         username : document.getElementById("session-user").innerHTML,
-		file : imp_file
+        file : imp_file
       },
       success:function(data){
         //var res = JSON.parse(data)["error"];
-		//var path = window.location.href.replace("dashboard.php", "")
-				console.log(data["error"])
+        //var path = window.location.href.replace("dashboard.php", "")
+                console.log(data["error"])
         switch(data["error"])
 
         {
           case 0:
             {
-				var msg = "Application has been successfully updated.\n\n"
-				if(imp_smtp==0){
-					msg += "INFO : No SMTP server settings imported. You will have to set it in the following steps.\n\n"
-					//$("#impsmtp").val(1)
-					toform.push("smtpconf_form")					
-				}					
+                var msg = "Application has been successfully updated.\n\n"
+                if(imp_smtp==0){
+                    msg += "INFO : No SMTP server settings imported. You will have to set it in the following steps.\n\n"
+                    //$("#impsmtp").val(1)
+                    toform.push("smtpconf_form")                    
+                }                   
  
-				if(imp_users==0){
-					msg += "INFO : No Users data imported. You will have to set the first Admistrator in the following steps.\n\n"
-					//$("#impusers").val(1)
-					toform.push("1streg_form")
-				}
-				alert(msg)
+                if(imp_users==0){
+                    msg += "INFO : No Users data imported. You will have to set the first Admistrator in the following steps.\n\n"
+                    //$("#impusers").val(1)
+                    toform.push("1streg_form")
+                }
+                alert(msg)
 
-				if(toform.length > 0){
-					$("#nextform").val(toform);
-					$("#import_bkp").hide();
-					showtab(toform,0);
-					$("#loader").hide();					
-				}
-				else{
-					$.ajax({
-						url: 'scripts/backup.py',
-						method:"POST",
-						data: {
-							action:"clean"
-						},
-						success: function (response) {
-							document.getElementById('inst-compl').innerHTML='<p style="min-height: 40px;"></p><p class="inst-compl">May the plots be with you...<p>'
-							$("#loader").hide();
-							$('#modal-complete').modal('show');
-						},
-						error: function () {
-							alert("ERROR! Something has gone wrong. Impossible to finalize installation.\nPlease, retry or contact AIDA staff.")
-							window.location.href = "index.php";
-						}
-					});
-				}
-				break;
+                if(toform.length > 0){
+                    $("#nextform").val(toform);
+                    $("#import_bkp").hide();
+                    showtab(toform,0);
+                    $("#loader").hide();                    
+                }
+                else{
+                    $.ajax({
+                        url: 'scripts/backup.py',
+                        method:"POST",
+                        data: {
+                            action:"clean"
+                        },
+                        success: function (response) {
+                            document.getElementById('inst-compl').innerHTML='<p style="min-height: 40px;"></p><p class="inst-compl">May the plots be with you...<p>'
+                            $("#loader").hide();
+                            $('#modal-complete').modal('show');
+                        },
+                        error: function () {
+                            alert("ERROR! Something has gone wrong. Impossible to finalize installation.\nPlease, retry or contact AIDA staff.")
+                            window.location.href = "index.php";
+                        }
+                    });
+                }
+                break;
             }
           case 1:
             {
-				var msg = "ERROR! Impossible to import data from backup file. Please, retry later or contact AIDA Admin."
-				alert(msg)
-				break;
+                var msg = "ERROR! Impossible to import data from backup file. Please, retry later or contact AIDA Admin."
+                alert(msg)
+                break;
             }      
           case 2:
             {
-				var msg = "WARNING! Data import has been completed but the following items have been not imported: \n" + data["msg"]+"\n"
-				let smtpfail = data["msg"].includes("SMTP settings");
-				if(smtpfail || imp_smtp==0){
-					msg += "INFO : No SMTP server settings imported. You will have to set it in the following steps.\n\n"
-					toform.push("smtpconf_form")					
-				}				
-				let userfail = data["msg"].includes("Users Data");
-				if(userfail || imp_users==0){
-					msg += "INFO : No Users data imported. You will have to set the first Admistrator in the following steps.\n\n"
-					toform.push("1streg_form")					
-				}						
-				alert(msg)
+                var msg = "WARNING! Data import has been completed but the following items have been not imported: \n" + data["msg"]+"\n"
+                let smtpfail = data["msg"].includes("SMTP settings");
+                if(smtpfail || imp_smtp==0){
+                    msg += "INFO : No SMTP server settings imported. You will have to set it in the following steps.\n\n"
+                    toform.push("smtpconf_form")                    
+                }               
+                let userfail = data["msg"].includes("Users Data");
+                if(userfail || imp_users==0){
+                    msg += "INFO : No Users data imported. You will have to set the first Admistrator in the following steps.\n\n"
+                    toform.push("1streg_form")                  
+                }                       
+                alert(msg)
 
-				if(toform.length > 0){
-					$("#nextform").val(toform);
-					$("#import_bkp").hide();
-					showtab(toform,0);
-					$("#loader").hide();					
-				}
-				else{
-					$.ajax({
-						url: 'scripts/backup.py',
-						method:"POST",
-						data: {
-							action:"clean"
-						},
-						success: function (response) {
-							alert("INSTALLATION COMPLETE!\n\nMay the plots be with you...");
-							window.location.href = "index.php";
-						},
-						error: function () {
-							alert("ERROR! Something has gone wrong. Impossible to finalize installation.\nPlease, retry or contact AIDA staff.")
-							window.location.href = "index.php";
-						}
-					});					
-				}				
-				break;			
+                if(toform.length > 0){
+                    $("#nextform").val(toform);
+                    $("#import_bkp").hide();
+                    showtab(toform,0);
+                    $("#loader").hide();                    
+                }
+                else{
+                    $.ajax({
+                        url: 'scripts/backup.py',
+                        method:"POST",
+                        data: {
+                            action:"clean"
+                        },
+                        success: function (response) {
+                            alert("INSTALLATION COMPLETE!\n\nMay the plots be with you...");
+                            window.location.href = "index.php";
+                        },
+                        error: function () {
+                            alert("ERROR! Something has gone wrong. Impossible to finalize installation.\nPlease, retry or contact AIDA staff.")
+                            window.location.href = "index.php";
+                        }
+                    });                 
+                }               
+                break;          
             }
         }
       }
     });
   }
   else{
-  	alert("Nothing to import. Please, select at least one item to import.")
- 	
+    alert("Nothing to import. Please, select at least one item to import.")
+    
   }
 });
 

@@ -18,14 +18,27 @@
 				</header>
 				<div class="panel-body">
 					<form id="ml_form" class="form-horizontal form-bordered" method="get" action="">
-						<label class="col-md-2 control-label">Machine Learning Model</label>
-						<div class="stat-list col-md-6">
-							<?php populate_ml();?>
-							<input type="hidden" name="s" id="hiddenField" value="<?php echo $_GET['s'] ?>" />
+						<div class="form-group">
+							<label class="col-md-2 control-label">Machine Learning Technique</label>
+							<select name="technique" id="technique" onchange="populate_ml(this.value)">
+								<option value="" disabled selected>Select ML Technique</option>
+								<option value="classifier">Classification</option>
+								<option value="cluster">Clustering</option>
+								<option value="regressor">Regression</option>
+							</select>
 						</div>
-						<button class="btn btn-primary"  formaction="ml.php" id = "submit_button">Select</button>
-						<button class="btn btn-primary"  formaction="modelHelp.php" id = "submit_button" formtarget="_blank">Help</button>
+						<div class="form-group" id = "ml_model_div" style="display:none">
+							<!--<label class="col-md-2 control-label">Machine Learning Model</label>-->
+								<?php //populate_ml();?>
+							
+						</div>
+						<input type="hidden" name="s" id="hiddenField" value="<?php echo $_GET['s'] ?>" />
+						<div class="col-md-12" style="text-align:right">
+								<button class="btn btn-primary"  formaction="ml.php" id = "submit_button" style="display:none">Select</button>
+								<!--b<utton class="btn btn-primary"  formaction="modelHelp.php" id = "submit_button" formtarget="_blank">Help</button>				-->
+						</div>						
 					</form>
+
 				</div>
 			</section>
 		</div>		

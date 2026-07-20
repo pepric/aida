@@ -202,9 +202,12 @@
 									<div class="col-xs-12" id="check_1"><label class="col-xs-10 control-label bkp-label">Reports</label><div class="col-xs-2 bkp-input"><input type="checkbox" id="imp_reports"/></div></div>            
 									<div class="col-xs-12" id="check_2"><label class="col-xs-10 control-label bkp-label">Report Configuration Files</label><div class="col-xs-2 bkp-input"><input type="checkbox" id="imp_repconf"/></div></div>
 									<div class="col-xs-12" id="check_3"><label class="col-xs-10 control-label bkp-label">Stored Experiments</label><div class="col-xs-2 bkp-input"><input type="checkbox" id="imp_stored"/></div></div>
+									
+									<div class="col-xs-12" id="check_7"><label class="col-xs-10 control-label bkp-label">ML Experiments</label><div class="col-xs-2 bkp-input"><input type="checkbox" id="imp_ml"/></div></div>									
 									<div class="col-xs-12" id="check_4"><label class="col-xs-10 control-label bkp-label">Systems Configurations</label><div class="col-xs-2 bkp-input"><input type="checkbox" id="imp_sys"/></div></div>
 									<div class="col-xs-12" id="check_5"><label class="col-xs-10 control-label bkp-label">History</label><div class="col-xs-2 bkp-input"><input type="checkbox" id="imp_history"/></div></div>    
 									<div class="col-xs-12" id="check_6"><label class="col-xs-10 control-label bkp-label">SMTP settings</label><div class="col-xs-2 bkp-input"><input type="checkbox" id="imp_smtp"/></div></div>                
+                
 								</div>			
 
 

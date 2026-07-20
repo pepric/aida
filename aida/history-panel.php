@@ -4,7 +4,7 @@
 				<header class="panel-heading">
 					<div class="panel-actions" style="top:10px">
                       	<div class="wait" id="wait_history"><img src="./assets/images/loader_wait.gif" width="58px"/></div>
-						<button type="button" class="btn btn-primary" onclick="refresh_history()">Refresh</button>
+						<!--<button type="button" class="btn btn-primary" onclick="refresh_history()">Refresh</button>-->
 					</div>                  
 					<h2 class="panel-title">History</h2>
 				</header>

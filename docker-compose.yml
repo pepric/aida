@@ -2,13 +2,13 @@ version: "2.4"
 
 services:
   aida:
-    image: httpd  
+    image: httpd:bullseye  
     build: .
     ports:
       - "80:80"
     command: apache2ctl -D FOREGROUND
     volumes:
-      -  F:/IODA/aida_docker/aida/:/var/www/html/aida
+      -  /home/dame/Downloads/aida_installation/aida_docker/aida/:/var/www/html/aida
     links: 
             - "db:mysql-aida"
     environment:
@@ -25,7 +25,7 @@ services:
       #-  MYSQL_RANDOM_ROOT_PASSWORD=1        
     restart: always
     volumes:
-      -  F:/IODA/aida_docker/mysqlData:/var/lib/mysql
+      -  /home/dame/Downloads/aida_installation/aida_docker/mysqlData:/var/lib/mysql
     ports:
       - "3306:3306" 
     cpus: 1
@@ -40,7 +40,7 @@ services:
       -  MYSQL_ALLOW_EMPTY_PASSWORD=1
     restart: always
     volumes:
-      -  F:/IODA/aida_docker/mysqlFakeData:/var/lib/mysql
+      -  /home/dame/Downloads/aida_installation/aida_docker/mysqlFakeData:/var/lib/mysql
     ports:
       - "3307:3306" 
     expose:
@@ -55,7 +55,7 @@ services:
       # PMA_USER: lota
       # PMA_PASSWORD: VerdiLoTA2024!
     # ports:
-      # - "8080:80"
+      # - "8081:80"
 
   # phpmyadmin_app:
     # image: phpmyadmin/phpmyadmin:5.0.1

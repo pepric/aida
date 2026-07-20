@@ -55,7 +55,7 @@ threadpoolctl==3.6.0 \
 tinycss2==1.1.0 \
 urllib3==1.26.7 \
 webencodings==0.5.1 \
-pandas \
+#pandas \
 lsst_efd_client
  
 
