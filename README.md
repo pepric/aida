@@ -11,7 +11,7 @@ The AIDA design was mainly focused on the following goals:
   * Detection and analysis of instrumental features, degradation and anomalies;
 * Data Analysis:
   *  Basic and on-demand advanced statistics for data correlation and quality assessment;
-  *  Machine/Deep Learning based classification/regression on data.
+  *  Machine Learning based classification/regression/clustering on data.
 
 In the following we will use the term **AIDAHM**, referring to a generic hosting machine on which AIDA is
 installed and running
