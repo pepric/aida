@@ -32,7 +32,7 @@ kiwisolver==1.3.1 \
 lxml==4.6.3 \
 matplotlib==3.4.1 \
 memory-profiler==0.58.0 \
-numpy==1.20.2 \
+numpy==1.22.4 \
 Pillow==8.2.0 \
 psrecord==1.2 \
 psutil==5.8.0 \
