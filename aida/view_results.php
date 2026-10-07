@@ -1,3 +1,16 @@
+<?php
+/**
+ * Stored/Dynamic Plot View Page.
+ *
+ * Renders the user interface for loading and viewing generated plots from the database
+ * by querying the Python CS interface (`scripts/cs_interface.py`).
+ *
+ * @package    AIDA
+ * @subpackage Views\Plots
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 <!doctype html>
 <html class="fixed">
 	<?php

@@ -1,5 +1,17 @@
 #!/usr/bin/python
 
+"""
+PDF Report Generation and Document Building Engine.
+
+This module provides classes and functions for parsing report XML datasets
+and rendering formatted PDF documents using ReportLab. It handles page templates,
+headers, footers, tables of contents, statistical summary tables, plot image
+embeddings, and flagged experiment/report exporting.
+
+@package AIDA
+@module pdfcreator
+"""
+
 import cgi, cgitb 
 cgitb.enable(display=0, logdir="cgi-logs")  # for troubleshooting
 import glob
@@ -57,26 +69,32 @@ styleN = styles["Normal"]
 styleH2 = styles["Heading2"]
 
 class reportTemplate(canvas.Canvas):
-    """
-    Create report template with header and page numbers
+    """Two-pass ReportLab Canvas template for managing headers, footers, and page numbers.
+
+    Parameters
+    ----------
+    *args : tuple
+        Positional canvas initialization arguments.
+    **kwargs : dict
+        Keyword canvas initialization arguments.
+
+    Attributes
+    ----------
+    pages : list of dict
+        Saved page dictionary states captured on page breaks.
     """
     def __init__(self, *args, **kwargs):
-        """Constructor"""
         canvas.Canvas.__init__(self, *args, **kwargs)
         self.pages = []
 
         
     def showPage(self):
-        """
-        On a page break, add information to the list
-        """
+        """Save the current page canvas state to the page buffer on page break."""
         self.pages.append(dict(self.__dict__))
         self._startPage()
         
     def save(self):
-        """
-        Add the page number to each page (page x of y)
-        """
+        """Iterate saved canvas states to draw total page count numbers on all pages."""
         page_count = len(self.pages)
         
         for page in self.pages:
@@ -87,8 +105,12 @@ class reportTemplate(canvas.Canvas):
         canvas.Canvas.save(self)
         
     def draw_page_number(self, page_count):
-        """
-        Add the page number
+        """Draw formatted page number string in the page footer.
+
+        Parameters
+        ----------
+        page_count : int
+            Total page count of the generated document.
         """
         page = "Page %s/%s" % (self._pageNumber, page_count)
         self.setFillColorRGB(0.8,0.8,0.8)
@@ -96,8 +118,12 @@ class reportTemplate(canvas.Canvas):
         self.drawRightString(self.w-20, 0.2 * inch, page)
 
     def header(self, doc):
-        """
-        Add header
+        """Render standard AIDA header logos and titles on portrait pages.
+
+        Parameters
+        ----------
+        doc : BaseDocTemplate
+            Reference to the parent document template.
         """
         self.setPageSize(portrait(A4))
         self.h = PAGE_HEIGHT
@@ -112,14 +138,27 @@ class reportTemplate(canvas.Canvas):
         self.drawImage(lsst_logo,480,self.h-68,width=100,height=63,mask='auto')   
 
     def make_landscape(self,doc):
-        """
-        Settings for landscape page
+        """Configure landscape page orientation dimensions.
+
+        Parameters
+        ----------
+        doc : BaseDocTemplate
+            Reference to the parent document template.
         """
         self.setPageSize(landscape(A4))
         self.h = PAGE_WIDTH
         self.w = PAGE_HEIGHT
 
 class MyDocTemplate(BaseDocTemplate):
+    """Custom BaseDocTemplate initializing portrait and landscape page frames.
+
+    Parameters
+    ----------
+    filename : str
+        Output PDF filename path.
+    **kw : dict
+        Document template configuration keyword arguments.
+    """
     def __init__(self, filename, **kw):
         BaseDocTemplate.__init__(self, filename, **kw)
         frame_a4 = Frame(self.leftMargin, self.bottomMargin+30, self.width, self.height-120,id='normal')
@@ -129,6 +168,30 @@ class MyDocTemplate(BaseDocTemplate):
         self.addPageTemplates([template, template_landscape])
 
 class xmlData():
+    """Parse and extract structured metadata and statistics from report XML files.
+
+    Parameters
+    ----------
+    xmlfile : str
+        File path to the input XML report file.
+
+    Attributes
+    ----------
+    root : Element
+        Root ElementTree node of the XML report.
+    rep_id : str
+        Unique report ID attribute.
+    filename : str
+        Target report filename.
+    general_info : dict
+        Parsed general report information.
+    configuration : list
+        Parsed configuration settings list.
+    notes : list
+        Parsed system diagnostic notes.
+    systems : list of Element
+        List of system XML elements.
+    """
     def __init__(self, xmlfile):
         data = ET.parse(xmlfile)
         self.root = data.getroot()
@@ -140,6 +203,13 @@ class xmlData():
         self.systems = self.root.findall("system")
 
     def get_acquisition_list(self):
+        """Extract list of acquisition step details from the XML report.
+
+        Returns
+        -------
+        output : list of list
+            List of [acquisition_id, start_time, stop_time] tuples.
+        """
         output = []
         xmlacq = self.root.find("exp_info/acquisitions_details")
         if xmlacq is not None:
@@ -153,6 +223,13 @@ class xmlData():
         return output
 
     def get_configuration(self):
+        """Extract experiment configuration parameters from the XML report.
+
+        Returns
+        -------
+        output : dict
+            Dictionary of key-value configuration labels.
+        """
         output = {}
         xmlexp = self.root.find("exp_info")
         
@@ -185,6 +262,22 @@ class xmlData():
         return output
 
     def get_error_summary(self, s, origin, par):
+        """Extract error and warning occurrences for a specific system parameter.
+
+        Parameters
+        ----------
+        s : str
+            System identifier name.
+        origin : str
+            Data origin classification.
+        par : dict
+            Parameter metadata dictionary.
+
+        Returns
+        -------
+        result : list of dict
+            List of error detail dictionaries.
+        """
         result = []
         for elem in self.root.iterfind('system[@name="'+s+'"]/'+origin+'/parameter[@name="'+par['par']+'"]'):
             xmlacq = elem.findall("acquisition")
@@ -205,6 +298,13 @@ class xmlData():
         return result
         
     def get_general_info(self):
+        """Extract general metadata block settings from the XML report.
+
+        Returns
+        -------
+        output : dict
+            General report metadata dictionary.
+        """
         output = {}
         xmlgeneral = self.root.find("general")
         el = xmlgeneral.find("generation_date")
@@ -221,6 +321,13 @@ class xmlData():
         return output
 
     def get_notes(self):
+        """Extract system diagnostic notes and error lists from the XML report.
+
+        Returns
+        -------
+        output : dict
+            System notes and error lists dictionary.
+        """
         output = {}
         xmlnotes = self.root.find("notes")
         systems = xmlnotes.findall('system')
@@ -240,6 +347,22 @@ class xmlData():
         return output
 
     def get_ops_summary(self, s, o, p):
+        """Extract operations summary specifications for a system parameter.
+
+        Parameters
+        ----------
+        s : str
+            System identifier name.
+        o : str
+            Data origin classification.
+        p : dict
+            Parameter metadata dictionary.
+
+        Returns
+        -------
+        result : dict
+            Operation summary specifications dictionary.
+        """
         result = {}
         plot_tags = ["additional", "setting", "X"]
         stat_tags = ["setting"]
@@ -275,6 +398,13 @@ class xmlData():
         return result
 
     def get_par_summary(self):
+        """Extract summary data for all analyzed parameters across systems.
+
+        Returns
+        -------
+        output : dict
+            Analyzed parameter records grouped by system section.
+        """
         output = {}
         if len(self.systems) > 0:
             for s in self.systems:
@@ -332,9 +462,34 @@ class xmlData():
         return output
         
     def get_period(self):
+        """Retrieve report periodicity string from XML report.
+
+        Returns
+        -------
+        str
+            Uppercase periodicity string.
+        """
         return self.root.find("period").text.upper()
         
     def get_results(self, s, o, p, opssum):
+        """Extract operation execution output results per acquisition step.
+
+        Parameters
+        ----------
+        s : str
+            System identifier name.
+        o : str
+            Data origin classification.
+        p : dict
+            Parameter metadata dictionary.
+        opssum : dict
+            Operation summary dictionary.
+
+        Returns
+        -------
+        results : dict
+            Results payload dictionary indexed by acquisition ID.
+        """
         results = {}
         #parameter xml branch
         for elem in self.root.iterfind('system[@name="'+s+'"]/'+o+'/parameter[@name="'+p['par']+'"]'):
@@ -424,8 +579,35 @@ class xmlData():
         return results
         
 class pdfBuilder():
-    """
-    Render XML data in PDF document
+    """Build PDF report documents from parsed XML data using ReportLab flowables.
+
+    Parameters
+    ----------
+    xmldata : str, optional
+        XML data content (default is "").
+    plotfromfile : bool, optional
+        If True, loads plot images from disk instead of re-rendering (default is False).
+    repid : str, optional
+        Unique experiment run ID (default is "").
+
+    Attributes
+    ----------
+    content : list
+        List of ReportLab flowable elements.
+    plotfromfile : bool
+        Plot rendering mode flag.
+    workdir : str
+        Path to temporary working directory.
+    txt_fontsize : int
+        Base text font size.
+    tbl_title_fontsize : int
+        Table title font size.
+    author : str
+        Document author string ("AIDA").
+    title : str
+        Document title string.
+    toc : TableOfContents
+        Table of contents flowable instance.
     """
     def __init__(self, xmldata="", plotfromfile = False, repid = ""):
         self.content = []
@@ -446,6 +628,13 @@ class pdfBuilder():
         self.toc = TableOfContents()
 
     def add_acq_details(self, alist):
+        """Append acquisition step details table to PDF flowables list.
+
+        Parameters
+        ----------
+        alist : list of list
+            List of [acq_id, tstart, tstop] tuples.
+        """
         if len(alist) > 0:
             self.content.append(Spacer(1,0.2*inch))
             p = Paragraph("<b>Acquisition Details</b>", self.paragraph_style)
@@ -474,9 +663,25 @@ class pdfBuilder():
             self.content.append(Spacer(1,0.2*inch))         
 
     def add_break(self):
+        """Append page break flowable."""
         self.content.append(PageBreak())
         
     def add_centred_title(self, text, textcolor=[0,0,0], size=28, mtop=0, mbottom=0):
+        """Append centered title paragraph flowable.
+
+        Parameters
+        ----------
+        text : str
+            Title text string.
+        textcolor : list of int, optional
+            RGB color values in range [0, 255] (default is [0, 0, 0]).
+        size : int, optional
+            Font size (default is 28).
+        mtop : int, optional
+            Top margin space (default is 0).
+        mbottom : int, optional
+            Bottom margin space (default is 0).
+        """
         titleStyle = ParagraphStyle('title',
                            fontName="Helvetica-Bold",
                            fontSize=size,
@@ -488,6 +693,13 @@ class pdfBuilder():
         self.content.append(p)
 
     def add_error_list(self, elist):
+        """Append error/warning detail summary table.
+
+        Parameters
+        ----------
+        elist : list of dict
+            List of error detail dictionaries.
+        """
         if len(elist)>0:
             self.content.append(Spacer(1,0.2*inch))
             p = Paragraph("<b>Errors/Warnings Details</b>", self.paragraph_style)
@@ -534,6 +746,13 @@ class pdfBuilder():
             self.content.append(Spacer(1,0.2*inch))         
             
     def add_exp_info(self, data):
+        """Append experiment configuration section table.
+
+        Parameters
+        ----------
+        data : dict
+            Configuration key-value mapping.
+        """
         self.add_section("*** Configuration", color=[0,0,190])
         tabledata = []
         for k,v in data.items():
@@ -544,6 +763,15 @@ class pdfBuilder():
         self.content.append(t)
 
     def add_exp_list(self, data, displayed):
+        """Append table summarizing performed analysis operations.
+
+        Parameters
+        ----------
+        data : dict
+            Performed operations mapping.
+        displayed : dict
+            Display status mapping per acquisition.
+        """
         self.content.append(Spacer(1,0.2*inch))
 
         if len(data) > 0:
@@ -630,6 +858,21 @@ class pdfBuilder():
             self.content.append(t)
 
     def add_exp_section(self, maintext, subtext = "", textcolor=[0,0,190], size=28, subsize = 28):
+        """Append experiment section cover banner flowable.
+
+        Parameters
+        ----------
+        maintext : str
+            Main title text.
+        subtext : str, optional
+            Subtitle text (default is "").
+        textcolor : list of int, optional
+            RGB color array (default is [0, 0, 190]).
+        size : int, optional
+            Main title font size (default is 28).
+        subsize : int, optional
+            Subtitle font size (default is 28).
+        """
         self.content.append(Spacer(1,150))
         tabledata = []
         titleStyle = ParagraphStyle('title',
@@ -654,6 +897,15 @@ class pdfBuilder():
         self.content.append(t)
         
     def add_general_info(self, data, period):
+        """Append general report info table flowable.
+
+        Parameters
+        ----------
+        data : dict
+            General info key-value pairs.
+        period : str
+            Report periodicity mode string.
+        """
         self.content.append(Spacer(1,0.4*inch))
         tabledata = []
         p = Paragraph('''<b>Report Periodicity</b>''', self.paragraph_style)
@@ -668,6 +920,13 @@ class pdfBuilder():
         self.content.append(t)
 
     def add_infopar(self, data):
+        """Append parameter metadata and soft/hard limits details table.
+
+        Parameters
+        ----------
+        data : dict
+            Parameter metadata dictionary.
+        """
         excluded_keys = ['par', 'error', 'warning', 'hard_max', 'hard_min', 'soft_max', 'soft_min']
         #get parameter name
         fullname = Paragraph('''<b>'''+data['par']+'''</b>''', self.paragraph_style)
@@ -744,6 +1003,13 @@ class pdfBuilder():
         self.content.append(t)
 
     def add_notes(self, data):
+        """Append system notes and error lists section.
+
+        Parameters
+        ----------
+        data : dict
+            System notes dictionary.
+        """
         self.add_section("*** Notes", color=[0,0,190])
         for s,v in data.items():
             #status summary
@@ -791,6 +1057,13 @@ class pdfBuilder():
                 self.content.append(Spacer(1,0.2*inch))
 
     def add_par_summary(self, data):
+        """Append overall summary table of analyzed system parameters.
+
+        Parameters
+        ----------
+        data : dict
+            Parameter records grouped by system section.
+        """
         self.add_section("*** Summary of analyzed parameters", color=[0,0,190])
         for section, d in data.items():
             tabledata = []
@@ -839,6 +1112,23 @@ class pdfBuilder():
             self.content.append(Spacer(1,0.2*inch))
 
     def add_results(self, data, acq_det, par, opdata, origin, s):
+        """Append plot figures or statistical analysis tables for an acquisition step.
+
+        Parameters
+        ----------
+        data : dict
+            Operation results dictionary.
+        acq_det : list
+            Acquisition details list.
+        par : str
+            Parameter identifier.
+        opdata : dict
+            Operations data mapping.
+        origin : str
+            Data origin context.
+        s : str
+            System identifier name.
+        """
         for i, acq_data in data.items():
             #if l(data) > 1, create page with acquisition title          
             if len(data) > 1:
@@ -885,7 +1175,21 @@ class pdfBuilder():
             if len(statres) > 0:
                 self.render_statistics(statres, par)
 
-    def add_section(self, text, fsize=12, color = [0,0,0], align = "LEFT"):     
+    def add_section(self, text, fsize=12, color = [0,0,0], align = "LEFT"):
+        """Append section heading paragraph flowable.
+
+        Parameters
+        ----------
+        text : str
+            Heading text.
+        fsize : int, optional
+            Font size (default is 12).
+        color : list of int, optional
+            RGB color values array (default is [0, 0, 0]).
+        align : str, optional
+            Text alignment ('LEFT', 'CENTER', 'RIGHT', default is "LEFT").
+        """
+        
         r = color[0]
         g = color[1]
         b = color[2]
@@ -909,6 +1213,13 @@ class pdfBuilder():
         self.content.append(p)
 
     def add_toc(self, entry = None):
+        """Append Table of Contents flowable or insert an entry.
+
+        Parameters
+        ----------
+        entry : tuple or None, optional
+            Tuple of (level, title, page_number) if adding an entry (default is None).
+        """
         if entry is None:
             self.add_section("*** Table of Contents", color=[0,0,190])      
             self.content.append(self.toc)
@@ -919,6 +1230,19 @@ class pdfBuilder():
             self.toc.addEntry(level, title,page)
 
     def make_plot(self, data, labels, nodata, pclass):
+        """Generate and append plot flowables.
+
+        Parameters
+        ----------
+        data : object
+            Plot data structure.
+        labels : list of str
+            Parameter labels list.
+        nodata : list
+            No-data flags list.
+        pclass : object
+            Plot class instance.
+        """
         if pclass.splitplot == 0:
             #only single plot
             drawing = pclass.single_plot(data, labels, nodata)
@@ -942,6 +1266,19 @@ class pdfBuilder():
                     self.content.append(item)
 
     def plot_header(self, op, curr_op, par, func):
+        """Append header banner table for a landscape plot page.
+
+        Parameters
+        ----------
+        op : str or int
+            Operation ID.
+        curr_op : dict
+            Current operation settings dictionary.
+        par : str
+            Parameter identifier name.
+        func : str
+            Plot function type name.
+        """
         #horizontal template for plots
         self.content.append(NextPageTemplate('landscape_page'))
         self.add_break()
@@ -992,6 +1329,15 @@ class pdfBuilder():
         self.content.append(Spacer(1,0.2*inch))
         
     def render_statistics(self, data, par):
+        """Append statistical analysis summary table.
+
+        Parameters
+        ----------
+        data : list of tuple
+            List of (metric_name, value) tuples.
+        par : str
+            Parameter identifier name.
+        """
         hasdata = False
         tabledata = []
         #create header
@@ -1035,8 +1381,20 @@ class pdfBuilder():
             self.content.append(t)
 
 class pdfExpBuilder():
-    """
-    Render data from online experiments in PDF document
+    """Build PDF document flowables for online experiment plot generation.
+
+    Attributes
+    ----------
+    content : list
+        List of ReportLab flowable elements.
+    txt_fontsize : int
+        Base text font size (12).
+    tbl_title_fontsize : int
+        Table title font size (12).
+    author : str
+        Document author string ("AIDA").
+    title : str
+        Document title string ("AIDA Experiment").
     """
     def __init__(self):
         self.content = []
@@ -1054,6 +1412,21 @@ class pdfExpBuilder():
         self.title = "AIDA Experiment"
 
     def add_centred_title(self, text, textcolor=[0,0,0], size=28, mtop=0, mbottom=0):
+        """Append centered title paragraph flowable.
+
+        Parameters
+        ----------
+        text : str
+            Title text string.
+        textcolor : list of int, optional
+            RGB color values in range [0, 255] (default is [0, 0, 0]).
+        size : int, optional
+            Font size (default is 28).
+        mtop : int, optional
+            Top margin space (default is 0).
+        mbottom : int, optional
+            Bottom margin space (default is 0).
+        """
         titleStyle = ParagraphStyle('title',
                            fontName="Helvetica-Bold",
                            fontSize=size,
@@ -1065,6 +1438,19 @@ class pdfExpBuilder():
         self.content.append(p)
 
     def add_comments(self, notes, labels, flags, mtop=30):
+        """Append user comments and flag status summary table.
+
+        Parameters
+        ----------
+        notes : list of str
+            User notes list.
+        labels : list of str
+            Parameter labels list.
+        flags : list of str
+            Flag status tokens list.
+        mtop : int, optional
+            Top margin space (default is 30).
+        """
         self.content.append(Spacer(1,mtop))
         title = Paragraph('''<b>Summary:</b>''', self.paragraph_style)
         title_tbl = Table([[title]])
@@ -1098,6 +1484,15 @@ class pdfExpBuilder():
         self.content.append(t)
 
     def add_filelist(self, flist, mtop=30):
+        """Append table listing files involved in plot experiment.
+
+        Parameters
+        ----------
+        flist : list of dict
+            List of file record dictionaries.
+        mtop : int, optional
+            Top margin space (default is 30).
+        """
         self.content.append(NextPageTemplate('landscape_page'))      
         self.content.append(PageBreak())        
         #Title
@@ -1134,6 +1529,17 @@ class pdfExpBuilder():
         self.content.append(t)      
         
     def add_image(self, fname, w=None, h=None):
+        """Append landscape plot image flowable.
+
+        Parameters
+        ----------
+        fname : str
+            Path to image file.
+        w : float or None, optional
+            Image draw height override (default is None).
+        h : float or None, optional
+            Image draw width override (default is None).
+        """
         self.content.append(NextPageTemplate('landscape_page'))
         self.content.append(PageBreak())
         I = Image(fname)
@@ -1148,6 +1554,17 @@ class pdfExpBuilder():
         self.content.append(I)    
 
     def add_overplots_info(self, marr, sarr, mtop = 10):
+        """Append overplots statistics summary list.
+
+        Parameters
+        ----------
+        marr : list
+            Mean metric tuples.
+        sarr : list
+            Standard deviation metric tuples.
+        mtop : int, optional
+            Top margin space (default is 10).
+        """
 
         self.content.append(Spacer(1,mtop))      
         tabledata = []
@@ -1175,6 +1592,17 @@ class pdfExpBuilder():
         self.content.append(t)
         
     def add_par_summary(self, data, source, mtop=30):
+        """Append summary table of analyzed parameters.
+
+        Parameters
+        ----------
+        data : list
+            Parameter metadata records.
+        source : str
+            Data system source name.
+        mtop : int, optional
+            Top margin space (default is 30).
+        """
         self.content.append(Spacer(1,mtop))
         title = Paragraph('''<b>Analyzed Parameters:</b>''', self.paragraph_style)
         title_tbl = Table([[title]])
@@ -1218,7 +1646,20 @@ class pdfExpBuilder():
         alt_color_tbl(t, len(tabledata),  startline = 2)
         self.content.append(t)
 
-    def add_plot_info(self, pclass, labels, mtop=10, title=None):    
+    def add_plot_info(self, pclass, labels, mtop=10, title=None):
+        """Append description table of plot type and parameters.
+
+        Parameters
+        ----------
+        pclass : object
+            Plot class instance.
+        labels : list of str
+            Plotted parameter labels.
+        mtop : int, optional
+            Top margin space (default is 10).
+        title : str or None, optional
+            Title string override (default is None).
+        """
         self.content.append(Spacer(1,mtop))      
         tabledata = []
         if title is not None:
@@ -1244,6 +1685,19 @@ class pdfExpBuilder():
         self.content.append(t)           
         
     def add_single_row(self, row1, row2, fontsize = None, mtop = 15):
+        """Append a two-column key-value text row table.
+
+        Parameters
+        ----------
+        row1 : str
+            Key text label.
+        row2 : str
+            Value text label.
+        fontsize : int or None, optional
+            Font size (defaults to self.txt_fontsize).
+        mtop : int, optional
+            Top margin space (default is 15).
+        """
         self.content.append(Spacer(1,mtop))
         if fontsize is None:
             fontsize = self.txt_fontsize          
@@ -1258,6 +1712,15 @@ class pdfExpBuilder():
         self.content.append(t)        
 
     def add_statistics(self, stats, labels):
+        """Append formatted statistical analysis pages for each parameter.
+
+        Parameters
+        ----------
+        stats : str
+            JSON string representation of calculated statistics.
+        labels : list of str
+            List of parameter labels.
+        """
         txt_font = 'Helvetica-Bold'
         txt_fontsize = 10
         space_len = stringWidth(" ", txt_font, txt_fontsize)
@@ -1302,6 +1765,17 @@ class pdfExpBuilder():
                     self.content.append(p)
                                       
     def add_op_info(self, op, flist, mtop = 10):
+        """Append description table for image analysis operations.
+
+        Parameters
+        ----------
+        op : str
+            Operation identifier name.
+        flist : list of str
+            List of file path strings involved in operation.
+        mtop : int, optional
+            Top margin space (default is 10).
+        """
         self.content.append(Spacer(1,mtop))      
         tabledata = []
         if op == "difference":
@@ -1329,6 +1803,15 @@ class pdfExpBuilder():
         self.content.append(t)        
         
     def add_stats_info(self, stats, mtop = 10):
+        """Append list of statistical function names to summary.
+
+        Parameters
+        ----------
+        stats : list of str
+            Statistical function names list.
+        mtop : int, optional
+            Top margin space (default is 10).
+        """
         self.content.append(Spacer(1,mtop))      
         tabledata = []
 
@@ -1342,6 +1825,15 @@ class pdfExpBuilder():
         self.content.append(t)
 
     def add_status(self, status, mtop = 15):
+        """Append experiment status label and icon table.
+
+        Parameters
+        ----------
+        status : str
+            Status string token ('ok', 'warning', 'serious', 'nd').
+        mtop : int, optional
+            Top margin space (default is 15).
+        """
         self.content.append(Spacer(1,mtop)) 
         if status == "nd":
             status_val = "N/A"
@@ -1361,9 +1853,7 @@ class pdfExpBuilder():
         self.content.append(t)      
 
 class pdfImgBuilder(pdfExpBuilder):
-    """
-    Render data from online experiments in PDF document
-    """
+    """Build PDF document flowables for image analysis results."""
     def __init__(self):
         self.content = []
         self.txt_fontsize = 12
@@ -1380,6 +1870,15 @@ class pdfImgBuilder(pdfExpBuilder):
         self.title = "AIDA Experiment"
         
     def add_img_comment(self, notes, mtop = 15):
+        """Append image comments section flowable.
+
+        Parameters
+        ----------
+        notes : str
+            Comment notes string.
+        mtop : int, optional
+            Top margin space (default is 15).
+        """
         self.content.append(Spacer(1,mtop)) 
         pstatus = Paragraph(notes, self.paragraph_style)
         tabledata = []
@@ -1389,6 +1888,17 @@ class pdfImgBuilder(pdfExpBuilder):
         self.content.append(t)          
         
 def alt_color_tbl(tbl, nrows, startline = 0):
+    """Apply alternating light grey / white background colors to table rows.
+
+    Parameters
+    ----------
+    tbl : Table
+        Target ReportLab Table flowable.
+    nrows : int
+        Total row count in table.
+    startline : int, optional
+        Starting row index for alternating colors (default is 0).
+    """
     for each in range(startline,nrows):
         if each % 2 == 0:
             bg_color = colors.lightgrey
@@ -1397,6 +1907,20 @@ def alt_color_tbl(tbl, nrows, startline = 0):
         tbl.setStyle(TableStyle([('BACKGROUND', (0, each), (-1, each), bg_color)]))         
         
 def set_filename(plot, now):
+    """Generate standardized timestamped experiment filename.
+
+    Parameters
+    ----------
+    plot : str
+        Plot or experiment name.
+    now : datetime
+        Current datetime instance.
+
+    Returns
+    -------
+    name : str
+        Formatted filename string.
+    """
     date = now.strftime("%Y%m%d")
     time = now.strftime("%H%M%S")
     name = "exp_"+plot+"_"+date+"_"+time
@@ -1404,6 +1928,24 @@ def set_filename(plot, now):
     return name
 
 def create_png(img, fname, user):
+    """Decode base64 image data string and save it as a PNG file.
+
+    Parameters
+    ----------
+    img : str
+        Base64 encoded image string.
+    fname : str
+        Output filename.
+    user : str
+        Username.
+
+    Returns
+    -------
+    error : int
+        0 on success, 1 on decoding or write failure.
+    complete_name : str
+        Full path to saved PNG file.
+    """
 
     error = 0
     complete_name = "../users/" + user + "/" + fname + ".png"
@@ -1418,6 +1960,17 @@ def create_png(img, fname, user):
     return error, complete_name
     
 def add_stats_table(pdf, stats, labels):
+    """Add statistical result tables to a PDF document.
+
+    Parameters
+    ----------
+    pdf : pdfExpBuilder
+        Target PDF builder instance.
+    stats : str
+        JSON formatted string of statistics.
+    labels : list of str
+        List of parameter labels.
+    """
 
     keys=[]
     stats = json.loads(stats)
@@ -1437,6 +1990,18 @@ def add_stats_table(pdf, stats, labels):
             pdf.add_stats_results(values, par_name, t = True)
             
 def create_image_pdf(data):
+    """Generate PDF summary report for image analysis experiments.
+
+    Parameters
+    ----------
+    data : cgi.FieldStorage or dict
+        CGI request payload containing user, filename, status, and image details.
+
+    Returns
+    -------
+    out : dict
+        Dictionary containing error status and PDF file download path.
+    """
     #Flag image into DB without creating PDF. To create PDF you need to modify pdfcreator
     #get data from args
     error = 0
@@ -1596,6 +2161,18 @@ def create_image_pdf(data):
     return out    
   
 def create_plot_pdf(data):
+    """Generate PDF summary report for plot experiments.
+
+    Parameters
+    ----------
+    data : cgi.FieldStorage or dict
+        CGI request payload containing image base64 data, plot parameters, flags, and notes.
+
+    Returns
+    -------
+    out : dict
+        Dictionary containing error status and PDF file download path.
+    """
     error = 0
     #get data from frontend
     img = data['img'].value
@@ -1845,6 +2422,18 @@ def create_plot_pdf(data):
     return out
   
 def insert_report_flag(data):
+    """Store report flag status and notes in database and send email notification.
+
+    Parameters
+    ----------
+    data : cgi.FieldStorage or dict
+        CGI request payload containing creator, filename, status, and notes.
+
+    Returns
+    -------
+    out : dict
+        Dictionary containing execution error status code.
+    """
     error = 0
     #get data from frontend
     error = 0
@@ -1902,6 +2491,13 @@ def insert_report_flag(data):
     return out
 
 def main(data):
+    """CGI main entry point for PDF generation requests.
+
+    Parameters
+    ----------
+    data : cgi.FieldStorage
+        HTTP POST request payload containing plot type and PDF specifications.
+    """
     global e
     e = util.statusMsg()
 

@@ -1,4 +1,15 @@
 <?php
+	/**
+	 * User Session Logout Handler.
+	 *
+	 * Logs out the user, updates last logout timestamp and user history, clears temporary
+	 * user files, destroys the session and cookies, and redirects to the landing page.
+	 *
+	 * @package    AIDA
+	 * @subpackage Controllers\Auth
+	 * @author     Giuseppe Riccio
+	 * @version    1.1.0
+	 */
 	include('functions.php');
 	#include("config.php");
 	$config = read_config_json("config.json");

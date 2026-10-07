@@ -1,4 +1,19 @@
-<?php include("header.html");
+<?php
+/**
+ * Application Installation Wizard View.
+ *
+ * Provides the step-by-step UI wizard for initial AIDA setup, including:
+ * - Optional backup archive import (users, configurations, experiments, history, SMTP)
+ * - Mail server (SMTP) host, port, user, and password configuration
+ * - First Administrator account registration with CAPTCHA verification
+ *
+ * @package    AIDA
+ * @subpackage Views\Install
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+
+	include("header.html");
 	if(!@include_once('functions.php')) {
 		include('functions.php');	
 	}

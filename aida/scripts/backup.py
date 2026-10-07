@@ -1,4 +1,16 @@
 #!/usr/bin/python
+
+"""
+System Backup and Data Management Module.
+
+This module provides functionalities for exporting, importing, and flushing 
+system data and user configurations. It handles the creation and extraction 
+of compressed archives (.tar.gz), database table dumps, restoration of public 
+and private stored files, system settings, and SMTP configuration management.
+
+@package AIDA
+@module backup
+"""
  
 import cgi, cgitb 
 cgitb.enable(display=0, logdir="cgi-logs")  # for troubleshooting
@@ -20,21 +32,22 @@ import db_io
 import traceback
 #maxInt = sys.maxsize
 import smtplib
-#while True:
- #   # decrease the maxInt value by factor 10 
-  #  # as long as the OverflowError occurs.
-
-#    try:
- #       csv.field_size_limit(maxInt)
- #       break
-  #  except OverflowError:
-   #     maxInt = int(maxInt/10)
-
-
-
-
 
 def maketar(zipf, d):
+    """Add a file or directory to a tar archive.
+
+    Parameters
+    ----------
+    zipf : tarfile.TarFile
+        Target tar archive object.
+    d : str
+        File or directory path to add.
+
+    Returns
+    -------
+    isdone : int
+        1 if successfully added, 0 otherwise.
+    """    
     isdone = 1
     try:
         zipf.add(d, arcname=d)
@@ -44,6 +57,20 @@ def maketar(zipf, d):
     return isdone
 
 def addemptydir(zipf, d):
+    """Add an empty directory entry to a tar archive.
+
+    Parameters
+    ----------
+    zipf : tarfile.TarFile
+        Target tar archive object.
+    d : str
+        Directory path to create in the archive.
+
+    Returns
+    -------
+    isdone : int
+        1 if successfully added, 0 otherwise.
+    """
     isdone = 1
     try:    
         t = tarfile.TarInfo(d)
@@ -55,6 +82,22 @@ def addemptydir(zipf, d):
     return isdone        
 
 def addtbldump(tbl, zipf,keep_tmp=True):
+    """Export database table contents to SQL insert file and add it to archive.
+
+    Parameters
+    ----------
+    tbl : str
+        Database table name.
+    zipf : tarfile.TarFile
+        Target tar archive object.
+    keep_tmp : bool, optional
+        If False, exports only permanently stored records (tokeep > 0) (default is True).
+
+    Returns
+    -------
+    isdone : int
+        1 if table dump was successfully added, 0 otherwise.
+    """
     isdone = 1  
     os.chdir("scripts")
     try:
@@ -111,6 +154,22 @@ def addtbldump(tbl, zipf,keep_tmp=True):
 
 
 def data_export(data):
+    """Generate a compressed archive backup containing selected system data and tables.
+
+    Parameters
+    ----------
+    data : cgi.FieldStorage or dict
+        Form parameters specifying components to include in export.
+
+    Returns
+    -------
+    filename : str
+        Generated archive filename.
+    error : int
+        Error status code (0: success, 1: total failure, 2: partial success).
+    listerr : str
+        Detailed newline-separated log of failed or skipped components.
+    """
     error = 0
     now = datetime.utcnow()
     now = now.strftime("%Y%m%d%H%M%S")
@@ -332,6 +391,22 @@ def data_export(data):
 
 
 def data_import(data):
+    """Import system data, configurations, and database records from an extracted archive.
+
+    Parameters
+    ----------
+    data : cgi.FieldStorage or dict
+        Input parameters containing uploaded backup details and flags.
+
+    Returns
+    -------
+    filename : str
+        Name of the imported file archive.
+    error : int
+        Error status code (0: success, 1: total failure, 2: partial error).
+    listout : str
+        Detailed log of error messages or processed items.
+    """
     error = 0
     listout = ""
     username = data["username"].value   
@@ -572,6 +647,20 @@ def data_import(data):
 
 
 def copy_el(src, dst):
+    """Copy a file or directory tree to a target destination.
+
+    Parameters
+    ----------
+    src : str
+        Source file or directory path.
+    dst : str
+        Destination path.
+
+    Returns
+    -------
+    error : int
+        0 if successful, 1 on failure.
+    """
     error = 0
     try:
         if os.path.isfile(src):      
@@ -584,6 +673,20 @@ def copy_el(src, dst):
     return error
 
 def import_tbl(tbl_list, datapath) :
+    """Import SQL insert statements from dumped table files into database.
+
+    Parameters
+    ----------
+    tbl_list : list of str
+        List of table names to import.
+    datapath : str
+        Directory path where `.tbl` files are stored.
+
+    Returns
+    -------
+    error : int
+        0 if all tables imported successfully, 1 if any import failed.
+    """
     error = 0  
     for tbl in tbl_list:
         if error == 0:
@@ -613,6 +716,20 @@ def import_tbl(tbl_list, datapath) :
  
     
 def replace_file(src, dst):
+    """Replace target destination file with source file.
+
+    Parameters
+    ----------
+    src : str
+        Source file path.
+    dst : str
+        Destination file path.
+
+    Returns
+    -------
+    error : int
+        0 if successful, 1 on failure.
+    """
     error = 0
     try:
         copyfile(src, dst)
@@ -621,6 +738,20 @@ def replace_file(src, dst):
     return error
 
 def copydir(src, dst):
+    """Copy directory structure recursively to destination.
+
+    Parameters
+    ----------
+    src : str
+        Source directory path.
+    dst : str
+        Destination directory path.
+
+    Returns
+    -------
+    error : int
+        0 if successful, 1 on failure.
+    """
     error = 0
     try:
         copy_tree(src, dst)
@@ -629,6 +760,22 @@ def copydir(src, dst):
     return error 
 
 def check_exist(files=[], dirs=[], ext=""):
+    """Check existence of specific files, directories, or extension matches.
+
+    Parameters
+    ----------
+    files : list of str, optional
+        List of file paths to check.
+    dirs : list of str, optional
+        List of directory paths to check.
+    ext : str, optional
+        File extension to check for matching files.
+
+    Returns
+    -------
+    out : str
+        "block" if all requested checks pass, otherwise "none".
+    """
 
     if len(files) > 0:
         chkfile = False
@@ -663,7 +810,22 @@ def check_exist(files=[], dirs=[], ext=""):
         
     
 def upload(data):
+    """Decompress uploaded tar.gz backup file and check its constituent contents.
 
+    Parameters
+    ----------
+    data : cgi.FieldStorage or dict
+        Contains uploaded file details and user details.
+
+    Returns
+    -------
+    file : str
+        Path to processed archive file.
+    error : int
+        0 on success, 1 on decompression failure, 2 if user data check fails.
+    listout : list or str
+        List of component status strings or error message.
+    """
     error = 0
     user = data["user"].value
     file = "../tmp/"+data["filename"].value
@@ -701,6 +863,18 @@ def upload(data):
     return file, error, listout
 
 def store_smtp(data):
+    """Save SMTP server settings to configuration file and test connection.
+
+    Parameters
+    ----------
+    data : cgi.FieldStorage or dict
+        Contains host, port, user, and password fields.
+
+    Returns
+    -------
+    error : int
+        0 on success, 1 on write error, 2 on SMTP connection failure.
+    """
     error = 0
     host = data['host'].value
     port = data['port'].value
@@ -733,7 +907,17 @@ def store_smtp(data):
     return error
 
 def flush_data(isfull = True, remove_stored = False, keep_config = False):
+    """Purge database tables, user folders, logs, and temporary files.
 
+    Parameters
+    ----------
+    isfull : bool, optional
+        If True, purges all user accounts and default settings (default is True).
+    remove_stored : bool, optional
+        If True, removes stored files in user directories (default is False).
+    keep_config : bool, optional
+        If True, preserves report configuration files (default is False).
+    """
     #flush db
     #tbl2del = ["history", "report_files", "stored_files", "stored_plots", "user_files"]
     tbl2del = ["history", "report_files", "stored_files", "stored_plots", "user_files", "running_reports","stored_ml"]
@@ -824,6 +1008,7 @@ def flush_data(isfull = True, remove_stored = False, keep_config = False):
         
         
 def clean_install():
+    """Clean temporary directory and log system installation readiness status."""
     #clean tmp dir
     for el in os.listdir("../tmp"):
         if el != "index.html":
@@ -836,6 +1021,18 @@ def clean_install():
         f.write("OK")
 
 def set_super_email(data):
+    """Update system administrator notification email address in global configuration.
+
+    Parameters
+    ----------
+    data : cgi.FieldStorage or dict
+        Contains the new admin email value.
+
+    Returns
+    -------
+    error : int
+        0 on success, 1 on configuration update failure.
+    """
     error = 0
     email = data['email'].value
     try:
@@ -849,6 +1046,13 @@ def set_super_email(data):
     return error
 
 def check_connection():
+    """Verify local database connection status.
+
+    Returns
+    -------
+    err : int
+        0 if connection succeeded, non-zero error code otherwise.
+    """
     #get IODA DB connection data from config.json
     connconfig = util.repConfig().data['local_db']
     dbio = db_io.dbIO(connconfig)
@@ -856,6 +1060,13 @@ def check_connection():
     return err
 
 def main(data):
+    """CGI main entry point for backup management operations.
+
+    Parameters
+    ----------
+    data : cgi.FieldStorage
+        HTTP request payload containing action parameter and relevant settings.
+    """
     error = 0
     file = ""
     listerr = ""    

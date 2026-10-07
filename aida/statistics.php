@@ -1,3 +1,16 @@
+<?php
+/**
+ * Statistical Analysis Setup View.
+ *
+ * Page template for selecting data sources, UTC date ranges, and advanced
+ * statistical estimators (e.g., mean, median, RMS, MAD, skewness, kurtosis).
+ *
+ * @package    AIDA
+ * @subpackage Views\Plots
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 <!doctype html>
 <html class="fixed">
 	<?php

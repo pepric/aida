@@ -1,3 +1,20 @@
+/**
+ * Data Plotting and Visualization Engine.
+ *
+ * Manages online and offline plot generation (Scatter, Trend, Histogram),
+ * Plotly layout rendering, custom modebar controls, statistics calculation, and export utilities.
+ *
+ * @package    AIDA
+ * @subpackage JS\Plots
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+
+/**
+ * Triggers offline background plot generation.
+ *
+ * @param {Event} e Event object.
+ */
 function run_plot_offline(e){
 	var ny = parseInt($("#n_ypar").val());
 	var system = document.getElementById("hktm_source").value;
@@ -38,6 +55,11 @@ function run_plot_offline(e){
 	e.preventDefault();
 }
 
+/**
+ * Triggers online plot generation and statistical analysis via Python CGI scripts.
+ *
+ * @param {Event} e Event object.
+ */
 function run_py(e) {
 	var ny = parseInt($("#n_ypar").val());
 	var system = document.getElementById("hktm_source").value;
@@ -164,6 +186,11 @@ function run_py(e) {
 	e.preventDefault();	
 };	
 
+/**
+ * Processes uploaded data files and renders corresponding plot types.
+ *
+ * @param {Event} e Event object.
+ */
 function run_upload_py(e){
   	$("#loader").show();
   	//number of y parameters
@@ -316,6 +343,12 @@ function run_upload_py(e){
 	e.preventDefault();	  
 }
 
+/**
+ * Retrieves input value from a form field or defaults to "None".
+ *
+ * @param {string} divname Element DOM ID.
+ * @returns {string} Element value or "None".
+ */
 function set_special_param(divname){
     var div = document.getElementById(divname)
     var val = "None"
@@ -326,6 +359,12 @@ function set_special_param(divname){
     return val
 }
 
+/**
+ * Parses coefficient range or list string into numerical array.
+ *
+ * @param {string} coeff Coefficient string representation.
+ * @returns {Array} Array containing [first_coeff, remaining_coeffs].
+ */
 function set_coeffs(coeff){
 	var first_coeff
 	var coeff_arr = []
@@ -362,6 +401,12 @@ function set_coeffs(coeff){
 	return [first_coeff, coeff_arr.slice(1)]
 }
 
+/**
+ * Evaluates first numerical coefficient value.
+ *
+ * @param {number|string} c Input value.
+ * @returns {string|number} Evaluated coefficient.
+ */
 function set_1st_coeff(c){
 	first_coeff = "None"
 	if(!isNaN(c)){
@@ -370,6 +415,13 @@ function set_1st_coeff(c){
 	return first_coeff
 }
 
+/**
+ * Collects form inputs and constructs data payload for plotting scripts.
+ *
+ * @param {number} ny Number of Y parameters.
+ * @param {string} plot Target plot type.
+ * @returns {Array} Array containing [params, labels, ny].
+ */
 function prepare_data(ny,plot){
 	var source_settings ={
 		"NISP" : {"nrows" : 4, "ncols" : 4},
@@ -741,6 +793,12 @@ function prepare_data(ny,plot){
 	return [params,labels,ny]
 }
 
+/**
+ * Gets parameter type string from select element.
+ *
+ * @param {string} p Parameter prefix ID.
+ * @returns {string} Parameter type value.
+ */
 function set_alt_tbl(p){
 	var alt_tbl_div = document.getElementById(p+"-partype");
 	if(alt_tbl_div == null){
@@ -752,6 +810,12 @@ function set_alt_tbl(p){
 	return alt_tbl
 }
 
+/**
+ * Evaluates ADU/Calibrated checkbox state.
+ *
+ * @param {string} p Parameter prefix ID.
+ * @returns {string} "True", "False", or "None".
+ */
 function set_adu(p){
 	var adu_flag
 	adu_checked = $('input[name="'+p+'-adu_cal"]')         
@@ -769,7 +833,14 @@ function set_adu(p){
 	return adu_flag
 }
 
-
+/**
+ * Retrieves group identifier for SIR data source.
+ *
+ * @param {string} plot Plot type identifier.
+ * @param {number|string} i Index.
+ * @param {boolean} [isX=false] X axis flag.
+ * @returns {string} Group string.
+ */
 function set_group(plot, i, isX=false){
 	var group = "None"
 	var div = "y"+i+"-partype"
@@ -785,6 +856,15 @@ function set_group(plot, i, isX=false){
 	return group
 }
 
+/**
+ * Queries server for parameter axis label configuration.
+ *
+ * @param {string} adu ADU status.
+ * @param {string} par Parameter string.
+ * @param {string} source Data source.
+ * @param {string} origin Data origin.
+ * @returns {jqXHR} AJAX deferred object.
+ */
 function set_labels(adu, par, source, origin){
   return $.ajax({
     url: 'scripts/cs_interface.py',
@@ -798,6 +878,23 @@ function set_labels(adu, par, source, origin){
   });
 }
 
+/**
+ * Constructs formatted string label for plot axes and legends.
+ *
+ * @param {string} pvar Parameter ID prefix.
+ * @param {string} sys System identifier.
+ * @param {string} par Parameter name.
+ * @param {string} adu ADU status flag.
+ * @param {string} source Data source.
+ * @param {string} origin Data origin.
+ * @param {string} [ic=null] Subsystem identifier.
+ * @param {string} [val=null] Value string.
+ * @param {string} [det=null] Detector identifier.
+ * @param {string} [order=null] Polynomial order.
+ * @param {string} [coeff=null] Coefficient value.
+ * @param {string} [group=null] Group identifier.
+ * @returns {string} Formatted label string.
+ */
 function build_label(pvar, sys, par, adu, source, origin, ic=null, val=null, det=null, order=null, coeff=null, group=null){
   	var label = ""
     var syslabel = sys+"."
@@ -840,6 +937,15 @@ function build_label(pvar, sys, par, adu, source, origin, ic=null, val=null, det
 	return label
 }
 
+/**
+ * Formats detector row, col, and quadrant into a single token string.
+ *
+ * @param {string} det Detector type token.
+ * @param {string} row Row index.
+ * @param {string} col Column index.
+ * @param {string} id Quadrant select element selector ID.
+ * @returns {string} Formatted detector token string.
+ */
 function collect_detectors(det, row, col, id){
 	if (det=="DET"){
 			var detector = det+"_"+row+col;
@@ -855,6 +961,11 @@ function collect_detectors(det, row, col, id){
 	return detector
 }
 
+/**
+ * Displays plot container and sets active tab.
+ *
+ * @param {string} name Plot or experiment display name.
+ */
 function display_plot(name){
 	document.getElementById('plot_container').style='display:block;';
 	var plotdiv = document.getElementById('tab1')
@@ -868,6 +979,11 @@ function display_plot(name){
 	plottab.setAttribute("class", "tab-pane active")
 }
 
+/**
+ * Collects selected statistical functions and parameters into structured JSON.
+ *
+ * @returns {Object} Structured statistics configuration object.
+ */
 function get_stats_list(){
 	var stats_data = {}
 	// list of selected stats
@@ -930,6 +1046,16 @@ function get_stats_list(){
   	return stats_data
 }
 
+/**
+ * Sends request to Python script to calculate dataset statistics.
+ *
+ * @param {Object} pydata Raw plot data object.
+ * @param {number} ny Number of Y parameters.
+ * @param {string} plot Plot type string.
+ * @param {string} stats Statistics mode ('global' or 'advanced').
+ * @param {Array<string>} labels Parameter label array.
+ * @param {number} [store=1] Storage flag.
+ */
 function calculate_stats(pydata, ny, plot, stats, labels, store=1){
 	stats_data = get_stats_list() 
 	// input data for Python/CGI
@@ -959,6 +1085,13 @@ function calculate_stats(pydata, ny, plot, stats, labels, store=1){
 	) 
 }
 
+/**
+ * Triggers direct browser download for stored image file.
+ *
+ * @param {string} filename File name.
+ * @param {string} source Data source.
+ * @param {string} user Active username.
+ */
 function download_image(filename, source, user){
 	
 	var htmlpage = window.location.href.split("/").pop()
@@ -1014,6 +1147,12 @@ function download_image(filename, source, user){
 	});	
 }
 
+/**
+ * Initializes and appends outer container div for result tables.
+ *
+ * @param {string} maindiv Container ID.
+ * @returns {HTMLElement} Created container element node.
+ */
 function init_result_div(maindiv){
 	var parent = document.getElementById(maindiv);
 	parent.style="display : flex; flex-wrap : wrap";
@@ -1028,6 +1167,16 @@ function init_result_div(maindiv){
 	return node
 }
 
+/**
+ * Renders DataTables list of image files generated by analysis jobs.
+ *
+ * @param {Object} results Analysis result object.
+ * @param {Array<string>} labels Label array.
+ * @param {string} plot Plot type.
+ * @param {string} user Active username.
+ * @param {Array<string>} flist File list array.
+ * @param {string} source Data source.
+ */
 function render_img_files_tbl(results, labels, plot, user, flist, source){
 	var node = init_result_div("plot_files")
 	// create table
@@ -1090,7 +1239,14 @@ function render_img_files_tbl(results, labels, plot, user, flist, source){
 	});	
 }
 
-
+/**
+ * Renders DataTables list of files involved in plot generation.
+ *
+ * @param {Object} results Plot data object.
+ * @param {number} ny Number of Y parameters.
+ * @param {Array<string>} labels Parameter labels.
+ * @param {string} plot Plot type.
+ */
 function render_files_tbl(results, ny, labels, plot){
 	var kf = Object.keys(results)
 	if(kf.includes("files")){
@@ -1218,6 +1374,15 @@ function render_files_tbl(results, ny, labels, plot){
     }
 }
 
+/**
+ * Renders statistics summary tables for image analysis results.
+ *
+ * @param {Object} results Analysis results.
+ * @param {Array<string>} labels Parameter labels.
+ * @param {string} plot Plot type.
+ * @param {Array<string>} flist File list.
+ * @param {number} [store=1] Storage option flag.
+ */
 function render_img_stats(results, labels, plot, flist, store=1){
  	var parent = document.getElementById("plot_stats");
 	parent.style="display : flex; flex-wrap : wrap";	
@@ -1262,6 +1427,16 @@ function render_img_stats(results, labels, plot, flist, store=1){
 	$("#loader").hide();
 }
 
+/**
+ * Parses Python statistics output and renders HTML summary tables.
+ *
+ * @param {string} pydata Raw JSON string from backend.
+ * @param {number} ny Number of Y parameters.
+ * @param {Array<string>} labels Parameter labels.
+ * @param {string} plot Plot type.
+ * @param {string} stats Statistics mode.
+ * @param {number} store Storage option flag.
+ */
 function render_stats(pydata, ny, labels, plot, stats, store){
 	var results = JSON.parse(pydata)
 	var parent = document.getElementById("plot_stats");
@@ -1350,6 +1525,14 @@ function render_stats(pydata, ny, labels, plot, stats, store){
 	$("#loader").hide();
 }
 
+/**
+ * Creates and appends HTML table displaying statistical metrics.
+ *
+ * @param {Object} data Key-value metric pairs.
+ * @param {string} name Table title.
+ * @param {HTMLElement} parent Parent container element.
+ * @param {string} id Container element DOM ID.
+ */
 function create_stats_table(data, name, parent, id){
 	
 	// create stats div
@@ -1417,6 +1600,14 @@ var pencil = {
   transform:"scale(8, 8)"
 }
 
+/**
+ * Renders interactive Plotly trend plot.
+ *
+ * @param {Object} results Data object.
+ * @param {number} ny Number of Y parameters.
+ * @param {Array<string>} labels Display labels.
+ * @returns {number} Number of valid datasets plotted.
+ */
 function trend(results, ny, labels) {
 	fname = get_now_string()
 	n_exp = "Trend Analysis"
@@ -1544,7 +1735,13 @@ function trend(results, ny, labels) {
   	return hasdata
 }
 
-
+/**
+ * Renders pre-generated histogram bar chart.
+ *
+ * @param {Object} results Pre-generated plot payload.
+ * @param {Object} data Histogram dataset object.
+ * @param {string} label Axis label.
+ */
 function preg_histogram(results, data, label){
 	let fname = get_now_string()
     var reskeys = Object.keys(data)
@@ -1725,6 +1922,13 @@ function preg_histogram(results, data, label){
  
 }
 
+/**
+ * Renders interactive Plotly histogram chart.
+ *
+ * @param {Object} results Input dataset object.
+ * @param {number} ny Number of Y parameters.
+ * @param {Array<string>} labels Display labels.
+ */
 function histogram(results, ny, labels) {
 	console.log(results)
 	fname = get_now_string()
@@ -1893,6 +2097,14 @@ function histogram(results, ny, labels) {
 	})
 }	
 
+/**
+ * Renders interactive Plotly scatter plot.
+ *
+ * @param {Object} results Input dataset object.
+ * @param {number} ny Number of Y parameters.
+ * @param {Array<string>} labels Display labels.
+ * @returns {number} Number of valid datasets plotted.
+ */
 function scatterplot(results, ny, labels) {
 	
 	fname = get_now_string()
@@ -2019,6 +2231,9 @@ function scatterplot(results, ny, labels) {
   	return hasdata
 }
 
+/**
+ * Enables advanced statistical options in UI.
+ */
 function set_advanced_stats(){
 	document.getElementById("stats_enable").value="advanced";
 	document.getElementById("stats").style="display : block";
@@ -2026,6 +2241,9 @@ function set_advanced_stats(){
 	document.getElementById("advanced_a").style="display : none";
 }
 
+/**
+ * Reverts statistical options in UI to global default.
+ */
 function set_global_stats(){
 	document.getElementById("stats_enable").value="global"
 	document.getElementById("stats").style="display : none";
@@ -2033,10 +2251,24 @@ function set_global_stats(){
 	document.getElementById("global_a").style="display : none";
 }
 
+/**
+ * Array filter callback to remove duplicate items.
+ *
+ * @param {*} value Current element.
+ * @param {number} index Current index.
+ * @param {Array} self Array reference.
+ * @returns {boolean} True if first occurrence.
+ */
 function only_unique(value, index, self) { 
     return self.indexOf(value) === index;
 }
 
+/**
+ * Finds array indices containing sentinel invalid/NaN values (-999, -999.0).
+ *
+ * @param {Array} in1 Source array.
+ * @returns {Array<number>} Indices containing sentinel values.
+ */
 function find_nan(in1){
 
 	var indices = [];
@@ -2070,6 +2302,13 @@ function find_nan(in1){
 	return indices
 }
 
+/**
+ * Removes elements at specified indices from an array.
+ *
+ * @param {Array} arr Source data array.
+ * @param {Array<number>} indices Array of indices to remove.
+ * @returns {Array} Filtered clean array.
+ */
 function reduce_array(arr, indices){
 	var new_arr = [...arr]
 	for (var j=0; j<indices.length; j++){
@@ -2082,6 +2321,11 @@ function reduce_array(arr, indices){
 	return new_arr
 }
 
+/**
+ * Generates formatted UTC timestamp string for output file naming.
+ *
+ * @returns {string} Formatted timestamp string.
+ */
 function get_now_string(){
 	var date = get_utc_date()
 	var curr_date = new Date(date).toISOString();
@@ -2091,6 +2335,14 @@ function get_now_string(){
 	return new_date
 }
 
+/**
+ * Constructs Plotly layout object.
+ *
+ * @param {number} [xangle=0] X-axis tick angle rotation.
+ * @param {string} [xtext=""] X-axis title text.
+ * @param {boolean} [hist=true] Histogram overlay flag.
+ * @returns {Object} Plotly layout object.
+ */
 function render_layout(xangle=0,xtext="",hist=true){
       var layout = {
           xaxis: {
@@ -2145,7 +2397,17 @@ function render_layout(xangle=0,xtext="",hist=true){
 	return layout
 }
 
-
+/**
+ * Configures custom modebar buttons for Plotly charts.
+ *
+ * @param {string} fname Export file name prefix.
+ * @param {boolean} [showPDF=true] Include PDF export button.
+ * @param {boolean} [showCSV=true] Include CSV export button.
+ * @param {string} [n_exp=null] Experiment type string.
+ * @param {Array<string>} [labels=null] Parameter labels array.
+ * @param {Object} [results=null] Plot data payload object.
+ * @returns {Array} Array of Plotly modebar button groups.
+ */
 function render_modebar(fname, showPDF=true, showCSV=true, n_exp=null, labels=null, results=null){
     var modeBarButtons = [ 
 		[
@@ -2218,8 +2480,16 @@ function render_modebar(fname, showPDF=true, showCSV=true, n_exp=null, labels=nu
 	
 }
 
-
-
+/**
+ * Renders target plot type or displays error messages.
+ *
+ * @param {Object} results Plot data object.
+ * @param {string} plot Plot type string.
+ * @param {number} ny Number of Y parameters.
+ * @param {Array<string>} labels Display labels.
+ * @param {string} [usecase=""] Application usecase string.
+ * @returns {Array} Array containing [operation_name, has_data_flag].
+ */
 function render_plot(results, plot, ny, labels, usecase=""){
 	if($('#chartContainer').is(':visible')){hide_custom_plot()}
 	var errstatus = results['errstatus']
@@ -2327,6 +2597,14 @@ function render_plot(results, plot, ny, labels, usecase=""){
 	return [op, hasdata]
 }
 
+/**
+ * Renders pre-generated plot payload.
+ *
+ * @param {Object} results Data payload.
+ * @param {string} plot Plot type name.
+ * @param {string} label Axis label.
+ * @returns {Array} Array containing [operation_name, has_data_flag].
+ */
 function render_pregenerated(results, plot, label){
  	if($('#chartContainer').is(':visible')){hide_custom_plot()}
 	var errstatus = results['errstatus']
@@ -2390,6 +2668,9 @@ function render_pregenerated(results, plot, label){
 	return [op, hasdata] 
 }
 
+/**
+ * Tab switch callback: displays main chart tab.
+ */
 function onclick_plot(){
 	$('#form-div').css('display', 'block');
 	$('#plot_stats').css('display', 'none');
@@ -2401,7 +2682,10 @@ function onclick_plot(){
 		'yaxis.autorange': true
 	});  
 } 
- 
+
+/**
+ * Tab switch callback: displays files list tab.
+ */ 
 function onclick_files(){
   $('#form-div').css('display', 'none'); 
   $('#plot_files').css('display', 'flex'); 
@@ -2411,6 +2695,9 @@ function onclick_files(){
 $('#files_tbl').DataTable().columns.adjust(); 
 }  
  
+ /**
+ * Tab switch callback: displays statistical analysis tab.
+ */
 function onclick_stats(){
   var t = document.getElementById("plot_type").value
   if(t != "stats"){
@@ -2426,6 +2713,9 @@ function onclick_stats(){
   $('#custom_plot').css('display', 'none');   
 } 
 
+/**
+ * Event listener: Toggles visibility of parameter flag selection and description fields.
+ */
 $("input[type='radio'][name=optflag]").change(function(){
 	$('#description').html('');
 	if($(this).val()!="nd")
@@ -2444,7 +2734,9 @@ $("input[type='radio'][name=optflag]").change(function(){
 	}
 });
 
-//Avoid action on "Enter" key press
+/**
+ * Event listener: Prevents default form submit action when "Enter" key is pressed outside textareas.
+ */
 $(document).keypress(
   function(event){
 	var tag = event.target.tagName
@@ -2454,6 +2746,11 @@ $(document).keypress(
     }
 });
 
+/**
+ * Loads stored plot offline data and renders chart and statistics tables.
+ *
+ * @param {Object} response Database record response object.
+ */
 function render_plot_offline(response){
 
 	//update title
@@ -2623,6 +2920,11 @@ function render_plot_offline(response){
 	
 }
 
+/**
+ * Loads stored Machine Learning experiment offline data and renders output panels.
+ *
+ * @param {Object} response Database record response object.
+ */
 function render_ml_offline(response){
 	console.log(response)	
 	//update title
@@ -2715,6 +3017,11 @@ function render_ml_offline(response){
 	
 }
 
+/**
+ * Triggers browser download for a given resource URL.
+ *
+ * @param {string} url Target URL.
+ */
 function force_download(url) {
   const a = document.createElement('a')
   a.href = url

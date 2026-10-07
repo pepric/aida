@@ -1,9 +1,14 @@
+/**
+ * Setup view initialization: hides right header and appends initial setup session user span.
+ */
 $(document).ready(function() {
     $('#header-right').hide()
 	$("#header-right").append("<span id='session-user'>1stInstall</span>");
 });
 
-    // Upload Form
+/**
+ * Plupload uploader initialization and configuration for backup archive importing.
+ */
     $(function() {
         // Settings ////////////////////////////////////////////////
         var uploader = new plupload.Uploader({
@@ -82,7 +87,9 @@ $(document).ready(function() {
         });      
     }); // end of the upload form configuration
 	
-	
+/**
+ * Initializes database truncation and directory cleanup prior to setup.
+ */	
 function start_install(){
 	//Initialize installation	
 	//AJAX call to truncate tables and remove existing directories
@@ -103,6 +110,12 @@ function start_install(){
 	})			
 }
 
+/**
+ * Navigates back or reloads current setup tab.
+ * 
+ * @param {HTMLElement|string} el Target DOM container.
+ * @param {boolean} reset Reload flag.
+ */
 function backtohome(el,reset){
 	if(reset){
 		window.location.reload()
@@ -113,6 +126,9 @@ function backtohome(el,reset){
 	}
 }
 
+/**
+ * Advances wizard to database configuration or import setup.
+ */
 function next_confdb(){
 	
 	var toimport = $('#import_bkp').val()
@@ -128,10 +144,16 @@ function next_confdb(){
 	
 }
 
+/**
+ * Synchronizes notification email field with changes in main email input.
+ */
 $("#email").keyup(function() {
     $("#notiemail").val( this.value );
 });
 
+/**
+ * Shows/hides notification email input based on checkbox state.
+ */
 $(document).ready(function() {
 	$("#notificationemail").change(function(){
         if($(this).is(":not(:checked")) {
@@ -147,6 +169,11 @@ $(document).ready(function() {
 	});
 });
 
+/**
+ * Submits notification settings and triggers first user registration.
+ * 
+ * @param {HTMLFormElement} yourform Target registration form.
+ */
 function registration(yourform){
 	$("#loader").show();
 	var addmsg = ""
@@ -170,6 +197,9 @@ function registration(yourform){
 	});
 }
 
+/**
+ * DOMContentLoaded listener: checks confirmation parameters and activates initial admin account via AJAX.
+ */
 document.addEventListener("DOMContentLoaded", function() {
     let confirm = document.getElementById("confirm").innerHTML
 	let activation = document.getElementById("activation").innerHTML
@@ -207,6 +237,11 @@ document.addEventListener("DOMContentLoaded", function() {
 	}
 });
 
+/**
+ * Cleans installation temporary files and displays completion modal dialog.
+ * 
+ * @param {string} [addmsg="\n"] Optional status message text.
+ */
 function clean_installation(addmsg="\n"){
 	$("#loader").show();	
 	$.ajax({
@@ -225,6 +260,9 @@ function clean_installation(addmsg="\n"){
 	})	
 }
 
+/**
+ * Bypasses backup import step in setup wizard.
+ */
 function skip_upload(){
 	var toform=["smtpconf_form", "1streg_form"]
 	$("#nextform").val(toform)

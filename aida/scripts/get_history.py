@@ -1,16 +1,27 @@
 #!/usr/bin/python
 
+"""
+User Activity History Listing Renderer.
+
+This module queries the user or global activity history records from the local 
+database and constructs an HTML list representation for dashboard display.
+
+@package AIDA
+@module get_history
+"""
+
 import cgi, cgitb 
 cgitb.enable()  # for troubleshooting
 from functions import db_query, connect_db, repConfig
 import json
 
 def main(data):
-    """Create HTML output to list history entries.
+    """Fetch user activity history from database and output HTML list items.
+
     Parameters
     ----------
-    data : cgi.FieldStorage,
-        Contains all data coming from client side script: user 
+    data : cgi.FieldStorage
+        HTTP request payload containing the target username ('global' or specific user).
     """     
     user = data['user'].value
 

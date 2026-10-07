@@ -1,3 +1,17 @@
+<?php
+/**
+ * Machine Learning Experiment Execution Panel Template.
+ *
+ * Renders the configuration interface for running a Machine Learning experiment,
+ * allowing selection of data source, features, target labels, time interval,
+ * model hyperparameters, and train-test split percentage/seed.
+ *
+ * @package    AIDA
+ * @subpackage Views\MachineLearning
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 					<!-- start: page -->
 						<?php include("plotcontainer.php"); ?>
 					

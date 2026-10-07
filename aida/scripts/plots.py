@@ -1,5 +1,15 @@
 #!/usr/bin/python
 
+"""
+Plot Rendering and Chart Export Utilities.
+
+This module provides classes for generating histogram, scatter, and trend 
+plots using Matplotlib for report generation and XML export.
+
+@package AIDA
+@module plots
+"""
+
 import numpy as np
 import ast
 import h5py
@@ -19,6 +29,25 @@ from matplotlib.ticker import MaxNLocator
 import functions as util
 
 class Histogram():
+    """Histogram chart generation class for report rendering.
+
+    Attributes
+    ----------
+    name : str
+        Display name of the plot type.
+    linewidth : float
+        Line width for histogram edges.
+    edgecolor : str
+        Color string for bar edges.
+    ptype : str
+        Plot type identifier string.
+    splitplot : int
+        Plot layout split mode flag.
+    vs : str
+        Comparison axis identifier.
+    xlabel : str or None
+        X-axis label string.
+    """
     def __init__(self):
         #name to display
         self.name = "Histogram"
@@ -34,6 +63,24 @@ class Histogram():
         self.xlabel = None
         
     def arrange_data_plot(self, resdict, par):
+        """Rearrange data dictionary into plottable structure.
+
+        Parameters
+        ----------
+        resdict : dict
+            Input result data dictionary.
+        par : str
+            Target parameter identifier.
+
+        Returns
+        -------
+        plotdata : list of dict
+            Formatted plot data structures.
+        labels : list of str
+            Extracted labels list.
+        nodatapar : list of str
+            List of parameters with no data available.
+        """
         labels = []
         plotdata = []
         nodatapar = []
@@ -54,6 +101,42 @@ class Histogram():
         return plotdata, labels, nodatapar      
 
     def create_plot_output(self, ET, y0, par, currop, addlist, acquid, fromfile, extrapars, h5add, h5resfile, h5group):
+        """Generate histogram output dataset and append XML nodes.
+
+        Parameters
+        ----------
+        ET : module
+            ElementTree module reference.
+        y0 : dict
+            Primary Y parameter dataset dictionary.
+        par : str
+            Parameter identifier name.
+        currop : Element
+            XML operation element node.
+        addlist : list of str
+            Additional parameter names list.
+        acquid : str
+            Acquisition ID string.
+        fromfile : bool
+            Flag indicating whether plot is saved from file.
+        extrapars : dict
+            Extra configuration options.
+        h5add : str
+            HDF5 additional data file path.
+        h5resfile : str
+            HDF5 results output file path.
+        h5group : Group
+            HDF5 target output group node.
+
+        Returns
+        -------
+        plotdict : dict
+            Histogram results mapping dictionary.
+        nodata : bool
+            True if additional data is missing.
+        warning : bool
+            Warning status flag.
+        """
         plotdict = {}
         opbranch = extrapars["opbranch"]
         iswidth, binval = ru.get_bins(opbranch)
@@ -125,6 +208,24 @@ class Histogram():
         return plotdict, nodata, False      
                                             
     def multi_plot(self, data, labels, nodata, filename = ""):
+        """Render multi-panel histogram grid layout.
+
+        Parameters
+        ----------
+        data : list
+            Plot data dictionaries list.
+        labels : list of str
+            Parameter labels list.
+        nodata : list of str
+            Missing data parameters list.
+        filename : str, optional
+            Output filename prefix (default is "").
+
+        Returns
+        -------
+        drawing : list
+            List of ReportLab drawings or creation boolean flags.
+        """
         drawing = []
         img_x_plot = 4
         img_x_row = int(img_x_plot/2)
@@ -174,6 +275,15 @@ class Histogram():
         return drawing 
         
     def set_axes(self, plt, ax):
+        """Apply custom axis styles and formatting to Matplotlib plot.
+
+        Parameters
+        ----------
+        plt : module
+            Matplotlib.pyplot module.
+        ax : Axes
+            Matplotlib axis instance.
+        """
         ax.set_facecolor('#e5ecf6')
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
@@ -185,6 +295,24 @@ class Histogram():
         plt.yticks(fontsize = 10)   
     
     def single_plot(self, data, labels, nodata, filename = ""):
+        """Render single histogram chart.
+
+        Parameters
+        ----------
+        data : list
+            Plot data list.
+        labels : list of str
+            Parameter labels list.
+        nodata : list of str
+            Missing data parameters list.
+        filename : str, optional
+            Output filename prefix (default is "").
+
+        Returns
+        -------
+        drawing : Drawing or list
+            ReportLab drawing or creation status list.
+        """
         drawing = []        
         fig = plt.figure(figsize=(8.5,5), dpi=100)
         ax = fig.add_subplot(1,1,1)
@@ -222,6 +350,23 @@ class Histogram():
         return drawing
 
 class Scatter():
+    """Scatter plot chart generation class for report rendering.
+
+    Attributes
+    ----------
+    name : str
+        Display name of the plot type.
+    linewidth : float
+        Line width for scatter markers.
+    ptype : str
+        Plot type identifier string.
+    splitplot : int
+        Plot layout split mode flag.
+    vs : int
+        VS parameter index.
+    xlabel : str or None
+        X-axis label string.
+    """
     def __init__(self):
         #name to display
         self.name = "Scatter Plot"
@@ -236,6 +381,24 @@ class Scatter():
         self.xlabel = None
         
     def arrange_data_plot(self, resdict, par):
+        """Rearrange data dictionary into scatter plot structure.
+
+        Parameters
+        ----------
+        resdict : dict
+            Input result data dictionary.
+        par : str
+            Target parameter identifier.
+
+        Returns
+        -------
+        plotdata : list of dict
+            Formatted scatter plot data structures.
+        labels : list of str
+            Extracted labels list.
+        nodatapar : list of str
+            List of parameters with no data available.
+        """
         labels = []
         plotdata = []
         nodatapar = []
@@ -254,6 +417,42 @@ class Scatter():
         return plotdata, labels, nodatapar
 
     def create_plot_output(self, ET, y0, par, currop, addlist, acquid, fromfile, extrapars, h5add, h5resfile, h5group):
+        """Generate scatter plot output dataset and append XML nodes.
+
+        Parameters
+        ----------
+        ET : module
+            ElementTree module reference.
+        y0 : dict
+            Primary Y parameter dataset dictionary.
+        par : str
+            Parameter identifier name.
+        currop : Element
+            XML operation element node.
+        addlist : list of str
+            Additional parameter names list.
+        acquid : str
+            Acquisition ID string.
+        fromfile : bool
+            Flag indicating whether plot is saved from file.
+        extrapars : dict
+            Extra configuration options.
+        h5add : str
+            HDF5 additional data file path.
+        h5resfile : str
+            HDF5 results output file path.
+        h5group : Group
+            HDF5 target output group node.
+
+        Returns
+        -------
+        plotdict : dict
+            Scatter results mapping dictionary.
+        nodata_add : bool
+            True if additional parameter data is missing.
+        nodata_x : bool
+            True if X parameter data is missing.
+        """
         plotdict = {}
         x = extrapars["x"]
         hf = h5py.File(h5add,"r")
@@ -321,9 +520,19 @@ class Scatter():
         return plotdict, nodata_add, nodata_x        
         
     def multi_plot(self, data, labels, nodata, filename=""):
+        """Unused multi-plot stub for scatter layout."""
         pass #NOT USED FOR SCATTER PLOT HERE
         
     def set_axes(self, plt, ax):
+        """Apply custom axis styles and formatting to scatter plot.
+
+        Parameters
+        ----------
+        plt : module
+            Matplotlib.pyplot module.
+        ax : Axes
+            Matplotlib axis instance.
+        """
         ax.set_facecolor('#e5ecf6')
         if self.xlabel is not None:
             ax.set_xlabel(self.xlabel)
@@ -346,6 +555,24 @@ class Scatter():
         plt.yticks(fontsize = 8)    
 
     def single_plot(self, data, labels, nodata, filename = ""):
+        """Render single scatter plot chart.
+
+        Parameters
+        ----------
+        data : list
+            Plot data list.
+        labels : list of str
+            Parameter labels list.
+        nodata : list of str
+            Missing data parameters list.
+        filename : str, optional
+            Output filename prefix (default is "").
+
+        Returns
+        -------
+        drawing : Drawing or list
+            ReportLab drawing or creation status list.
+        """
         drawing = []
         fig = plt.figure(figsize=(9,5.5), dpi=100)
         ax = fig.add_subplot(1,1,1)
@@ -389,6 +616,23 @@ class Scatter():
         return drawing
 
 class Trend():
+    """Trend analysis time-series chart generation class.
+
+    Attributes
+    ----------
+    name : str
+        Display name of the plot type.
+    linewidth : float
+        Line width for time-series trend lines.
+    ptype : str
+        Plot type identifier string.
+    splitplot : int
+        Plot layout split mode flag.
+    vs : str
+        Comparison axis identifier ("time").
+    xlabel : str or None
+        X-axis label string.
+    """
     def __init__(self):
         #name to display
         self.name = "Trend Analysis"
@@ -403,6 +647,24 @@ class Trend():
         self.xlabel = None
         
     def arrange_data_plot(self, resdict, par):
+        """Rearrange data dictionary into time-series trend structure.
+
+        Parameters
+        ----------
+        resdict : dict
+            Input result data dictionary.
+        par : str
+            Target parameter identifier.
+
+        Returns
+        -------
+        plotdata : list of dict
+            Formatted trend plot data structures.
+        labels : list of str
+            Extracted labels list.
+        nodatapar : list of str
+            List of parameters with no data available.
+        """
         labels = []
         plotdata = []
         nodatapar = []
@@ -422,6 +684,42 @@ class Trend():
         return plotdata, labels, nodatapar
       
     def create_plot_output(self, ET, y0, par, currop, addlist, acquid, fromfile, extrapars, h5add, h5resfile, h5group):
+        """Generate time-series trend output dataset and append XML nodes.
+
+        Parameters
+        ----------
+        ET : module
+            ElementTree module reference.
+        y0 : dict
+            Primary Y parameter dataset dictionary.
+        par : str
+            Parameter identifier name.
+        currop : Element
+            XML operation element node.
+        addlist : list of str
+            Additional parameter names list.
+        acquid : str
+            Acquisition ID string.
+        fromfile : bool
+            Flag indicating whether plot is saved from file.
+        extrapars : dict
+            Extra configuration options.
+        h5add : str
+            HDF5 additional data file path.
+        h5resfile : str
+            HDF5 results output file path.
+        h5group : Group
+            HDF5 target output group node.
+
+        Returns
+        -------
+        plotdict : dict
+            Trend results mapping dictionary.
+        nodata : bool
+            True if additional data is missing.
+        warning : bool
+            Warning status flag.
+        """
         plotdict = {}              
         if y0['dates'].shape[0] > 0:
             ET.SubElement(currop, "data").text = h5resfile
@@ -475,6 +773,24 @@ class Trend():
         return plotdict, nodata, False
       
     def multi_plot(self, data, labels, nodata, filename = ""):
+        """Render multi-panel trend plot grid layout.
+
+        Parameters
+        ----------
+        data : list
+            Plot data dictionaries list.
+        labels : list of str
+            Parameter labels list.
+        nodata : list of str
+            Missing data parameters list.
+        filename : str, optional
+            Output filename prefix (default is "").
+
+        Returns
+        -------
+        drawing : list
+            List of ReportLab drawings or creation boolean flags.
+        """
         drawing = []
         img_x_plot = 4
         img_x_row = int(img_x_plot/2)
@@ -524,6 +840,15 @@ class Trend():
         return drawing
 
     def set_axes(self, plt, ax):
+        """Apply concise date formatting and custom axis styles to trend plot.
+
+        Parameters
+        ----------
+        plt : module
+            Matplotlib.pyplot module.
+        ax : Axes
+            Matplotlib axis instance.
+        """
         ax.set_facecolor('#e5ecf6')
         plt.grid(color='white')
         ax.spines['top'].set_visible(False)
@@ -543,6 +868,24 @@ class Trend():
         plt.yticks(fontsize = 8)
         
     def single_plot(self, data, labels, nodata, filename = ""):
+        """Render single time-series trend chart.
+
+        Parameters
+        ----------
+        data : list
+            Plot data list.
+        labels : list of str
+            Parameter labels list.
+        nodata : list of str
+            Missing data parameters list.
+        filename : str, optional
+            Output filename prefix (default is "").
+
+        Returns
+        -------
+        drawing : Drawing or list
+            ReportLab drawing or creation status list.
+        """
         drawing = []      
         fig = plt.figure(figsize=(9,5.5), dpi=100)
         ax = fig.add_subplot(1,1,1)

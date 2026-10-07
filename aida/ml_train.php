@@ -1,3 +1,16 @@
+<?php
+/**
+ * Machine Learning Model Selection View.
+ *
+ * Page template for selecting a Machine Learning technique (Classification,
+ * Clustering, or Regression) and choosing the desired model algorithm.
+ *
+ * @package    AIDA
+ * @subpackage Views\MachineLearning
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+ ?>
 <!doctype html>
 <html class="fixed">
 	<?php

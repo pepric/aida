@@ -1,3 +1,19 @@
+<?php
+/**
+ * Admin User Management Panel View.
+ *
+ * Renders the administration interface for supervising user accounts and registration requests.
+ * Displays DataTables for:
+ * - Pending user account activation requests
+ * - Currently active user accounts
+ * - Deactivated or removed user accounts
+ *
+ * @package    AIDA
+ * @subpackage Admin\Views
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 <div class="panel-body panel-dash">
   <div class="row">	  
     <div class="col-md-12">

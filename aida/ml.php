@@ -1,3 +1,16 @@
+<?php
+/**
+ * Machine Learning Experiment Setup View.
+ *
+ * View template wrapping the Machine Learning experiment setup panel (`ml_panel.php`)
+ * for configuring model features, target labels, time ranges, and hyperparameters.
+ *
+ * @package    AIDA
+ * @subpackage Views\MachineLearning
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+ ?>
 <!doctype html>
 <html class="fixed">
 	<?php

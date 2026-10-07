@@ -1,5 +1,16 @@
 #!/usr/bin/python
 
+"""
+Report Generation Request Handler.
+
+This module serves as the CGI entry point to initiate report generation 
+jobs, recording the running job in the database and invoking the background 
+report pipeline.
+
+@package AIDA
+@module run_report
+"""
+
 import cgi, cgitb 
 cgitb.enable()  # for troubleshooting
 from    os              import system, getpid
@@ -9,11 +20,13 @@ import functions as util
 
 
 def main(data):
-    """Start a new report generation experiment.
+    """Start a new background report generation job and log run in database.
+
     Parameters
     ----------
-    data : cgi.FieldStorage,
-        Contains all data coming from client side script: user name, periodicity, configuration file name, app url, flag isrunning
+    data : cgi.FieldStorage
+        HTTP POST request payload containing username, periodicity mode, 
+        configuration filename, running state flag, and application URL.
     """      
     #get input values   
     user = data['user'].value

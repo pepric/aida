@@ -2,8 +2,17 @@
 
 	'use strict';
 
+	/**
+	 * Initializes DataTables instances across various dashboard tabs and components.
+	 */
 	var datatableInit = function() {
-
+		/**
+		 * Formats status data values into descriptive string labels for CSV export context.
+		 *
+		 * @param {string} data Input cell content/HTML string.
+		 * @param {string} type Render/export context type.
+		 * @returns {string} Processed cell data.
+		 */
       	function render_flag(data, type){
          	if (type === "exportcsv") {
                	data = data.replace('<img src="assets/images/nd.png"><span style="display:none">0</span>', "Not Defined");
@@ -97,11 +106,17 @@
 			.draw();        
 	};
 
+	/**
+	 * Event listener: Executes DataTables initialization sequence on DOM ready.
+	 */
 	$(function() {
 		datatableInit();
 	});
 }).apply( this, [ jQuery ]);
 
+/**
+ * Initializes the DataTables component for parameter information tables.
+ */
 function initParTbl(){
   		//PARAMETER INFO TABLE
 	  	var t_parinfo = $('#datatable-params').DataTable( {

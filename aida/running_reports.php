@@ -1,4 +1,15 @@
-
+<?php
+/**
+ * Running Reports Table View Component.
+ *
+ * Renders the HTML table structure and queries running report tasks for the current user or administrator.
+ *
+ * @package    AIDA
+ * @subpackage Views\Components
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 <table class="table tab-reports table-bordered table-striped mb-none" id="datatable-running">
 	<thead>
 		<tr >

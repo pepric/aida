@@ -1,3 +1,19 @@
+/**
+ * Core IOT Utility Functions and UI Handlers.
+ *
+ * Provides helper functions for form resetting, dynamic dropdown population,
+ * detector grid setup, statistics parameter configuration, PDF/CSV export generation,
+ * user management, and installation/update workflows.
+ *
+ * @package    AIDA
+ * @subpackage JS\Core
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+
+/**
+ * Resets form fields, hides parameter controls, and removes dynamic detector inputs.
+ */
 function reset_form(){
     
     var plot = document.getElementById('plot_type').value;
@@ -53,7 +69,12 @@ function reset_form(){
     document.getElementById("remove").style="display: none;"
 }
 
-//Maybe no longer used - to check
+/**
+ * Sets input element names for a system selection control.
+ *
+ * @param {string} system System identifier.
+ * @param {string} id Target select element ID.
+ */
 function set_system(system, id) {
     var selectname = "hktm_"+system.toLowerCase();
     var systemname = system.toLowerCase()+"_system";
@@ -62,6 +83,11 @@ function set_system(system, id) {
     selectList.name = selectname;
 }
 
+/**
+ * Populates parameter group dropdowns based on repository metadata.
+ *
+ * @param {HTMLElement} elem Select element triggering parameter group setup.
+ */
 function set_pargroup(elem){
     var par = elem.id.split("-")[0] 
     var target_sel = par+"-sys"
@@ -90,6 +116,13 @@ function set_pargroup(elem){
    show_addmore(par)
 }
 
+/**
+ * Dynamically creates detector row/column and quadrant select controls.
+ *
+ * @param {HTMLElement} sys System selection element.
+ * @param {string} par Axis/parameter prefix ('x' or 'yN').
+ * @param {string} [elbefore="sys"] DOM element ID after which detectors are inserted.
+ */
 function init_detectors(sys, par, elbefore="sys"){
     var value = sys.value;
     var plot = document.getElementById('plot_type').value;
@@ -135,6 +168,12 @@ function init_detectors(sys, par, elbefore="sys"){
     set_detectors(idpar, par+"-det-row", nrow, par+"-det-col", ncol, par+"-"+elbefore);
 }
 
+/**
+ * Updates UI controls and fetches parameter definitions when a system/subsystem changes.
+ *
+ * @param {HTMLElement} sys Select element.
+ * @param {boolean} [fromdb=false] Whether parameters are retrieved from database.
+ */
 function set_params(sys, fromdb=false) {
 
     var par = sys.id.split("-")[0]
@@ -215,6 +254,11 @@ function set_params(sys, fromdb=false) {
     }
 }
 
+/**
+ * Removes detector selection controls (quadrant, row, column) from DOM.
+ *
+ * @param {string} par Axis/parameter prefix.
+ */
 function remove_prev_detectors(par){
     var element = document.getElementById(par+"-quadrant");
     if (element!==null){
@@ -232,6 +276,11 @@ function remove_prev_detectors(par){
     }
 }
 
+/**
+ * Displays the "Add more..." button for multi-parameter configurations.
+ *
+ * @param {string} par Axis/parameter prefix.
+ */
 function show_addmore(par){
   //show addmore button for y
   if(par.substring(0, 1) == "y"){
@@ -243,6 +292,11 @@ function show_addmore(par){
     }
 }
 
+/**
+ * Refreshes parameter list when parameter type selection changes.
+ *
+ * @param {HTMLElement} sys Select element.
+ */
 function reset_option(sys){
     var coord = sys.id.split("-")[0]
     var partype = document.getElementById(coord + "-partype");
@@ -252,6 +306,11 @@ function reset_option(sys){
     }
 }
 
+/**
+ * Fetches subsystem parameter options from XML configuration files via AJAX.
+ *
+ * @param {HTMLElement} cat Target category element.
+ */
 function xml_refresh_params(cat){
     var filter = cat.value
     var par_id = cat.id.split("-")[0]
@@ -278,6 +337,11 @@ function xml_refresh_params(cat){
     });
 }
 
+/**
+ * Reloads parameter selection controls based on category choices.
+ *
+ * @param {HTMLElement} cat Category selection element.
+ */
 function refresh_params(cat){
     var sub = cat.value;
     var par_id = cat.id.split("-")[0]
@@ -345,7 +409,12 @@ function refresh_params(cat){
     }
 }
 
-
+/**
+ * Fetches subsystem parameter list from database via AJAX.
+ *
+ * @param {HTMLElement} sys Target selection element.
+ * @param {string} [f=""] Optional filter parameter.
+ */
 function populate_params(sys, f=""){
     var system = document.getElementById("hktm_source").value.toLowerCase();
     var usecase = document.getElementById('usecase').value;
@@ -425,6 +494,11 @@ function populate_params(sys, f=""){
     });
 }
 
+/**
+ * Toggles ADU calibration checkbox visibility via AJAX query.
+ *
+ * @param {HTMLElement} sys Select element.
+ */
 function show_adu_checkbox(sys){
     var y = sys.id.split("-")[0]
     var par = sys.value
@@ -456,6 +530,11 @@ function show_adu_checkbox(sys){
     });
 }
 
+/**
+ * Retrieves discrete parameter values via AJAX and populates target dropdown.
+ *
+ * @param {HTMLElement} sys Target parameter select element.
+ */
 function populate_values(sys){
     var par = sys.id.split("-")[0]
     var cat_val = sys.value
@@ -480,6 +559,16 @@ function populate_values(sys){
     });
 }
 
+/**
+ * Creates and appends detector row and column select controls.
+ *
+ * @param {string} idpar Parent container element ID.
+ * @param {string} name_row Element name/ID for row selector.
+ * @param {number} nrow Number of rows.
+ * @param {string} name_col Element name/ID for column selector.
+ * @param {number} ncol Number of columns.
+ * @param {string} elbefore Target DOM element ID to insert controls after.
+ */
 function set_detectors(idpar, name_row, nrow, name_col, ncol, elbefore){
     var coord = name_row.split("-")[0]
     var myDiv = document.getElementById(idpar); 
@@ -551,6 +640,13 @@ function set_detectors(idpar, name_row, nrow, name_col, ncol, elbefore){
     
 }
 
+/**
+ * Appends CCD quadrant selector control to DOM.
+ *
+ * @param {string} idpar Parent container ID.
+ * @param {string} name_quad Element name/ID for quadrant selector.
+ * @param {string} instr Instrument identifier.
+ */
 function create_quadrant(idpar, name_quad, instr){
     var par = idpar.split("-")[0]
     var ptype_div = document.getElementById(par+"-partype")
@@ -595,6 +691,11 @@ function create_quadrant(idpar, name_quad, instr){
     }     
 }
 
+/**
+ * Updates filter options according to selected CCD quadrant ('full' vs specific quadrant).
+ *
+ * @param {string} par Parameter prefix.
+ */
 function update_filter(par){
     var val = $('select[name='+par+'-quadrant] option').filter(':selected').val()
     if(val=="full"){
@@ -616,6 +717,15 @@ function update_filter(par){
     $("#"+par+"-values").empty();  
 }
 
+/**
+ * Formats selected detector, row, column, and quadrant into a single string token.
+ *
+ * @param {string} det Detector type string ('DET' or 'CCD').
+ * @param {string} row Selected row.
+ * @param {string} col Selected column.
+ * @param {string} id Quadrant select element ID.
+ * @returns {string} Formatted detector string token.
+ */
 function collect_detectors(det, row, col, id){
     if (det=="DET"){
             var detector = det+"_"+row+col;
@@ -631,6 +741,12 @@ function collect_detectors(det, row, col, id){
     return detector
 }
 
+/**
+ * Hides target plot/results panel and activates initial tab.
+ *
+ * @param {string} tab_id Tab element ID.
+ * @param {string} id Container element ID to remove.
+ */
 function hide_panel(tab_id, id){
     var ref = document.getElementById(id);
     var par = document.getElementById(tab_id).parentNode;
@@ -641,6 +757,11 @@ function hide_panel(tab_id, id){
     $('#tab1').addClass('active');
 }
 
+/**
+ * Dynamically creates additional inputs for statistical function parameters.
+ *
+ * @param {HTMLInputElement} box Checkbox element for a statistical function.
+ */
 function more_stats_params(box){
     var funcname = box.name;
     var func = box.value;
@@ -737,6 +858,11 @@ function more_stats_params(box){
     }
 };
 
+/**
+ * Clones and appends parameter inputs for multi-instance statistical functions.
+ *
+ * @param {HTMLElement} div Button element triggering addition.
+ */
 function addmore_stats(div){
     var parentID = $(div).parent().attr('id');
     var parentDiv = document.getElementById(parentID);
@@ -784,6 +910,11 @@ function addmore_stats(div){
     event.preventDefault()
 }
 
+/**
+ * Removes the last added parameter input group for a statistical function.
+ *
+ * @param {HTMLElement} div Button element triggering removal.
+ */
 function remove_stats(div){
     var parentID = $(div).parent().attr('id');
     var parentDiv = document.getElementById(parentID)
@@ -803,12 +934,25 @@ function remove_stats(div){
     event.preventDefault();
 }
 
+/**
+ * Returns current timestamp in UTC string format.
+ *
+ * @returns {string} UTC formatted date string.
+ */
 function get_utc_date(){
     var today = new Date();
     dateTime = today.toUTCString()
     return dateTime;
 }
 
+/**
+ * Converts Plotly chart to image and requests server-side PDF report creation via Python.
+ *
+ * @param {string} n_exp Experiment title or type.
+ * @param {Array<string>} labels Parameter label array.
+ * @param {string} save Storage scope ('public' or 'private').
+ * @param {boolean} download Download PDF flag.
+ */
 function exportPDF(n_exp, labels, save, download){
     //get experiment info
     var source = document.getElementById("hktm_source").value;
@@ -999,6 +1143,14 @@ function exportPDF(n_exp, labels, save, download){
     });
 }
 
+/**
+ * Downloads a PDF file from a given URL using XMLHttpRequest and FileSaver.js.
+ *
+ * @param {string} dataurl Resource URL.
+ * @param {string} filename Output filename.
+ * @param {string} save Archive type.
+ * @param {string} [type='application/pdf'] MIME type.
+ */
 function downloadPDF(dataurl, filename, save, type='application/pdf'){
     
     var oReq = new XMLHttpRequest();
@@ -1020,6 +1172,11 @@ function downloadPDF(dataurl, filename, save, type='application/pdf'){
     oReq.send();
 }
 
+/**
+ * Displays custom option fields based on selected mode.
+ *
+ * @param {string} val Selected option value.
+ */
 function show_opt(val){
     switch(val)
     {
@@ -1036,6 +1193,13 @@ function show_opt(val){
     }
 }
 
+/**
+ * Prepares modal form values and opens export modal dialog.
+ *
+ * @param {string} id Target modal element ID.
+ * @param {string} n_exp Experiment type string.
+ * @param {Array<string>} labels Parameter labels array.
+ */
 function select_download_dir(id, n_exp, labels){
     document.getElementById("nd").checked = true;
     $("#description").hide();
@@ -1056,6 +1220,9 @@ function select_download_dir(id, n_exp, labels){
     document.body.removeChild(element);
 }
 
+/**
+ * Populates parameter flag dropdowns and comment textareas inside modal form.
+ */
 function populate_flags(){
     var labels = document.getElementById("modal-labels").value.split(",");
     var div = document.getElementById('description')
@@ -1098,6 +1265,13 @@ function populate_flags(){
     }   
 }
 
+/**
+ * Deletes a stored file from repository via AJAX request.
+ *
+ * @param {number} id Record database ID.
+ * @param {string} file Filename to delete.
+ * @param {string} path Subdirectory path.
+ */
 function delete_file(id, file, path){
     
     res=confirm("You have chosen to delete the file "+file+". Please confirm ");
@@ -1123,6 +1297,11 @@ function delete_file(id, file, path){
     }
 }
 
+/**
+ * Displays extended details popover for a history log entry.
+ *
+ * @param {HTMLElement} div Hovered/clicked element.
+ */
 function show_more(div){
     id = div.id.substr(2)
     t_user = div.id.substr(0,2)
@@ -1135,11 +1314,20 @@ function show_more(div){
     document.getElementById('moredata').style.opacity = 1;
 }
 
+/**
+ * Hides extended details popover for history log entries.
+ */
 function hide_more(){
     document.getElementById('moredata').style.visibility = "hidden";
     document.getElementById('moredata').style.opacity = 0;
 }
 
+/**
+ * Validates whether a string is a valid JSON payload.
+ *
+ * @param {string} str Input text.
+ * @returns {boolean} True if valid JSON, false otherwise.
+ */
 function IsValidJSONString(str) {
     try {
         JSON.parse(str);
@@ -1149,6 +1337,12 @@ function IsValidJSONString(str) {
     return true;
 }
 
+/**
+ * Deletes a temporary uploaded file record via AJAX.
+ *
+ * @param {string} fname Filename.
+ * @param {number} id Record ID.
+ */
 function remove_upload(fname, id){
     $.ajax({
         url         : "functions.php",
@@ -1162,6 +1356,12 @@ function remove_upload(fname, id){
     })
 }
 
+/**
+ * Calls Python script via AJAX to generate and download CSV formatted results.
+ *
+ * @param {Array<string>} labels CSV header labels.
+ * @param {Object} indata Data payload.
+ */
 function save_csv(labels, indata){
     
     var user = document.getElementById("session-user").innerHTML
@@ -1189,6 +1389,12 @@ function save_csv(labels, indata){
     })
 }
 
+/**
+ * Triggers a browser file download via temporary anchor element.
+ *
+ * @param {string} uri File URI.
+ * @param {string} name Destination filename.
+ */
 function downloadURI(uri, name) {
   var link = document.createElement("a");
   link.download = name;
@@ -1199,6 +1405,14 @@ function downloadURI(uri, name) {
   delete link;
 }
 
+/**
+ * Updates user account state (activate, deactivate, remove) via AJAX request.
+ *
+ * @param {number} id User account database ID.
+ * @param {string} action Action command ('active', 'deactive', 'remove').
+ * @param {string} user Target username.
+ * @param {string} email User email address.
+ */
 function manage_user(id, action, user, email){
     switch(action){
         case "active":
@@ -1240,6 +1454,9 @@ function manage_user(id, action, user, email){
     }
 }
 
+/**
+ * Prompts user for logout confirmation and redirects to logout script.
+ */
 function session_logout(){
     res=confirm("Are you sure to quit? All downloaded data will be deleted.");
     if(res==true){
@@ -1247,16 +1464,30 @@ function session_logout(){
     }
 }
 
+/**
+ * Hides the "Save experiment as PDF" button if present in UI.
+ */
 function hide_pdf(){
     var btn = document.querySelector("[data-title='Save experiment as PDF']"); 
     if(btn!=null){btn.style.display = "none"}
 }
 
+/**
+ * Hides the "Save results as CSV" button if present in UI.
+ */
 function hide_csv(){
     var btn = document.querySelector("[data-title='Save results as CSV']"); 
     if(btn!=null){btn.style.display = "none"}
 }
 
+/**
+ * Opens a file in JS9 Image Explorer window via AJAX interface.
+ *
+ * @param {string} filename Base filename.
+ * @param {string} source Data source identifier.
+ * @param {string} origin Data origin identifier.
+ * @param {string} user Owner username.
+ */
 function to_image_explorer(filename, source, origin, user){
     $("#loader").show();
     $.ajax({
@@ -1289,7 +1520,14 @@ function to_image_explorer(filename, source, origin, user){
     })
 }
 
-
+/**
+ * Reads metadata and column headers from uploaded data files via Python backend script.
+ *
+ * @param {string} filename Uploaded file name.
+ * @param {string} [fmt=""] File format identifier.
+ * @param {number} [csv_checked=-999] CSV header state flag.
+ * @param {string} [origin=""] Data origin context.
+ */
 function read_uploaded_file(filename, fmt="", csv_checked=-999, origin=""){
     //Read data from uploaded files
     var user = document.getElementById("session-user").innerHTML
@@ -1396,6 +1634,12 @@ function read_uploaded_file(filename, fmt="", csv_checked=-999, origin=""){
     })  
 }
 
+/**
+ * Retrieves parameter metadata table for a system and displays inspection panel.
+ *
+ * @param {string} system System identifier.
+ * @param {string} origin Origin identifier.
+ */
 function show_parameters(system, origin){
   $.ajax({
     url: "functions.php",
@@ -1425,6 +1669,12 @@ function show_parameters(system, origin){
 
 }
 
+/**
+ * Opens report flagging modal dialog.
+ *
+ * @param {string} filename Target report filename.
+ * @param {string} period Recurrence periodicity.
+ */
 function flag_report(filename, period){
     $("#fname").val(filename)
     $("#fcreator").val(document.getElementById("session-user").innerHTML)
@@ -1441,6 +1691,15 @@ function flag_report(filename, period){
     document.body.removeChild(element);  
 }
 
+/**
+ * Submits report flag details and sends summary PDF report via Python script.
+ *
+ * @param {string} filename Report filename.
+ * @param {string} creator Flag creator username.
+ * @param {string} expstatus Flag status ('ok', 'warning', 'serious').
+ * @param {string} descr Comment text.
+ * @param {string} email Notification email address.
+ */
 function export_report_flag(filename, creator, expstatus, descr, email){
     $("#loader").show();
     $.ajax({
@@ -1502,6 +1761,11 @@ function export_report_flag(filename, creator, expstatus, descr, email){
     });
 }
 
+/**
+ * Parses uploaded backup archive payload via Python backend script.
+ *
+ * @param {string} filename Backup archive filename.
+ */
 function upload_backup(filename){
     //Read data from uploaded files
     var user = document.getElementById("session-user").innerHTML
@@ -1578,6 +1842,9 @@ function upload_backup(filename){
     })
 }
 
+/**
+ * Deletes uploaded temporary PDF file via AJAX.
+ */
 function remove_upfile(){
     $('#okupload').hide()
     document.getElementById("file-preview").innerHTML=""
@@ -1596,6 +1863,12 @@ function remove_upfile(){
     })  
 }
 
+/**
+ * Navigates to target tab step in wizard.
+ *
+ * @param {Array<string>} idlist Array of tab DOM IDs.
+ * @param {number} n Step index.
+ */
 function showtab(idlist, n){
     if(idlist.length > 0){
         var oldtab = "import_bkp"
@@ -1608,6 +1881,11 @@ function showtab(idlist, n){
     }
 }
 
+/**
+ * Navigates back to previous wizard tab.
+ *
+ * @param {string} el Current step identifier.
+ */
 function backtab(el){
     var idstr = $("#nextform").val()
     var idlist = idstr.split(",")   
@@ -1621,6 +1899,11 @@ function backtab(el){
     }
 }
 
+/**
+ * Saves SMTP configuration via Python backend script.
+ *
+ * @param {string} el Calling step identifier.
+ */
 function store_smtp(el){
     $.ajax({
         url: "scripts/backup.py",
@@ -1666,6 +1949,9 @@ function store_smtp(el){
     })  
 }
 
+/**
+ * Prompts user to confirm installation abort and restores application defaults.
+ */
 function abort_install(){
     var abort = confirm("Application will be restored to default setting, by deleting imported data and already set configurations.\nAre you sure?")
     if(abort){
@@ -1692,6 +1978,11 @@ function abort_install(){
     }
 }
 
+/**
+ * Validates installation step input forms.
+ *
+ * @param {string} el Step identifier ('smtpconf' or '1streg').
+ */
 function validate_install(el){
     switch(el){
         case "smtpconf":
@@ -1720,6 +2011,11 @@ function validate_install(el){
     }); 
 }
 
+/**
+ * Navigates to next wizard tab or completes installation.
+ *
+ * @param {string} el Current step identifier.
+ */
 function nexttab(el){
     var idstr = $("#nextform").val()
     var idlist = idstr.split(",")
@@ -1732,6 +2028,9 @@ function nexttab(el){
     }   
 }
 
+/**
+ * Refreshes user and global history treeviews via AJAX.
+ */
 function refresh_history(){
     $("#wait_history").show();  
     var role = document.getElementById("session-role").innerHTML
@@ -1742,8 +2041,13 @@ function refresh_history(){
     setTimeout(() => { $("#wait_history").hide(); }, 2500);
 }
 
-
-/**** NEW FOR LSST ***/
+/**
+ * Configures system selection options based on subsystem inputs.
+ *
+ * @param {HTMLElement} ic Subsystem input element.
+ * @param {boolean} [fromdb=true] Database query flag.
+ * @param {string} [next="sys"] Target select element identifier.
+ */
 function set_sys_options(ic, fromdb=true, next="sys"){
     var par = ic.id.split("-")[0]
     var system = document.getElementById("hktm_source").value; //EFD
@@ -1777,6 +2081,11 @@ function set_sys_options(ic, fromdb=true, next="sys"){
     }
 }
 
+/**
+ * Fetches filtered parameter options based on subsystem selections.
+ *
+ * @param {HTMLElement} div Filter selection element.
+ */
 function set_par_options(div){
     var par_id = div.id.split("-")[0]
     var system = document.getElementById("hktm_source").value; //EFD

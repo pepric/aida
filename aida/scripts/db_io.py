@@ -1,38 +1,50 @@
 #!/usr/bin/python
 
+"""
+Database I/O Interface Utilities.
+
+This module provides the dbIO class to manage MySQL database connections and 
+execute queries for stored plots, running reports, flagged parameters, user 
+accounts, and system configurations.
+
+@package AIDA
+@module db_io
+"""
+
 import functions as util
 import pymysql
 import pymysql.cursors
 import traceback
 
 class dbIO():
-    """ Class implementing utilities and queries for local database interface"""
+    """Manage database connection lifecycle and data operations for AIDA.
+
+    Parameters
+    ----------
+    config : dict
+        Dictionary containing database connection configuration settings.
+
+    Attributes
+    ----------
+    config : dict
+        Connection parameters dictionary.
+    connection : pymysql.connections.Connection or None
+        Active PyMySQL connection object.
+    """
+    
     def __init__(self, config):
-        """dbIO init
-        Parameters
-        ---------
-        config : dict,
-            dictionary containing connection parameters
-            
-        Attributes
-        ---------
-        config : dict,
-            dictionary containing connection parameters
-        connection : class or None,
-            connection class by pymysql if not None
-        """            
-       
         self.config = config
         self.connection = None        
 
     def _commit_query(self, sql, keep_open = False):
-        """ Commit a query
+        """Execute and commit an SQL query.
+
         Parameters
-        ---------
-        sql : str,
-            query to commit,
-        keep_open : boolean,
-            if True, keep the connection open for next operation
+        ----------
+        sql : str
+            SQL query statement to execute.
+        keep_open : bool, optional
+            If True, keeps the database connection open (default is False).
         """
         if self.connection is None:
             self.connect()
@@ -44,18 +56,19 @@ class dbIO():
             self.close()         
         
     def check_connection(self, keep_open=False):
-        """ Check if a connection can be opened
+        """Test whether a database connection can be established.
+
         Parameters
-        ---------
-        keep_open : boolean,
-            if True, keep the connection open for next operation
-            
+        ----------
+        keep_open : bool, optional
+            If True, preserves the active connection instance (default is False).
+
         Returns
-        --------
-        locerr : 0 or 1,
-            it is 0 if the connection can be opened, 1 otherwise
-        connection : class
-            connection class by pymysql if opened, None otherwise
+        -------
+        locerr : int
+            0 if connection succeeded, 1 on failure.
+        connection : pymysql.connections.Connection or None
+            Established connection instance or None.
         """        
         connection = None        
         try:
@@ -71,20 +84,21 @@ class dbIO():
         return locerr, connection
 
     def count_records(self, tbl, statement="", keep_open = False):
-        """ Get number of records in defined DB table with conditions defined by statement.
+        """Count total matching records in a target database table.
+
         Parameters
-        ---------
-        tbl : string,
-            table to query
-        statement : string,
-            statement of query
-        keep_open : boolean,
-            if True, keep the connection open for next operation
+        ----------
+        tbl : str
+            Database table name.
+        statement : str, optional
+            SQL WHERE clause or filter statement (default is "").
+        keep_open : bool, optional
+            If True, keeps the connection open (default is False).
 
         Returns
-        ---------
-        counts : int,
-            number of records
+        -------
+        counts : int
+            Total number of matching records.
         """
         sql = "SELECT COUNT(*) FROM "+tbl+" " +statement
         if self.connection is None:
@@ -99,41 +113,49 @@ class dbIO():
         return counts      
       
     def close(self):
-        """Close connection"""      
+        """Close the active database connection if open."""      
         self.connection.close()
         self.connection = None
         
     def connect(self):
-        """Open a new connection to local DB
+        """Open a new connection to the local database.
+
         Returns
-        --------
-        error : 0 or 1,
-            it is 0 if the connection can be opened, 1 otherwise
-        connection : class
-            connection class by pymysql if opened, None otherwise
+        -------
+        error : int
+            0 if successful, 1 on connection failure.
+        connection : pymysql.connections.Connection or None
+            Active database connection object or None.
         """         
         error, connection = self.check_connection(keep_open = True)
         return error, connection
       
     def get_connection(self):
-        """Return the current connection"""      
+        """Retrieve current active connection object.
+
+        Returns
+        -------
+        pymysql.connections.Connection or None
+            Active database connection handle.
+        """      
         return self.connection
 
     def get_flagged(self, mode = "exp", archive = "public",keep_open = False):
-        """ Get list of flagged experiment from DB.
+        """Fetch list of flagged files or experiments.
+
         Parameters
-        ---------
-        mode : string, "exp" or "par"
-            query by "experiment" or by "parameter"
-        archive: string, "stored" or "user"
-            query public archive or private archive
-        keep_open : boolean,
-            if True, keep the connection open for next operation
+        ----------
+        mode : str, optional
+            Query perspective mode ('exp' or 'par', default is 'exp').
+        archive : str, optional
+            Archive scope ('public', 'report', or specific username, default is 'public').
+        keep_open : bool, optional
+            If True, keeps connection open (default is False).
 
         Returns
-        ---------
-        res : list of dictionaries,
-            list of dicts containing flagged experiments records
+        -------
+        res : list of dict
+            List of flagged experiment record dictionaries.
         """
 
         if archive == "public":
@@ -155,24 +177,25 @@ class dbIO():
         return res
 
     def get_local_files(self, source,tmp_dir, ts = None,te=None,keep_open = False):
-        """ Get list of data files already downloaded for analysis.
+        """Fetch list of filenames already cached or downloaded locally.
+
         Parameters
-        ---------
-        source : str,
-                system source under analysis    
-        tmp_dir : str,
-                user temporary directory to search in 
-        ts : int or None,
-            timestamp of search start date
-        te : int or None,
-            timestamp of search end date
-        keep_open : boolean,
-            if True, keep the connection open for next operation
+        ----------
+        source : str
+            Target data system source name.
+        tmp_dir : str
+            Temporary working directory identifier.
+        ts : str or None, optional
+            Search start timestamp string (default is None).
+        te : str or None, optional
+            Search end timestamp string (default is None).
+        keep_open : bool, optional
+            If True, keeps connection open (default is False).
 
         Returns
-        ---------
-        locfiles : list,
-            list of stored files
+        -------
+        locfiles : list of str
+            Filenames matching search criteria.
         """
         sql = "SELECT filename FROM local_files WHERE ("
         if ts is not None and te is not None:
@@ -192,16 +215,17 @@ class dbIO():
         return locfiles
 
     def get_ml(self, keep_open = False):
-        """ Get list of ML experiments from DB.
+        """Fetch list of stored Machine Learning experiment records.
+
         Parameters
-        ---------
-        keep_open : boolean,
-            if True, keep the connection open for next operation
+        ----------
+        keep_open : bool, optional
+            If True, keeps connection open (default is False).
 
         Returns
-        ---------
-        res : list of dictionaries,
-            list of dicts containing flagged experiments records
+        -------
+        res : list of dict
+            List of ML experiment records.
         """
 
         sql = "SELECT * FROM stored_ml ORDER BY id DESC"
@@ -218,16 +242,17 @@ class dbIO():
         return res
         
     def get_opmode(self,keep_open = False):
-        """ Get the current operation mode.
+        """Fetch active operational mode setting.
+
         Parameters
-        ---------
-        keep_open : boolean,
-            if True, keep the connection open for next operation
+        ----------
+        keep_open : bool, optional
+            If True, keeps connection open (default is False).
 
         Returns
-        ---------
-        res : dict,
-            single entry dictionary, {"mode" : <current operational mode>}
+        -------
+        res : dict
+            Single-item dictionary containing 'mode' key.
         """        
         sql = "SELECT mode FROM operation_modes WHERE enable = 1"
         if self.connection is None:
@@ -241,18 +266,19 @@ class dbIO():
         return res    
             
     def get_users(self, status = 1, keep_open = False):
-        """ Get list of users from DB.
+        """Fetch registered users filtered by account status.
+
         Parameters
-        ---------
-        status : int,
-            0 to select "pending", 1 for "active" or 2 for "deactive" users
-        keep_open : boolean,
-            if True, keep the connection open for next operation
+        ----------
+        status : int, optional
+            Filter status code (0: pending, 1: active, 2: deactivated, default is 1).
+        keep_open : bool, optional
+            If True, keeps connection open (default is False).
 
         Returns
-        ---------
-        res : list of dictionaries,
-            list of dicts containing users records
+        -------
+        res : list of dict
+            List of matching user records.
         """
         sql = "SELECT * FROM members WHERE active = "+str(status);        
         if self.connection is None:
@@ -267,17 +293,17 @@ class dbIO():
         return res
 
     def get_report_status(self, runid):
-        """Get status of current report record within running_reports table in local DB
-        
+        """Fetch execution status percentage for a target report generation run.
+
         Parameters
         ----------
-        runid : int or str,
-            id of the current experiment
-            
+        runid : int or str
+            Unique run ID of target report job.
+
         Returns
-        --------
-        p : float,
-            exp_status value from local DB
+        -------
+        p : float
+            Numeric execution progress percentage.
         """            
      
         if self.connection is None:
@@ -293,18 +319,21 @@ class dbIO():
         return p
       
     def get_running_reports(self, role = "admin", username = "", keep_open = False):
-        """ Get running report list from DB.
+        """Fetch active running report execution records.
+
         Parameters
-        ---------
-        keep_open : boolean,
-            if True, keep the connection open for next operation
-        role : string,
-            if "admin", get all the results, otherwise get only user running reports
+        ----------
+        role : str, optional
+            User role level ('admin' or standard user, default is 'admin').
+        username : str, optional
+            Filter username when role is not 'admin' (default is "").
+        keep_open : bool, optional
+            If True, keeps connection open (default is False).
 
         Returns
-        ---------
-        res : list of dictionaries,
-            list of dicts containing running reports records
+        -------
+        res : list of dict
+            List of running report records.
         """
         sql = "SELECT * FROM running_reports";        
         if role != "admin":
@@ -321,16 +350,17 @@ class dbIO():
         return res      
       
     def get_systems(self, keep_open = False):
-        """ Get available systems from DB.
+        """Fetch list of distinct system identifiers registered in database.
+
         Parameters
-        ---------
-        keep_open : boolean,
-            if True, keep the connection open for next operation
+        ----------
+        keep_open : bool, optional
+            If True, keeps connection open (default is False).
 
         Returns
-        ---------
-        out : list,
-            the list of available systems
+        -------
+        out : list of str
+            Unique registered system names.
         """      
         sql = "SELECT name FROM systems GROUP BY name"
         out = []
@@ -349,57 +379,63 @@ class dbIO():
         return out
 
     def insert_local_file(self, fname, source, user, subsystem = None, tstart = None, tstop = None, ftype = None, keep_open = False):
-        """Insert a new downloaded file into the local DB
-        
+        """Register newly downloaded local data file entry in database.
+
         Parameters
-        ---------
-        fname : str,
-            name of file
-        source : str,
-            system source of file
+        ----------
+        fname : str
+            Filename.
+        source : str
+            Data source system identifier.
+        user : str
+            User who initiated download.
         subsystem : str, optional
-            subsystem source of file. Default is None            
-        user : str,
-            user who downloaded file
+            Subsystem identifier name (default is None).
         tstart : str, optional
-            start time in file. Default is None
+            Start timestamp (default is None).
         tstop : str, optional
-            end time in file.  Default is None
-        keep_open : boolean,
-            if True, keep the connection open for next operation
+            End timestamp (default is None).
+        ftype : str, optional
+            File classification type (default is None).
+        keep_open : bool, optional
+            If True, keeps connection open (default is False).
         """
 
         sql_newf = "INSERT INTO local_files (filename, data_source, username, filetype) VALUES ('"+fname+"', '"+source+"', '"+user+"', '"+ftype+"')"
         self._commit_query(sql_newf, keep_open)      
 
     def insert_ml_plot(self, username, modelfile, outfile, recapfile, labels, source, creation, ts, te, config, stats):
-        """Insert a new ml experiment into the local DB
-        
+        """Insert new Machine Learning experiment record.
+
         Parameters
         ----------
-        username : str,
-                  user who generated the plot
-        modelfile : str,
-                  model filename
-        outfile : str,
-                  output filename
-        recapfile : str,
-                  experiment recap filename
-        labels : list,
-                list of plotted parameters                   
-        source  : str,
-                  source name
-        ts : str,
-            start datetime of experiment data
-        te : str,
-            end datetime of experiment data
-        config : dict,
-                experiment configuration : ML technique, model
-           
+        username : str
+            Generating user's name.
+        modelfile : str
+            Path to serialized model file.
+        outfile : str
+            Path to model prediction output file.
+        recapfile : str
+            Path to summary report file.
+        labels : list of str
+            List of feature and target parameter labels.
+        source : str
+            Data system source name.
+        creation : str
+            Creation timestamp string.
+        ts : str
+            Data range start timestamp string.
+        te : str
+            Data range end timestamp string.
+        config : dict
+            Model and technique configuration settings.
+        stats : dict or str
+            Evaluation metrics payload.
+
         Returns
         -------
-        plotid : int,
-            row id of stored record in DB
+        plotid : int or None
+            Database record ID if successful, None on failure.
         """
         if self.connection is None:
             self.connect()
@@ -424,58 +460,62 @@ class dbIO():
         return plotid
       
     def insert_report_file(self, fname, user, creation, period, configfile, tstart, tstop, keep_open = False):
-        """Insert a new report file into the local DB
-        
+        """Insert record for a generated report document.
+
         Parameters
-        ---------
-        fname : str,
-            name of report file
-        user : str,
-            user who run the report generation
-        creation : str,
-            report creation date
-        period : "ondemand", "daily", "weekly", "monthly" or "custom"
-            report periodicity
-        configfile : str,
-            name of report configuration file
-        tstart : str,
-            start time of report
-        tstop : str,
-            end time of report
-        keep_open : boolean,
-            if True, keep the connection open for next operation
+        ----------
+        fname : str
+            Report PDF filename.
+        user : str
+            Generating user's name.
+        creation : str
+            Creation timestamp string.
+        period : str
+            Report periodicity mode.
+        configfile : str
+            Configuration filename used for generation.
+        tstart : str
+            Report data start datetime string.
+        tstop : str
+            Report data end datetime string.
+        keep_open : bool, optional
+            If True, keeps connection open (default is False).
         """
         sql_newrep = "INSERT INTO report_files (filename, username, upload_date, period, config_file, start_date, end_date) VALUES ('"+fname+"', '"+user+"', '"+creation+"', '"+period+"', '"+configfile+"', '"+tstart+"', '"+tstop+"')"
         self._commit_query(sql_newrep, keep_open)
 
     def insert_temp_plot(self, pdata, usecase, plot, username, labels, stats, stat_res, plot_name, ts, te, tokeep):
-        """Insert a new temporary plot experiment into the local DB
-        
+        """Insert new temporary plot experiment record.
+
         Parameters
-        ---------
-        pdata : dict,
-            data to plot as retrieved by get_data
-        usecase: "htkm" or "science", string
-            data origin
-        plot : str,
-            plot to generate
-        username : str,
-            user who request the plot
-        labels : list,
-            list of plotted parameters
-        period : "ondemand", "daily", "weekly", "monthly" or "custom"
-            report periodicity
-        stats : "global" or "advanced", string
-            type of statistical analysis requested
-        stat_res : dict,
-            results of statistical analysis
-        plot_name : str,
-            displayed name of plot
-            
+        ----------
+        pdata : dict or str
+            Plotted data payload.
+        usecase : str
+            Data origin context.
+        plot : str
+            Plot type identifier string.
+        username : str
+            User requesting plot generation.
+        labels : list of str
+            Labels for plotted parameters.
+        stats : str
+            Statistical mode ('global' or 'advanced').
+        stat_res : str
+            JSON formatted statistical results string.
+        plot_name : str
+            Display name of plot.
+        ts : str
+            Data start timestamp string.
+        te : str
+            Data end timestamp string.
+        tokeep : int
+            Persistence flag (0 for temporary, 1 for permanent).
+
         Returns
-        --------
-        plotid : int,
-            row id of stored record in DB
+        -------
+        plotid : int or None
+            Inserted record ID, or None if insert failed.
         """
         if self.connection is None:
             self.connect()
@@ -496,29 +536,29 @@ class dbIO():
         return plotid
         
     def remove_running_report(self, runid, keep_open=False):
-        """Remove a report generation from running reports table
-        
+        """Delete report execution entry from running_reports table.
+
         Parameters
-        ---------
-        runid : int or str,
-            id of the current experiment
-        keep_open : boolean,
-            if True, keep the connection open for next operation
+        ----------
+        runid : int or str
+            Unique execution record ID.
+        keep_open : bool, optional
+            If True, keeps connection open (default is False).
         """      
         sql = "DELETE FROM running_reports WHERE id="+ str(runid)      
         self._commit_query(sql, keep_open)
         
     def remove_tmp_data(self, syslist, runid, keep_open = False):
-        """Remove temporary experiment data from local DB
-        
+        """Purge temporary experiment tables for listed systems and run ID.
+
         Parameters
         ----------
-        confreport : list
-            list of systems involved in current experiment
-        runid : int or str,
-            id of the current experiment
-        keep_open : boolean,
-            if True, keep the connection open for next operation        
+        syslist : list of str
+            Target systems names.
+        runid : int or str
+            Target run execution ID.
+        keep_open : bool, optional
+            If True, keeps connection open (default is False).
         """
         
         for s in syslist:
@@ -528,18 +568,18 @@ class dbIO():
             self.close()
 
     def update_config_files(self, configfile, isrunning, start_date=None, keep_open=False):
-        """Update config file record within config_files table in local DB
-        
+        """Update report configuration file status flags in database.
+
         Parameters
         ----------
-        configfile : str,
-            name of report configuration file
-        isrunning : int,
-            running status of related report generation (0 = idle, 1 = running, 2 = scheduled),
-        start_date : str,
-            If not None, start date for report generation        
-        keep_open : boolean,
-            if True, keep the connection open for next operation        
+        configfile : str
+            Report configuration filename.
+        isrunning : int
+            Execution status flag (0: idle, 1: running, 2: scheduled, etc.).
+        start_date : str, optional
+            Scheduled start date string (default is None).
+        keep_open : bool, optional
+            If True, keeps connection open (default is False).
         """  
         sql = "UPDATE config_files SET isrunning = "+str(isrunning)
         if start_date is not None:
@@ -548,14 +588,14 @@ class dbIO():
         self._commit_query(sql, keep_open)      
 
     def update_progress(self, runid, percent="final"):
-        """Update progress percentage of current report record within running_reports table in local DB
-        
+        """Update completion progress percentage for a running report job.
+
         Parameters
         ----------
-        runid : int or str,
-            id of the current experiment
-        percent : float or "final",
-            if float, the percentage to add to the previous status. If "final", percent is set in order to reach 100%
+        runid : int or str
+            Unique run ID.
+        percent : float or "final", optional
+            Percentage increment or "final" to reach 100% (default is "final").
         """
         p = self.get_report_status(runid)
 
@@ -570,20 +610,20 @@ class dbIO():
         self._commit_query(sql_update)
         
     def update_running_reports(self, pid, runid, tstart = None, status = None, keep_open = False):
-        """Update current report record within running_reports table in local DB
-        
+        """Update process ID and progress status for a running report job.
+
         Parameters
         ----------
-        pid : int,
-            program id for current report generation experiment
-        runid : int or str,
-            id of the current experiment.
+        pid : int
+            System process ID.
+        runid : int or str
+            Target run execution ID.
         tstart : str, optional
-            If not None, start date of report acquisition. Default is None
-        status : str, optional
-            If not None, starting percentage of report generation. Default is None
-        keep_open : boolean, optional
-            if True, keep the connection open for next operation. Default is False.     
+            Execution start datetime string (default is None).
+        status : float or int, optional
+            Execution progress value (default is None).
+        keep_open : bool, optional
+            If True, keeps connection open (default is False).
         """
 
         if status is None:

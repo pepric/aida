@@ -1,3 +1,21 @@
+/**
+ * Application Dashboard Controller and DataTables Manager.
+ *
+ * Handles dashboard tab initialization, periodic DataTables auto-reloading (running processes,
+ * flagged reports, ML experiments, pending/active/deactivated users), flagged anomaly filtering,
+ * file uploader initialization (Plupload), and administrative system/SMTP settings AJAX handlers.
+ *
+ * @package    AIDA
+ * @subpackage JS\Dashboard
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+
+/**
+ * DOM Load Initialization:
+ * Loads navigation file trees (user, stored, reports, configs),
+ * retrieves active history logs, and prevents form submission on Enter key in password fields.
+ */
 $(document).ready(function(){
 	var name = document.getElementById("session-user").innerHTML;
 	get_tree(name, "#treeUser", [], 1)
@@ -14,10 +32,19 @@ $(document).ready(function(){
 	});	
 });	
 
+/**
+ * Periodic Refresh Timer:
+ * Polls to refresh user and global history logs every 3 minutes.
+ */
 setInterval(function(){
 	refresh_history();
 }, 180000);
 
+/**
+ * Opens a page in a new browser tab with the current operating mode appended as a query parameter.
+ *
+ * @param {string} page Target URL path.
+ */
 function open_tab(page){
 	var opmode = document.getElementById("opmode").innerHTML.toLowerCase()
 	window.open(page+'?opmode='+opmode,'_blank');
@@ -25,6 +52,13 @@ function open_tab(page){
 	
 }
 
+/**
+ * Formats flag image elements into text strings for CSV export.
+ *
+ * @param {string} data HTML content string containing flag image.
+ * @param {string} type Render type context (e.g., 'exportcsv').
+ * @returns {string} Plain text flag status.
+ */
 function render_flag(data, type){
 	if (type === "exportcsv") {
 		data = data.replace('<img src="assets/images/nd.png"><span style="display:none">0</span>', "Not Defined");
@@ -36,6 +70,9 @@ function render_flag(data, type){
 	return data;        
 }
 
+/**
+ * Prompts the user for logout confirmation and redirects to logout.php.
+ */
 function logout(){
 	var r = confirm("You are logging out. Are you sure?");
 	if (r == true) {
@@ -43,7 +80,11 @@ function logout(){
 	}
 }
 
-//refresh running reports table
+/**
+ * Running Reports DataTables:
+ * Configures displayed columns based on user role (Admin vs. User),
+ * initializes the table, and triggers automatic AJAX polling every 5 seconds.
+ */
 $( document ).ready(function() {
 	var role = document.getElementById("session-role").innerHTML
 	var user = document.getElementById("session-user").innerHTML
@@ -97,7 +138,10 @@ $( document ).ready(function() {
 	}, 5000 );
 });
   
-//refresh flagged reports table  
+/**
+ * Flagged Reports DataTables:
+ * Initializes the table for flagged reports/anomalies and schedules a refresh every 10 minutes.
+ */ 
 $( document ).ready(function() {
 		var cols = [
 			{ mData: 'Flag' } ,
@@ -127,7 +171,10 @@ $( document ).ready(function() {
 }); 
 
 
-//refresh ML experiment table  
+/**
+ * Machine Learning Experiments DataTables:
+ * Initializes the table for saved ML models in the database, refreshing every 10 minutes.
+ */
 $( document ).ready(function() {
 		var cols = [
 			{ mData: 'ID' } ,
@@ -159,9 +206,10 @@ $( document ).ready(function() {
 }); 
 
 
-
-  
-//refresh pending requests table  
+/**
+ * Administrative User Management DataTables (Pending, Active, Deactivated):
+ * Three blocks populating their respective DataTables and scheduling hourly updates (3600000 ms).
+ */
 $( document ).ready(function() {
 		var cols = [
 			{ mData: 'Username' } ,
@@ -249,7 +297,10 @@ $( document ).ready(function() {
 	}, 3600000);
 });
 
-
+/**
+ * Page-Level Periodic Refresh Timers:
+ * Regenerates file trees, flag tables, and history logs every 10 minutes.
+ */
 $( document ).ready(function() {
 	  //refresh config files and reports trees
   	  update_tree('config', '#treeConfig', ['json', 'ini'], 1)
@@ -263,6 +314,9 @@ $( document ).ready(function() {
   
 });
 
+/**
+ * Fetches flagged anomaly data via AJAX and initializes or refreshes DataTables.
+ */
 function build_flagged_tables(){
 
   	  var tbl = ['datatable-anomalies','datatable-anomalies1','datatable-anomalies2','datatable-anomalies3']
@@ -286,6 +340,13 @@ function build_flagged_tables(){
       }) 
 }
 
+/**
+ * Initializes a DataTable instance for a flagged anomaly table.
+ *
+ * @param {string} divid Container table ID.
+ * @param {Array}  data  Dataset array to populate.
+ * @returns {Array} Columns configuration array.
+ */
 function init_flagged(divid, data){
 	var filenames={
       	"datatable-anomalies" : "flagged_parameters_public",
@@ -340,6 +401,13 @@ function init_flagged(divid, data){
 	return cols
 }
 
+/**
+ * Populates dropdown filter controls based on flagged DataTable column values.
+ *
+ * @param {Array}  cols Column definitions array.
+ * @param {string} tbl  Table ID.
+ * @param {Array}  data Source data array.
+ */
 function build_flagged_filters(cols, tbl, data){
 
 	const select_map = {
@@ -395,6 +463,9 @@ $(document).ready(function() {
 
 });
 
+/**
+ * Resets repository modal selection dropdowns and hides input fields.
+ */
 function reset_repo_modal(){
 	$('#form_settings').hide()
 	$('#form_opmode').hide()
@@ -413,12 +484,24 @@ $(document).ready(function() {
 		$(targetBox).show(); 
 	}); 
 }); 
- 
+
+/**
+ * Applies a column search filter on a DataTable instance.
+ *
+ * @param {string}          tbl Table ID.
+ * @param {HTMLSelectElement} sel Select element triggering the filter.
+ * @param {number}          col Target column index.
+ */ 
 function filter_table(tbl, sel, col){
 	var table = $('#'+tbl).DataTable()
 	table.columns(col).search( sel.value ).draw();
 }  
 
+/**
+ * Resets all select filters for a specific anomaly table.
+ *
+ * @param {string|number} id Anomaly table ID suffix.
+ */
 function reset_filters(id){
 	var n = 0;
     $("#filters"+id).find("select").each(function () { // there is no such thing as input[type=select] 
@@ -428,7 +511,11 @@ function reset_filters(id){
     });
 }
  
-// Upload Form
+/**
+ * Upload Form (Plupload Engine):
+ * Initializes the chunked uploader for backup archives (10MB chunks),
+ * handles extension validation, progress bar rendering, and completion callbacks.
+ */
 $(function() {
 	// Settings ////////////////////////////////////////////////
 	var uploader = new plupload.Uploader({
@@ -512,7 +599,9 @@ $(function() {
 	});      
 }); // end of the upload form configuration 
 
-// SWITCH
+/**
+ * Handles UI toggle events for system state switches.
+ */
 function switch_systems(){
 
       var isChecked = $(this).is(':checked');
@@ -526,6 +615,10 @@ function switch_systems(){
       }
 }
 
+/**
+ * AJAX Handler - Save Monitored Systems Settings:
+ * Collects active toggle switch states and sends the update request to the backend.
+ */
 $(document).ready(function() {
 
 	$('#update_sys').on("click", function(){
@@ -580,6 +673,9 @@ $(document).ready(function() {
 	})
 })
 
+/**
+ * AJAX Handler and Validation - Save General Web App Settings (General Settings Modal).
+ */
 $(document).ready(function() {
 	$('#gen_set-btn').on('click', function(event) {
 		$('#histnum').rules("add", {digits : true})
@@ -643,6 +739,9 @@ $(document).ready(function() {
 	});
 });
 
+/**
+ * AJAX Handler and Validation - SMTP Configuration (SMTP Settings Modal).
+ */
 $(document).ready(function() {
 	$('#smtp_set-btn').on('click', function(event) {
 	// prevent default submit action         
@@ -693,6 +792,9 @@ $(document).ready(function() {
 	});
 });
 
+/**
+ * AJAX Handler - Send Test SMTP Email.
+ */
 $(document).ready(function() {
 	$('#smtp_test-btn').on('click', function(event) {
 	// prevent default submit action         
@@ -742,6 +844,12 @@ $(document).ready(function() {
 	});
 });
 
+/**
+ * Displays a PNotify notification pop-up containing report information.
+ *
+ * @param {string} repname   Report name.
+ * @param {string} repstatus Report status ('ok', 'warning', 'serious', 'nd').
+ */
 function show_rep_info(repname, repstatus){
 	const status_map = {"ok" : "success", "warning" : "warning", "serious" : "error", "nd" : "dark"}
 	var reptype = status_map[repstatus]
@@ -759,6 +867,12 @@ function show_rep_info(repname, repstatus){
 	});
 }
 
+/**
+ * Displays a PNotify notification pop-up containing detailed user or global history entry.
+ *
+ * @param {string|number} id   History entry ID.
+ * @param {string}        list Scope identifier ('global' or 'user').
+ */
 function show_hist_info(id, list){
 	var addcl = "ui-pnotify-no-icon notification-dark"
     var id_prefix
@@ -779,6 +893,11 @@ function show_hist_info(id, list){
 	});
 }
 
+/**
+ * Triggers a browser file download for user or global history text files.
+ *
+ * @param {string} [el="full"] User identifier or 'full' for global history.
+ */
 function download_history(el="full"){
 	var link = document.createElement("a");
 	var name, uri

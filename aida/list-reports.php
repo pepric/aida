@@ -1,3 +1,16 @@
+<?php
+/**
+ * Generated Reports View.
+ *
+ * Displays lists of generated Periodic and On-Demand reports, including creation dates,
+ * owners, recurrence, and flagging information.
+ *
+ * @package    AIDA
+ * @subpackage Views\Reports
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+ ?>
 <!doctype html>
 <html class="fixed">
 	<?php 

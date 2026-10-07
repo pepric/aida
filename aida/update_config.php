@@ -1,4 +1,15 @@
 <?php
+	/**
+ * Uncompleted Configuration Update Handler.
+ *
+ * AJAX endpoint handling updates for uncompleted or draft JSON report configuration files,
+ * saving updated JSON payloads to disk and updating database configuration records.
+ *
+ * @package    AIDA
+ * @subpackage Controllers\Reports
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
 	include("functions.php");
 	$out=[];
 	$file_name = $_POST['file'];

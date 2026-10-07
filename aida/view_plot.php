@@ -1,3 +1,16 @@
+<?php
+/**
+ * Stored Offline Plot & Machine Learning View Page.
+ *
+ * Renders offline plots or Machine Learning results from stored experiment records
+ * via AJAX calls to the Python interface (`scripts/cs_interface.py`).
+ *
+ * @package    AIDA
+ * @subpackage Views\Plots
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 <!doctype html>
 <html class="fixed">
 	<?php

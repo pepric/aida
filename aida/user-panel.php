@@ -1,3 +1,19 @@
+<?php
+/**
+ * User Dashboard Panel View Component.
+ *
+ * Renders the primary dashboard tab containing data tables and treeviews for:
+ * - Running report generation processes
+ * - Flagged reports archive
+ * - Available generated PDF/XML reports tree
+ * - Stored JSON configuration files tree
+ *
+ * @package    AIDA
+ * @subpackage Views\Dashboard
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 <div class="panel-body panel-dash">
 	<div class="col-md-12">
 		<header class="panel-heading">

@@ -1,3 +1,17 @@
+<?php
+/**
+ * Plot Customization Panel View.
+ *
+ * Renders the collapsible sidebar control panel for customizing plot aesthetics,
+ * including background colors, typography, titles, trace styles (markers/lines),
+ * axis ranges, grids, zero-lines, tick labels, and legend options.
+ *
+ * @package    AIDA
+ * @subpackage Views\Plots
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 <div id="plot_settings" style="display:none; padding: 0">
   <section class="panel panel-featured panel-featured-primary cp-panel">
     <header class="panel-heading">

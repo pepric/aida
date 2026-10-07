@@ -1,3 +1,16 @@
+<?php
+/**
+ * Stored Files View.
+ *
+ * Tabbed view template for inspecting user-owned files, globally stored files,
+ * and temporary repository or uploaded files.
+ *
+ * @package    AIDA
+ * @subpackage Views
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+ ?>
 <!doctype html>
 <html class="fixed">
 	<?php 

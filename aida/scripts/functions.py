@@ -1,5 +1,16 @@
 #!/usr/bin/python
 
+"""
+Core System Utilities and Helper Functions.
+
+This module provides common helper routines for configuration loading, 
+database connections, date formatting, FTP downloads, path formatting, 
+user activity history logging, and file copying operations across AIDA.
+
+@package AIDA
+@module functions
+"""
+
 import json
 import time         #useless?
 import numpy as np
@@ -18,6 +29,32 @@ import filecmp
 import traceback
 
 class repConfig():
+    """Load and maintain system and repository operational configurations.
+
+    Parameters
+    ----------
+    source : str, optional
+        Data source identifier string (default is None).
+    usecase : str, optional
+        Execution context ('config', 'report', 'plot', default is 'config').
+
+    Attributes
+    ----------
+    root : str
+        Base directory path of application scripts.
+    usecase : str
+        Execution context identifier.
+    data : dict
+        Parsed global config.json dictionary.
+    repclass : dict
+        Mapping of sub-origins to instantiated repository objects.
+    opmode : str
+        Active operational mode name.
+    offset : int
+        Data offset integer value.
+    error : int
+        Combined configuration error status flag (0 on success).
+    """
     def __init__(self, source = None, usecase = "config"):
 
         self.root = path.dirname(path.abspath(__file__)).replace("scripts","")
@@ -65,6 +102,20 @@ class repConfig():
         self.error = main_err or data_read_error or repsource_error or db_error or data_rep_error or opmode_error
 
     def get_config_data(self, cfile = "config.json"):
+        """Read and parse target JSON configuration file.
+
+        Parameters
+        ----------
+        cfile : str, optional
+            Configuration relative file path (default is "config.json").
+
+        Returns
+        -------
+        data : dict or None
+            Parsed JSON contents dictionary.
+        error : int
+            0 on success, 1 on read or JSON parse failure.
+        """
         error = 0
         data = None
         try:
@@ -81,6 +132,7 @@ class repConfig():
         return data, error
 
     def get_nthreads(self):
+        """Extract multi-threading allocation per subsystem from configuration."""
         for sub, data in self.sourcedata.items():
             try:
                 ftp_th = data["nprocs"]
@@ -89,6 +141,13 @@ class repConfig():
             self.nth_dict.update({sub : ftp_th})
 
     def get_offset(self):
+        """Extract data time offset setting from global configuration.
+
+        Returns
+        -------
+        offset : int
+            Time offset value in seconds.
+        """
         try:
             offset = int(self.data['offset'])
         except:
@@ -97,6 +156,15 @@ class repConfig():
         return offset      
       
     def get_opmode(self):
+        """Retrieve active operational mode setting from local database.
+
+        Returns
+        -------
+        opmode : str or None
+            Name of enabled operational mode.
+        error : int
+            0 on success, 1 on query error.
+        """
         error = 0
         opmode = None
         try:
@@ -111,6 +179,13 @@ class repConfig():
         return opmode, error
 
     def set_db(self):
+        """Configure database connection specifications from system settings.
+
+        Returns
+        -------
+        error : int
+            0 on success, 1 if configuration missing or invalid.
+        """
         error = 0
         try:
             if self.usecase == "report":
@@ -125,6 +200,13 @@ class repConfig():
         return error
 
     def set_data_rep(self):
+        """Configure file repository connection parameters and transfer methods.
+
+        Returns
+        -------
+        error : int
+            0 on success, 1 if repository setup encounters errors.
+        """
         error = 0
 
         for sub,repsys in self.repsource.items():
@@ -177,6 +259,13 @@ class repConfig():
         return error
 
     def set_main(self):
+        """Resolve web application main directory path.
+
+        Returns
+        -------
+        error : int
+            0 on success, 1 if path unresolvable.
+        """
         error = 0
         try:
             self.main = set_path(self.data['webapp_dir'])
@@ -188,6 +277,13 @@ class repConfig():
         return error
 
     def set_rep_source(self):
+        """Instantiate repository handler classes for active subsystems.
+
+        Returns
+        -------
+        error : int
+            0 on success, 1 if class instantiation fails.
+        """
         error = 0
         try:
             list_repos = [m[0] for m in inspect.getmembers(repos, inspect.isclass) if m[1].__module__ == 'repos']
@@ -220,6 +316,7 @@ class repConfig():
         return error
 
 class statusMsg():
+    """Encapsulate execution warning, error, and status diagnostic messages."""
     def __init__(self):
         #Configuration file status
         self.confmsg = "ERROR!\nUnable to read configuration file.\nPlease check config.json"
@@ -256,19 +353,38 @@ class statusMsg():
         self.info = ""
 
     def get_confstatus(self):
+        """Return configuration error message string."""
         return self.confmsg
     def get_ftpstatus(self):
+        """Return FTP transfer warning message string."""
         return self.ftpmsg
     def get_downloadstatus(self):
+        """Return file download warning message string."""
         return self.downmsg
     def get_filestatus(self):
+        """Return file parsing warning message string."""
         return self.filemsg
     def get_locdbstatus(self):
+        """Return local database error message string."""
         return self.localmsg
     def get_remdbstatus(self):
+        """Return remote database error message string."""
         return self.remotemsg
 
     def get_status(self):
+        """Evaluate status flags and compile summary diagnostic messages.
+
+        Returns
+        -------
+        errorstatus : int
+            1 if fatal errors exist, otherwise 0.
+        warningstatus : int
+            1 if warnings exist, otherwise 0.
+        datastatus : int
+            1 if data missing warnings exist, otherwise 0.
+        infostatus : int
+            1 if informational messages exist, otherwise 0.
+        """
         errorstatus = self.confstatus or self.localstatus or self.remotestatus or self.mainstatus
         warningstatus = self.ftpstatus or self.downstatus or self.filestatus
         datastatus = self.datastatus
@@ -280,6 +396,7 @@ class statusMsg():
         return errorstatus, warningstatus, datastatus, infostatus
 
     def set_errormsg(self):
+        """Compile active fatal error status messages into error attribute."""
         if self.confstatus == 1:
             self.error += self.confmsg + "\n"
         if self.mainstatus == 1:
@@ -290,6 +407,7 @@ class statusMsg():
             self.error += self.remotemsg + "\n"
 
     def set_warningmsg(self):
+        """Compile active warning status messages into error attribute."""
         if self.ftpstatus == 1:
             self.error += self.ftpmsg + "\n"
         if self.downstatus == 1:
@@ -298,14 +416,36 @@ class statusMsg():
             self.error += self.filemsg + "\n"
 
     def set_datamsg(self):
+        """Compile data availability messages into error attribute."""
         if self.datastatus == 1:
             self.error += self.datamsg + "\n"
 
     def set_infomsg(self):
+        """Compile informational notices into info attribute."""
         if self.nastatus == 1:
             self.info += self.namsg + "\n"
 
 def add_detector_layer(connection, det_type, det, row, col):
+    """Append detector layer suffix string to detector identifier token.
+
+    Parameters
+    ----------
+    connection : pymysql.connections.Connection
+        Active database connection instance.
+    det_type : str
+        Detector family name ('DET' or 'CCD').
+    det : str
+        Base detector string.
+    row : str or int
+        Detector row index.
+    col : str or int
+        Detector column index.
+
+    Returns
+    -------
+    det : str
+        Updated detector token string.
+    """
     if det_type == "DET":
         layer = db_query(connection, "hktm_detector_layer", "layer", "WHERE detid="+str(row)+str(col), "one")
         layer = layer.get("layer")
@@ -313,6 +453,18 @@ def add_detector_layer(connection, det_type, det, row, col):
     return det
 
 def concat_keys(dictionary):
+    """Flatten nested dictionary key hierarchy into dot-separated string paths.
+
+    Parameters
+    ----------
+    dictionary : dict
+        Target dictionary object.
+
+    Returns
+    -------
+    result : list of str
+        List of dot-separated key path strings.
+    """
     result = []
     for key, value in dictionary.items():
         if type(value) is dict:
@@ -324,6 +476,18 @@ def concat_keys(dictionary):
     return result
 
 def connect_db(config):
+    """Instantiate and return a new PyMySQL database connection.
+
+    Parameters
+    ----------
+    config : dict
+        Connection parameters dictionary.
+
+    Returns
+    -------
+    connection : pymysql.connections.Connection
+        Active PyMySQL connection object.
+    """
 
     host=config['host']
     port=int(config['port'])
@@ -343,6 +507,26 @@ def connect_db(config):
     return connection
 
 def db_query(connection, table, column, statement = "", res_type = "all"):
+    """Execute SQL SELECT query and return result rows.
+
+    Parameters
+    ----------
+    connection : pymysql.connections.Connection
+        Active database connection.
+    table : str
+        Target table name.
+    column : str
+        Target SELECT columns.
+    statement : str, optional
+        WHERE clause or additional SQL statements (default is "").
+    res_type : str, optional
+        Result format ('one' for single row dict, 'all' for row list, default is "all").
+
+    Returns
+    -------
+    result : dict or list of dict
+        Query result row(s).
+    """
     allowed = ["one", "all"]
     if not res_type in allowed:
         raise TypeError("Invalid result type")
@@ -360,6 +544,18 @@ def db_query(connection, table, column, statement = "", res_type = "all"):
         return result  
   
 def extract_runid(fname):
+    """Extract run ID directory string from formatted data filename.
+
+    Parameters
+    ----------
+    fname : str
+        Source filename token.
+
+    Returns
+    -------
+    dir : str
+        Resolved directory identifier name.
+    """
     x = fname.split("_")[0]
     if len(x) > 4:
         runid = int(int(x[3:])/10)
@@ -374,6 +570,18 @@ def extract_runid(fname):
     return dir
     
 def flatten(mydict):
+    """Recursively flatten nested dictionary nodes into dot-separated single level dict.
+
+    Parameters
+    ----------
+    mydict : dict
+        Input nested dictionary.
+
+    Returns
+    -------
+    new_dict : dict
+        Flattened single-level dictionary.
+    """
     new_dict = {}
     for key,value in mydict.items():
       if type(value) == dict and not key.startswith("Operation"):
@@ -384,6 +592,18 @@ def flatten(mydict):
     return new_dict
 
 def format_date(t):
+    """Convert ISO datetime string into UTC epoch timestamp float.
+
+    Parameters
+    ----------
+    t : str
+        Datetime text string (%Y-%m-%d %H:%M:%S format).
+
+    Returns
+    -------
+    timestamp : float
+        UTC epoch timestamp float.
+    """
     #CASE from YYYY-mm-dd HH:mm:ss to TIMESTAMP UTC
     #remove Z from utc time string
     if t[-1] == "Z":
@@ -399,6 +619,18 @@ def format_date(t):
     return timestamp  
   
 def get_detector_layers(config):
+    """Query database and map detector IDs to layer indices.
+
+    Parameters
+    ----------
+    config : dict
+        Database connection dictionary.
+
+    Returns
+    -------
+    layers : dict
+        Dictionary mapping detector ID strings to layer values.
+    """
     con = connect_db(config)
     layerdict = db_query(con, "hktm_detector_layer", "*", "", "all")
     layers = {}
@@ -410,6 +642,20 @@ def get_detector_layers(config):
     return layers
 
 def get_email(connection, user):
+    """Fetch registered email address for target username.
+
+    Parameters
+    ----------
+    connection : pymysql.connections.Connection
+        Active database connection.
+    user : str
+        Target username string.
+
+    Returns
+    -------
+    email : str
+        Registered user email address.
+    """
     sql = "SELECT email FROM members WHERE username = '"+user+"'"
     with connection.cursor() as cursor:
         cursor.execute(sql)
@@ -419,11 +665,36 @@ def get_email(connection, user):
     return email  
 
 def get_localdb_info():
+    """Retrieve local database credentials dictionary from configuration.
+
+    Returns
+    -------
+    conndata : dict
+        Local database connection parameters.
+    """
     confdata = repConfig().data
     conndata = confdata['local_db']
     return conndata  
 
 def get_par_info(obj, conn, origin, system):
+    """Query parameter metadata table for specified parameter list.
+
+    Parameters
+    ----------
+    obj : dict
+        Selected parameters object.
+    conn : pymysql.connections.Connection
+        Active database connection.
+    origin : str
+        Data origin classification.
+    system : str
+        System identifier name.
+
+    Returns
+    -------
+    infopar : list of dict
+        Parameter records retrieved from database.
+    """
     infopar = []
     statement = "WHERE "
     if system == "QLA":
@@ -452,6 +723,26 @@ def get_par_info(obj, conn, origin, system):
     return infopar  
   
 def get_param_list(repdata, conn, origin, system):
+    """Retrieve parameter metadata list and summary attributes.
+
+    Parameters
+    ----------
+    repdata : dict
+        Target report parameters mapping.
+    conn : pymysql.connections.Connection
+        Active database connection.
+    origin : str
+        Data origin classification.
+    system : str
+        System identifier name.
+
+    Returns
+    -------
+    infopar : list of dict
+        Detailed database parameter records.
+    tolist : list of list
+        List containing [param_name, subsystem, description] tuples.
+    """
     try:
         infopar = get_par_info(repdata, conn, origin, system)
         tolist = []
@@ -464,6 +755,22 @@ def get_param_list(repdata, conn, origin, system):
     return infopar, tolist  
 
 def get_plf(plffile, params, fulllist):
+    """Filter list of data files against Parameter List File (PLF) mappings.
+
+    Parameters
+    ----------
+    plffile : str
+        Path to PLF mapping file.
+    params : list of str
+        Target parameters requested.
+    fulllist : list of str
+        Full list of available candidate files.
+
+    Returns
+    -------
+    f2use : list of str
+        Filtered list of useful filenames.
+    """
     f2use = []
     try:
         #get info from PLF file to download only useful files
@@ -493,6 +800,20 @@ def get_plf(plffile, params, fulllist):
     return f2use  
   
 def get_subs_files(flist, subs):
+    """Filter filenames list by subsystem token match.
+
+    Parameters
+    ----------
+    flist : list of str
+        Input list of filenames.
+    subs : list of str
+        Allowed subsystem token identifiers.
+
+    Returns
+    -------
+    out : list of str
+        Matching filenames.
+    """
     out=[]
     for fname in flist:
         curr_sub = fname.split("_")[1]
@@ -501,10 +822,44 @@ def get_subs_files(flist, subs):
     return out
 
 def get_subsystems(origin, system, connection):
+    """Query database for subsystem entries matching origin and system.
+
+    Parameters
+    ----------
+    origin : str
+        Data origin context.
+    system : str
+        System identifier name.
+    connection : pymysql.connections.Connection
+        Active database connection.
+
+    Returns
+    -------
+    subs_dict : list of dict
+        Subsystem record entries.
+    """
     subs_dict = db_query(connection, origin+"_"+system, '*', res_type = "all")
     return subs_dict
   
 def get_subsystems_from_file(origin, system, connection, t="required"):
+    """Extract form filter structure definitions from forms.json for given system.
+
+    Parameters
+    ----------
+    origin : str
+        Data origin context.
+    system : str
+        Target system identifier.
+    connection : pymysql.connections.Connection
+        Active database connection.
+    t : str, optional
+        Target requirement node ('required' or 'optional', default is "required").
+
+    Returns
+    -------
+    subs : dict
+        Filter nodes dictionary structure.
+    """
     opmode = db_query(connection, "operation_modes", 'mode', "WHERE enable=1", "one")['mode']
     repo_json = get_json_data("../"+system+".conf")
     repo = repo_json[opmode][origin]["repository"]
@@ -517,6 +872,18 @@ def get_subsystems_from_file(origin, system, connection, t="required"):
     return subs
 
 def get_json_data(path):
+    """Read file and parse JSON contents into dictionary object.
+
+    Parameters
+    ----------
+    path : str
+        Target JSON file path.
+
+    Returns
+    -------
+    data : dict
+        Parsed JSON dictionary payload.
+    """
     # get repository data from json
     fileobj = open(path, "r")
     jsonstr = fileobj.read()
@@ -528,7 +895,20 @@ def get_json_data(path):
     return data  
   
 def get_time(t=None):
-    """Function to get current time as string and timestamp"""
+    """Format datetime into string representation and UTC epoch timestamp.
+
+    Parameters
+    ----------
+    t : datetime.datetime, optional
+        Target datetime object (defaults to current UTC datetime).
+
+    Returns
+    -------
+    t_str : str
+        Formatted datetime string (%Y-%m-%d %H:%M:%S).
+    t_ts : float
+        UTC epoch timestamp float.
+    """
     if t is None:
         t = utc_now()
 
@@ -537,6 +917,18 @@ def get_time(t=None):
     return t_str, t_ts  
   
 def join_by_date(D):
+    """Merge dataset arrays across aligned timestamp positions.
+
+    Parameters
+    ----------
+    D : list of list
+        Input data arrays.
+
+    Returns
+    -------
+    res : list
+        Merged data values array.
+    """
     X = np.array(D)
     masked = np.ma.masked_where(X == None, X, True).mask
     noneindex = np.where(np.all(masked,axis=0) == True)[0]
@@ -549,6 +941,20 @@ def join_by_date(D):
     return res  
   
 def open_ftp_connection(source, conf):
+    """Open ftplib.FTP connection using repository configuration credentials.
+
+    Parameters
+    ----------
+    source : str
+        Data source identifier string.
+    conf : repConfig
+        Repository configuration instance containing FTP host and credentials.
+
+    Returns
+    -------
+    ftp : ftplib.FTP or "unable"
+        Active ftplib.FTP instance, or "unable" on connection failure.
+    """
     try:
         ftp = ftplib.FTP(conf.wgeta, conf.wgetu, conf.wgetp)
     except:
@@ -556,10 +962,33 @@ def open_ftp_connection(source, conf):
     return ftp
 
 def pretty_time(t):
-    """Change time format from seconds to a pretty visualization (H:m:s)"""
+    """Convert time duration in seconds to a formatted timedelta object.
+
+    Parameters
+    ----------
+    t : float or int
+        Duration in seconds.
+
+    Returns
+    -------
+    datetime.timedelta
+        Formatted timedelta representation.
+    """
     return timedelta(seconds=t)  
   
 def read_db_config(configfile):
+    """Parse legacy key-value database config file lines into dictionary.
+
+    Parameters
+    ----------
+    configfile : str
+        Path to configuration text file.
+
+    Returns
+    -------
+    config : dict
+        Parsed configuration properties dictionary.
+    """
     config={}
     try:
         f = open(configfile, "r")
@@ -578,6 +1007,22 @@ def read_db_config(configfile):
     return config
 
 def remove_nan_data(X,Y):
+    """Remove paired element entries containing invalid/NaN sentinel values (-999).
+
+    Parameters
+    ----------
+    X : array_like
+        X series data sequence.
+    Y : array_like
+        Y series data sequence.
+
+    Returns
+    -------
+    final_x : numpy.ndarray
+        Cleaned X data array.
+    final_y : numpy.ndarray
+        Cleaned Y data array.
+    """
     final_y = []
     final_x = []
     toremove = []
@@ -592,6 +1037,18 @@ def remove_nan_data(X,Y):
     return final_x, final_y  
   
 def set_path(s):
+    """Normalize system file path separators and ensure trailing separator.
+
+    Parameters
+    ----------
+    s : str
+        Input directory path string.
+
+    Returns
+    -------
+    path : str
+        Normalized path string.
+    """
     s = s.replace("/",sep).replace("\\",sep)
     if s[-1]==sep:
         path = s
@@ -600,16 +1057,51 @@ def set_path(s):
     return path
 
 def set_running_flag(connection, configfile, flag):
+    """Update execution status flag for report configuration file in database.
+
+    Parameters
+    ----------
+    connection : pymysql.connections.Connection
+        Active database connection.
+    configfile : str
+        Target report configuration filename.
+    flag : int
+        Running state flag integer.
+    """
     sql = "UPDATE config_files SET isrunning = "+str(flag)+" WHERE filename = '"+configfile+"'"
     with connection.cursor() as cursor:
         cursor.execute(sql)
     connection.commit()  
 
 def set_threadlimiter(n):
+    """Initialize global BoundedSemaphore thread limiter instance.
+
+    Parameters
+    ----------
+    n : int
+        Maximum concurrent threads limit count.
+    """
     global threadLimiter
     threadLimiter=threading.BoundedSemaphore(n)
     
 def update_history(connection, user, op, input="NA", output="NA", config="NA"):
+    """Log operation details into database history table and user history text log.
+
+    Parameters
+    ----------
+    connection : pymysql.connections.Connection
+        Active database connection.
+    user : str
+        Username executing operation.
+    op : str
+        Operation description string.
+    input : str, optional
+        Input parameters payload summary (default is "NA").
+    output : str, optional
+        Output status summary (default is "NA").
+    config : str, optional
+        Configuration settings summary (default is "NA").
+    """
     #limit number of records 
     lr = db_query(connection, "history", "MIN(date_time), COUNT(*)", statement = "WHERE username = '"+user+"'", res_type = "one")  
     l = lr['COUNT(*)'];
@@ -654,6 +1146,25 @@ def update_history(connection, user, op, input="NA", output="NA", config="NA"):
 
         
 def update_local_files(connection, fname, source, subsystem, tstart, tstop, user):
+    """Register downloaded local file record in local_files database table.
+
+    Parameters
+    ----------
+    connection : pymysql.connections.Connection
+        Active database connection.
+    fname : str
+        Filename.
+    source : str
+        Data system source name.
+    subsystem : str or None
+        Subsystem identifier name.
+    tstart : str or None
+        Data start timestamp string.
+    tstop : str or None
+        Data end timestamp string.
+    user : str
+        Username initiating transfer.
+    """
   
     cols = "filename, data_source, date_start, username"
     values = "'"+fname+"', '"+source+"', '"+str(tstart)+"', '"+user+"'"
@@ -672,6 +1183,41 @@ def update_local_files(connection, fname, source, subsystem, tstart, tstop, user
     connection.commit()
 
 def update_stored(connection, fname,user, date, ext, ftype, status="nd", filepath = "stored", tbl = "stored", comment="", pars = "{}", tstart = "NULL", tstop = "NULL", plot_id = None, source="NA"):
+    """Insert new stored file or plot record into target archive table.
+
+    Parameters
+    ----------
+    connection : pymysql.connections.Connection
+        Active database connection.
+    fname : str
+        Target file name.
+    user : str
+        Owner username.
+    date : str
+        Creation date timestamp string.
+    ext : str
+        File extension string.
+    ftype : str
+        File classification type string.
+    status : str, optional
+        Flag status token (default is "nd").
+    filepath : str, optional
+        Relative storage folder (default is "stored").
+    tbl : str, optional
+        Target table name prefix (default is "stored").
+    comment : str, optional
+        User comments string (default is "").
+    pars : str, optional
+        JSON string parameter details (default is "{}").
+    tstart : str, optional
+        Data start datetime string (default is "NULL").
+    tstop : str, optional
+        Data end datetime string (default is "NULL").
+    plot_id : int, optional
+        Associated plot ID integer (default is None).
+    source : str, optional
+        System data source string (default is "NA").
+    """
     
     if tstart != "NULL" and tstart != "undefined":
         exptstart = datetime.strptime(tstart, '%Y-%m-%d %H:%M:%S')
@@ -699,10 +1245,37 @@ def update_stored(connection, fname,user, date, ext, ftype, status="nd", filepat
         connection.commit()
 
 def utc_now():
+    """Get current UTC datetime instance.
+
+    Returns
+    -------
+    now : datetime.datetime
+        Current UTC datetime.
+    """
     now = datetime.utcnow()
     return now
   
 def units_to_label(label, struct, partags, connection, tbl):
+    """Append physical measurement units string from database to axis label.
+
+    Parameters
+    ----------
+    label : str
+        Raw parameter label string.
+    struct : list
+        Parameter token structure parts.
+    partags : list
+        Parameter tag classification identifiers.
+    connection : pymysql.connections.Connection
+        Active database connection.
+    tbl : str
+        Target parameter database table name.
+
+    Returns
+    -------
+    new_l : str
+        Label string appended with physical units.
+    """
   
     if len(struct) > 1:
         xl_splitted = label.split(".")
@@ -724,24 +1297,27 @@ def units_to_label(label, struct, partags, connection, tbl):
     return new_l  
   
 def copylocal(f2use, conf, final_path, sysclass, userunid="False", usecase = "hktm"):
-    """ Copy files from local repository to temporary directory
+    """Copy requested files from local repository directory to temporary directory.
 
-    Parameters      DA RISCRIVERE
-    --------
-        f2use: list
-        list of files to copy
-        orig_path: string
-            path of local repository (from configuration)
-        final_path: string
-            path of destination (temporary path)
-        usecase : string, optional
-            experiment from which the call is done ("report", "plot"...), Default is "hktm"
+    Parameters
+    ----------
+    f2use : list of str
+        List of filenames to copy.
+    conf : repConfig
+        Repository operational configuration object.
+    final_path : str
+        Target temporary directory path.
+    sysclass : object
+        System class instance.
+    userunid : str, optional
+        Run ID subfolder resolution flag (default is "False").
+    usecase : str, optional
+        Execution usecase scope (default is "hktm").
 
     Returns
     -------
-        file_ok: boolean
-            True if all the files in the list f2use have been successfully copied, False otherwise
-
+    file_ok : bool
+        True if all files copied and verified successfully.
     """
    
     orig_path = conf.path.replace("/", sep)
@@ -768,6 +1344,22 @@ def copylocal(f2use, conf, final_path, sysclass, userunid="False", usecase = "hk
     return file_ok
   
 def get_subsystems_from_json(source, usecase, key = "subsystem"):
+    """Extract list of allowed subsystem names from forms.json configuration.
+
+    Parameters
+    ----------
+    source : str
+        Data system source identifier string.
+    usecase : str
+        Execution context origin scope.
+    key : str, optional
+        Target property key name (default is "subsystem").
+
+    Returns
+    -------
+    subs : list of str
+        List of matching subsystem names.
+    """
     #get current operation mode
     conf = repConfig(source,usecase)
     reponame = conf.repclass[usecase].slug
@@ -777,6 +1369,15 @@ def get_subsystems_from_json(source, usecase, key = "subsystem"):
     return subs
     
 def create_temp_dir(usr_tmp_dir, source_slug):
+    """Ensure user and system source temporary working subdirectories exist.
+
+    Parameters
+    ----------
+    usr_tmp_dir : str
+        Path to user's temporary working directory.
+    source_slug : str
+        Subdirectory slug for system source.
+    """
     if (path.exists(usr_tmp_dir)==False):
         mkdir(usr_tmp_dir)
     sourcetmp = usr_tmp_dir+"/"+source_slug
@@ -784,19 +1385,57 @@ def create_temp_dir(usr_tmp_dir, source_slug):
         mkdir(sourcetmp)    
     
 def get_configured_origin(opmode, source):
+    """Retrieve configured origin list for specified source and operating mode.
+
+    Parameters
+    ----------
+    opmode : str
+        Active operating mode string.
+    source : str
+        Target system identifier.
+
+    Returns
+    -------
+    keys : list of str
+        List of configured origin uppercase names.
+    """
     sys_json = get_json_data("../"+source+".conf")
     keys = [x.upper() for x in sys_json[opmode].keys()]
 
     return keys
     
 def finddepth(dictA):
-   if isinstance(dictA, dict):
-      return 1 + (max(map(finddepth, dictA.values()))
-         if dictA else 0)
+    """Compute maximum depth level of nested dictionary hierarchy.
 
-   return 0    
+    Parameters
+    ----------
+    dictA : dict
+        Target dictionary object.
+
+    Returns
+    -------
+    int
+        Maximum depth integer.
+    """
+    if isinstance(dictA, dict):
+        return 1 + (max(map(finddepth, dictA.values()))
+        if dictA else 0)
+
+    return 0    
     
 def change_timestring(t):
+    """Format datetime string separators into comma-delimited time components.
+
+    Parameters
+    ----------
+    t : str
+        Input datetime text string.
+
+    Returns
+    -------
+    date : str
+        Comma-separated date string.
+    """
     if t!="":
         date = t.replace("-",",").replace(":",",").replace(" ",",")
         date = date.split(".")[0]

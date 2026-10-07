@@ -1,4 +1,15 @@
 #!/usr/bin/python
+
+"""
+Scikit-Learn Estimator Parameter Inspector.
+
+This command-line utility inspects scikit-learn estimator classes by name and 
+prints their accepted initialization parameters along with default values.
+
+@package AIDA
+@module formMaker
+"""
+
 import inspect
 import sys
 from sklearn.utils import all_estimators

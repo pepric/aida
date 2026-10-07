@@ -1,3 +1,19 @@
+<?php
+/**
+ * Stored Experiments Dashboard Panel View.
+ *
+ * Renders the dashboard panel for exploring flagged experiments and parameters stored
+ * in the AIDA database. Provides toggles and DataTables to view data:
+ * - Grouped "By Experiment" or "By Parameter"
+ * - Separated into Public and Personal archives
+ * - Filterable by flag status, system, experiment type, user, and date ranges
+ *
+ * @package    AIDA
+ * @subpackage Views
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 <div class="panel-body panel-dash">
 	<div class="col-md-12 ">
 		<header class="panel-heading">

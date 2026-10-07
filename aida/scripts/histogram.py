@@ -1,21 +1,28 @@
 #!/usr/bin/python
 
+"""
+Histogram Calculation CGI Handler.
+
+This module receives numerical dataset series via CGI requests and calculates 
+histogram bin edges and frequencies for frontend visualization.
+
+@package AIDA
+@module histogram
+"""
+
 import json
 import numpy as np
 import cgi, cgitb 
 cgitb.enable(display=0, logdir="cgi-logs")  # for troubleshooting
 
 def main(data):
-    """Calculate bins and counts to generate an histogram.
+    """Calculate bin edges and frequency counts for histogram visualization.
+
     Parameters
     ----------
-    data : cgi.FieldStorage,
-        Contains all data coming from client side script: width/number of bins, number of parameters, values, binsize/binnumber flag 
-        
-    Returns
-    ---------
-    result : dict
-        Dictionary containing counts and bin edges of the histogram
+    data : cgi.FieldStorage
+        CGI request payload containing input data series, number of parameters,
+        and bin size or count configurations.
     """     
     result = {}
     iswidth = int(data['iswidth'].value)

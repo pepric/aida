@@ -1,3 +1,22 @@
+/**
+ * Machine Learning Execution and Interactive Plotting Utilities.
+ *
+ * Provides functions for preparing parameters, executing Machine Learning training/evaluation
+ * jobs (Classification, Regression, Clustering) via AJAX/Python scripts, calculating statistical
+ * estimators, rendering Plotly charts (trend, histogram, scatterplot), and managing UI tabs.
+ *
+ * @package    AIDA
+ * @subpackage JS\MachineLearning
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+ 
+ 
+/**
+ * Triggers offline execution for Machine Learning plot generation.
+ *
+ * @param {Event} e Event object.
+ */ 
 function run_plot_offline(e){
 	var ny = parseInt($("#n_ypar").val());
 	var system = document.getElementById("hktm_source").value;
@@ -48,7 +67,11 @@ function run_plot_offline(e){
 }
 
 
-
+/**
+ * Triggers online execution of Machine Learning training or prediction via Python AJAX calls.
+ *
+ * @param {Event} e Event object.
+ */
 function run_py(e) {
 	var ny = parseInt($("#n_ypar").val());
 	var system = document.getElementById("hktm_source").value;
@@ -242,7 +265,13 @@ function run_py(e) {
 	}
 };	
 
-
+/**
+ * Collects form inputs and builds parameter payload and label arrays for ML jobs.
+ *
+ * @param {number} ny Number of Y parameters.
+ * @param {string} plot Plot type or ML model context.
+ * @returns {Array} Array containing [params, labels, ny].
+ */
 function prepare_data(ny,plot){
 	var source_settings ={
 		"NISP" : {"nrows" : 4, "ncols" : 4},
@@ -614,6 +643,11 @@ function prepare_data(ny,plot){
 	return [params,labels,ny]
 }
 
+/**
+ * Gathers configured statistical tool options and parameter values into a structured object.
+ *
+ * @returns {Object} Structured object containing selected statistical tools and their parameters.
+ */
 function get_stats_list(){
 	var stats_data = {}
 	// list of selected stats
@@ -676,7 +710,12 @@ function get_stats_list(){
   	return stats_data
 }
 
-
+/**
+ * Helper to safely extract value from a form element or return "None".
+ *
+ * @param {string} divname Target element DOM ID.
+ * @returns {string} Formatted parameter value string.
+ */
 function set_special_param(divname){
     var div = document.getElementById(divname)
     var val = "None"
@@ -687,6 +726,12 @@ function set_special_param(divname){
     return val
 }
 
+/**
+ * Parses coefficient range or comma-separated list into numerical array.
+ *
+ * @param {string} coeff Coefficient value or range string.
+ * @returns {Array} Array containing [first_coeff, remaining_coeffs_array].
+ */
 function set_coeffs(coeff){
 	var first_coeff
 	var coeff_arr = []
@@ -723,6 +768,12 @@ function set_coeffs(coeff){
 	return [first_coeff, coeff_arr.slice(1)]
 }
 
+/**
+ * Returns first valid numerical coefficient or "None".
+ *
+ * @param {number|string} c Input coefficient value.
+ * @returns {string|number} Evaluated first coefficient.
+ */
 function set_1st_coeff(c){
 	first_coeff = "None"
 	if(!isNaN(c)){
@@ -731,7 +782,12 @@ function set_1st_coeff(c){
 	return first_coeff
 }
 
-
+/**
+ * Retrieves alternate parameter type string from element.
+ *
+ * @param {string} p Parameter prefix ID.
+ * @returns {string} Alternate table type string.
+ */
 function set_alt_tbl(p){
 	var alt_tbl_div = document.getElementById(p+"-partype");
 	if(alt_tbl_div == null){
@@ -743,6 +799,12 @@ function set_alt_tbl(p){
 	return alt_tbl
 }
 
+/**
+ * Evaluates ADU/Calibrated checkbox state for a parameter.
+ *
+ * @param {string} p Parameter prefix ID.
+ * @returns {string} "True", "False", or "None".
+ */
 function set_adu(p){
 	var adu_flag
 	adu_checked = $('input[name="'+p+'-adu_cal"]')         
@@ -760,7 +822,14 @@ function set_adu(p){
 	return adu_flag
 }
 
-
+/**
+ * Returns parameter group for SIR data source.
+ *
+ * @param {string} plot Plot type string.
+ * @param {number|string} i Parameter index.
+ * @param {boolean} [isX=false] Whether parameter is X axis.
+ * @returns {string} Parameter group string.
+ */
 function set_group(plot, i, isX=false){
 	var group = "None"
 	var div = "y"+i+"-partype"
@@ -776,6 +845,15 @@ function set_group(plot, i, isX=false){
 	return group
 }
 
+/**
+ * Fetches parameter axis labels from backend interface.
+ *
+ * @param {string} adu ADU flag status.
+ * @param {string} par Parameter string.
+ * @param {string} source Data source.
+ * @param {string} origin Data origin.
+ * @returns {jqXHR} jQuery AJAX deferred object.
+ */
 function set_labels(adu, par, source, origin){
   return $.ajax({
     url: 'scripts/cs_interface.py',
@@ -789,6 +867,23 @@ function set_labels(adu, par, source, origin){
   });
 }
 
+/**
+ * Constructs formatted display label string for a parameter.
+ *
+ * @param {string} pvar Parameter ID prefix.
+ * @param {string} sys Subsystem identifier.
+ * @param {string} par Parameter name.
+ * @param {string} adu ADU flag status.
+ * @param {string} source Data source.
+ * @param {string} origin Data origin.
+ * @param {string} [ic=null] Subsystem identifier.
+ * @param {string} [val=null] Value string.
+ * @param {string} [det=null] Detector string.
+ * @param {string} [order=null] Polynomial order.
+ * @param {string} [coeff=null] Coefficient.
+ * @param {string} [group=null] Group string.
+ * @returns {string} Formatted label string.
+ */
 function build_label(pvar, sys, par, adu, source, origin, ic=null, val=null, det=null, order=null, coeff=null, group=null){
   	var label = ""
     var syslabel = sys+"."
@@ -831,6 +926,13 @@ function build_label(pvar, sys, par, adu, source, origin, ic=null, val=null, det
 	return label
 }
 
+/**
+ * Prepares parameter payload specifically for NISP instrument data.
+ *
+ * @param {number} ny Number of Y parameters.
+ * @param {string} plot Plot type string.
+ * @returns {Array} Array containing [params, labels].
+ */
 function prepare_nisp_data(ny, plot){
 	var y0sys = $("#y0-sys").val();
 	var det = $("#det-type").val().split(",");
@@ -896,7 +998,15 @@ function prepare_nisp_data(ny, plot){
 	return [params,labels]	
 }
 
-
+/**
+ * Formats detector row, col, and quadrant into a single token string.
+ *
+ * @param {string} det Detector type token.
+ * @param {string} row Row index.
+ * @param {string} col Column index.
+ * @param {string} id Quadrant select element selector ID.
+ * @returns {string} Formatted detector string token.
+ */
 function collect_detectors(det, row, col, id){
 	if (det=="DET"){
 			var detector = det+"_"+row+col;
@@ -912,6 +1022,11 @@ function collect_detectors(det, row, col, id){
 	return detector
 }
 
+/**
+ * Activates plot container UI tab and adjusts dimensions for rendering.
+ *
+ * @param {string} name Model or experiment display name.
+ */
 function display_plot(name){
 	document.getElementById('plot_container').style='display:block;';
 	var plotdiv = document.getElementById('tab1')
@@ -926,6 +1041,12 @@ function display_plot(name){
 
 }
 
+/**
+ * Converts HTML FormElement entries into a plain JavaScript Object.
+ *
+ * @param {HTMLFormElement} FormElement Target form DOM element.
+ * @returns {Object} Key-value pair object of form fields.
+ */
 function FormDataToJSON(FormElement){    
 	var formData = new FormData(FormElement);
 	var ConvertedJSON= {};
@@ -937,6 +1058,15 @@ function FormDataToJSON(FormElement){
 	return ConvertedJSON
 }
 
+/**
+ * Dispatches AJAX request to Python backend to compute ML evaluation metrics and statistics.
+ *
+ * @param {string} pydata Raw JSON output string from data processing script.
+ * @param {number} ny Number of Y parameters.
+ * @param {string} plot ML technique identifier.
+ * @param {string} stats Statistics mode.
+ * @param {Array<string>} labels Parameter label array.
+ */
 function calculate_stats(pydata, ny, plot, stats, labels){
 	var stats_data = {}
 	// list of selected stats
@@ -1111,7 +1241,15 @@ function calculate_stats(pydata, ny, plot, stats, labels){
 		) 
 	}
 
-
+/**
+ * Parses Python statistics output and renders HTML tables and download buttons.
+ *
+ * @param {string} pydata JSON payload from backend script.
+ * @param {number} ny Number of Y parameters.
+ * @param {Array<string>} labels Parameter label array.
+ * @param {string} plot ML technique identifier.
+ * @param {string} stats Statistics mode identifier.
+ */
 function render_stats(pydata, ny, labels, plot, stats){
 /* 	try { */
 	    var results = JSON.parse(pydata);
@@ -1234,6 +1372,14 @@ function render_stats(pydata, ny, labels, plot, stats){
     } */
 }
 
+/**
+ * Creates and appends an HTML table displaying calculated statistical metrics.
+ *
+ * @param {Object} data Key-value dictionary of statistical metrics.
+ * @param {string} name Display title for table header.
+ * @param {HTMLElement} parent Parent container element.
+ * @param {string} id Target DOM element ID for the container div.
+ */
 function create_stats_table(data, name, parent, id){
 	
 		// create stats div
@@ -1297,6 +1443,10 @@ var csv = {
 	width:875,height:1e3, path:"M0,22.261v467.478h512V22.261H0z M155.826,456.348H33.391v-77.913h122.435V456.348z M155.826,345.043H33.391V267.13	h122.435V345.043z M155.826,233.739H33.391v-77.913h122.435V233.739z M322.783,456.348H189.217v-77.913h133.565V456.348z M322.783,345.043H189.217V267.13h133.565V345.043z M322.783,233.739H189.217v-77.913h133.565V233.739z M478.609,456.348H356.174 v-77.913h122.435V456.348z M478.609,345.043H356.174V267.13h122.435V345.043z M478.609,233.739H356.174v-77.913h122.435V233.739z M478.609,122.435H33.391V55.652h445.217V122.435z", transform:"scale(1.8, 1.9)"
 };
 
+/**
+ * Event handler: Toggles visibility of parameter flagging details and description controls
+ * when option radio buttons change state.
+ */
 $("input[type='radio'][name=optflag]").change(function(){
 	$('#description').html('');
 	if($(this).val()!="nd")
@@ -1315,6 +1465,13 @@ $("input[type='radio'][name=optflag]").change(function(){
 	}
 });
 
+/**
+ * Renders an interactive Plotly trend line chart for ML Clustering output.
+ *
+ * @param {string} pydata Raw JSON string containing output series data.
+ * @param {number} ny Number of Y parameters.
+ * @param {Array<string>} labels Display label array.
+ */
 function trend(pydata, ny, labels) {
 
 	fname = get_now_string()
@@ -1419,10 +1576,14 @@ function trend(pydata, ny, labels) {
 	
 }
 
-
-
-
-function histogram(pydata, ny, labels) {
+/**
+ * Renders an interactive Plotly bar histogram chart.
+ *
+ * @param {string} pydata Raw JSON string containing input series data.
+ * @param {number} ny Number of Y parameters.
+ * @param {Array<string>} labels Display label array.
+ */
+ function histogram(pydata, ny, labels) {
 	
 	fname = get_now_string()
 	n_exp = "Histogram"
@@ -1665,7 +1826,13 @@ function histogram(pydata, ny, labels) {
 	Plotly.newPlot(dom, data, layout, {responsive:true, editable:true, displaylogo: false, scrollZoom: true, modeBarButtons: modeBarButtons, displayModeBar : true}); */
 }	
 
-
+/**
+ * Renders an interactive Plotly scatter plot chart for ML predictions/ground truth.
+ *
+ * @param {string} pydata Raw JSON string containing X/Y series data.
+ * @param {number} ny Number of Y parameters.
+ * @param {Array<string>} labels Display label array.
+ */
 function scatterplot(pydata, ny, labels) {
 	
 	fname = get_now_string()
@@ -1771,6 +1938,9 @@ function scatterplot(pydata, ny, labels) {
 
 }
 
+/**
+ * Enables advanced statistical options in UI.
+ */
 function set_advanced_stats(){
 	document.getElementById("stats_enable").value="advanced";
 	document.getElementById("stats").style="display : block";
@@ -1778,6 +1948,9 @@ function set_advanced_stats(){
 	document.getElementById("advanced_a").style="display : none";
 }
 
+/**
+ * Reverts statistical options in UI to global default.
+ */
 function set_global_stats(){
 	document.getElementById("stats_enable").value="global"
 	document.getElementById("stats").style="display : none";
@@ -1786,11 +1959,24 @@ function set_global_stats(){
 	
 }
 
-
+/**
+ * Array filter callback to remove duplicate items.
+ *
+ * @param {*} value Current array element.
+ * @param {number} index Current element index.
+ * @param {Array} self Array reference.
+ * @returns {boolean} True if first occurrence of element.
+ */
 function only_unique(value, index, self) { 
     return self.indexOf(value) === index;
 }
 
+/**
+ * Finds array indices containing sentinel invalid/NaN values (-999 or -999.0).
+ *
+ * @param {Array} in1 Input data array.
+ * @returns {Array<number>} Array of indices containing invalid values.
+ */
 function find_nan(in1){
 	var indices = [];
 	var x = in1;
@@ -1810,6 +1996,13 @@ function find_nan(in1){
 	return indices
 }
 
+/**
+ * Removes elements at specified indices from an array.
+ *
+ * @param {Array} arr Source data array.
+ * @param {Array<number>} indices Array of indices to exclude.
+ * @returns {Array} Filtered clean data array.
+ */
 function reduce_array(arr, indices){
 	var new_arr = [...arr]
 	for (var j=0; j<indices.length; j++){
@@ -1824,9 +2017,11 @@ function reduce_array(arr, indices){
 	return new_arr
 }
 
-
-
-
+/**
+ * Generates formatted UTC timestamp string for output file naming.
+ *
+ * @returns {string} Formatted timestamp string.
+ */
 function get_now_string(){
 	
 	var date = get_utc_date()
@@ -1838,6 +2033,9 @@ function get_now_string(){
 	return new_date
 }
 
+/**
+ * Tab switch callback: shows main plot/chart container tab.
+ */
 function onclick_plot(){
 	$('#form-div').css('display', 'block');
 	$('#plot_stats').css('display', 'none');
@@ -1851,6 +2049,9 @@ function onclick_plot(){
 	});  
 }  
 
+/**
+ * Tab switch callback: shows exported files container tab.
+ */
 function onclick_files(){
 
   $('#form-div').css('display', 'none'); 
@@ -1864,6 +2065,9 @@ $('#files_tbl').DataTable().columns.adjust().draw()
   $('#plot_files').css('flex-wrap', 'wrap');	 
 } 
 
+/**
+ * Tab switch callback: shows statistical analysis results tab.
+ */
 function onclick_stats(){
   var t = document.getElementById("plot_type").value
   if(t != "stats"){
@@ -1884,6 +2088,11 @@ function onclick_stats(){
   $('#custom_plot').css('display', 'none');   
 } 
 
+/**
+ * Fetches available Machine Learning models for a chosen technique via AJAX.
+ *
+ * @param {string} ml Selected Machine Learning technique ('classifier', 'cluster', 'regressor').
+ */
 function populate_ml(ml){
 	//console.log(ml)
 	$.ajax({
@@ -1921,6 +2130,11 @@ select.appendChild(option); */
 
 }
 
+/**
+ * Triggers browser download for a target file URL.
+ *
+ * @param {string} url Target resource URL.
+ */
 function force_download(url) {
   const a = document.createElement('a')
   a.href = url

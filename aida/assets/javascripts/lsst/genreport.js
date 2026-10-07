@@ -1,3 +1,8 @@
+/**
+ * Verifies active database connection state.
+ * 
+ * @returns {number} Error status indicator.
+ */
 function check_connection(){
 	var error = 0
   	$.ajax({
@@ -12,6 +17,11 @@ function check_connection(){
  	return error
 }
 
+/**
+ * Displays or hides sampling interval inputs based on chosen mode.
+ * 
+ * @param {HTMLSelectElement} select Triggering select control.
+ */
 function show_dts(select){
 	var chosen = select.options[select.selectedIndex].value; 
 	var dtsg = document.getElementById("dts-group")
@@ -38,6 +48,11 @@ function show_dts(select){
 	}
 }
 
+/**
+ * Toggles acquisition time step input depending on acquisitions count.
+ * 
+ * @param {HTMLInputElement|HTMLSelectElement} select Input control.
+ */
 function show_dtacq(select){
 	var n = select.value; 
 	var dtacqg = document.getElementById("dtacq-group")
@@ -53,6 +68,11 @@ function show_dtacq(select){
 	}
 }
 
+/**
+ * Toggles custom periodicity input field.
+ * 
+ * @param {HTMLSelectElement} select Select element.
+ */
 function show_custom(select){
 	var n = select.value; 
 	var customg = document.getElementById("custom-group")
@@ -68,7 +88,9 @@ function show_custom(select){
 	}
 }
 
-
+/**
+ * Generates CodeMirror text editor populated with JSON template payload.
+ */
 function generate_editor(){
 	$.ajax({
 		method : 'POST',
@@ -125,6 +147,9 @@ function generate_editor(){
 	});
 }
 
+/**
+ * Reads existing JSON config file and loads contents into CodeMirror editor.
+ */
 function generate_from_file(){
 	$.ajax({
 		method : 'POST',
@@ -155,6 +180,13 @@ function generate_from_file(){
 	});
 }
 
+/**
+ * Validates JSON structure via Python validator before saving configuration file.
+ * 
+ * @param {number} iscomplete Completion status flag (0 or 1).
+ * @param {string} page Execution page context ('new', 'edit', 'upload').
+ * @param {string} action Action target identifier ('run' or 'save').
+ */
 function create_configfile(iscomplete, page, action){
 	
 	//Get JSON text from textarea
@@ -197,6 +229,16 @@ function create_configfile(iscomplete, page, action){
 	})
 }
 
+/**
+ * Saves report configuration file via AJAX handler and triggers job execution if requested.
+ * 
+ * @param {string} textToWrite Valid JSON string content.
+ * @param {number} iscomplete Completion status flag.
+ * @param {string} page Context page identifier.
+ * @param {string} customtime Custom time window value.
+ * @param {string} period Periodicity string.
+ * @param {string} action Action string ('run' or 'save').
+ */
 function save_configfile(textToWrite, iscomplete, page, customtime, period, action){
 	// filename to save as
 	var fileNameToSaveAs = document.getElementById("infile").value
@@ -272,7 +314,14 @@ function save_configfile(textToWrite, iscomplete, page, customtime, period, acti
 	}
 }
 		
-
+/**
+ * Sends request to Python execution script to launch background report generation.
+ * 
+ * @param {string} configfile Target JSON configuration filename.
+ * @param {string} period Report periodicity.
+ * @param {string} user Owner username.
+ * @param {number} isrunning Running state flag.
+ */
 function run_report(configfile, period, user, isrunning){
 	$.ajax({
 		url         : "scripts/run_report.py",
@@ -296,6 +345,15 @@ function run_report(configfile, period, user, isrunning){
 	event.preventDefault();
 }		
 
+/**
+ * Launches report execution from an existing saved configuration file.
+ * 
+ * @param {string} configfile Configuration filename.
+ * @param {string} period Periodicity string.
+ * @param {string} user Active username.
+ * @param {string} opmode Operating mode string.
+ * @param {number} isrunning Execution state.
+ */
 function run_from_db(configfile, period, user, opmode, isrunning){
 	var op_error = 0
 	//check operating mode
@@ -344,6 +402,9 @@ function run_from_db(configfile, period, user, opmode, isrunning){
     }
 }
 
+/**
+ * Submit event handler for uploading and immediately launching JSON configuration files.
+ */
 $(document).ready(function() {		
 	$('#submit_btn_upload').on('click', function(event){
 		
@@ -428,7 +489,15 @@ $(document).ready(function() {
 	})
 });	
 
-
+/**
+ * Resumes a paused background report generation process.
+ * 
+ * @param {number} id Report run ID.
+ * @param {string} t0 Start time string.
+ * @param {string} cf Configuration filename.
+ * @param {string} user Owner username.
+ * @param {string} period Recurrence periodicity.
+ */
 function resume_report(id, t0, cf, user, period){
 	alert("Report generation is scheduled or running. You will receive an email when a report is completed.")
    	$.ajax({
@@ -447,6 +516,14 @@ function resume_report(id, t0, cf, user, period){
 	});
 }  
 
+/**
+ * Pauses, terminates, or removes a background report generation process.
+ * 
+ * @param {number} id Report run ID.
+ * @param {number} pid System process ID (PID).
+ * @param {string} cf Configuration filename.
+ * @param {string} act Action command ('kill', 'pause', or 'remove').
+ */
 function stop_report(id, pid, cf, act){
 	var user = document.getElementById("session-user").innerHTML
     if(act == "kill"){

@@ -1,7 +1,27 @@
+<?php
+/**
+ * Plot Data Selection and Setup View.
+ *
+ * Page template for configuring and launching interactive plots (trend, scatter, histogram, statistics).
+ * Captures query string parameters for plot type and data source, populates enabled system options,
+ * renders date range pickers, and initializes advanced statistical tool choices.
+ *
+ * @package    AIDA
+ * @subpackage Views\Plots
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+ ?>
 <!doctype html>
 <html class="fixed">
 	<?php
-		include('functions.php');  
+		include('functions.php');
+		/**
+		 * Parse query string parameters for plot rendering.
+		 *
+		 * @var string $plot  Target plot type identifier (e.g., 'trend', 'scatter', 'histogram').
+		 * @var string $title Computed page title string returned by get_plot_title().
+		 */		
   		$plot = $_GET['plot'];
   		$title = get_plot_title($plot);
 		include("header.php"); 

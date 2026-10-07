@@ -1,3 +1,16 @@
+<?php
+/**
+ * User and Global Activity History Panel View.
+ *
+ * Renders the dashboard history tab containing UI containers for user activity logs
+ * and (for administrators) global system activity logs, with export options.
+ *
+ * @package    AIDA
+ * @subpackage Views\Dashboard
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 <div class="panel-body panel-dash">
 			<div class="col-md-12 ">
 		

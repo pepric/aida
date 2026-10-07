@@ -1,15 +1,22 @@
+/**
+ * Date/time pickers (datetimepicker) initialization and UTC date range constraint handling.
+ */
 $(document).ready(function () {
+  // Disable end date initially until start date is selected
   $('#tend').prop('disabled', true);
+  // Initialize start date picker (UTC time zone)
   $('#tstart').datetimepicker({
     useCurrent: "day",
     timeZone : "UTC",
     format: 'YYYY-MM-DD HH:mm:ss',
   });
+  // Initialize end date picker (UTC time zone)
   $('#tend').datetimepicker({
     useCurrent: false, //Important! See issue #1075 - This comment is for useCurrent:"day" maybe OLD
     timeZone : "UTC",
     format: 'YYYY-MM-DD HH:mm:ss',
   });
+  // Update minimum selectable end date when start date changes
   $("#tstart").on("dp.change", function (e) {
     $('#tend').prop('disabled', false);
 
@@ -19,11 +26,16 @@ $(document).ready(function () {
     }
 
   });
+  // Trigger focus on fields when clicking calendar icons
   $('#dateiconend').on("click", function (){$("#tend").focus()})
   $('#dateiconstart').on("click", function (){$("#tstart").focus()})
 });
 
+/**
+ * DataTables initialization and event handlers for data source change, operation selection, and analysis submission.
+ */
 $(document).ready(function(){
+	// Initialize DataTables for the FITS image files list
     $('#img_filelist').DataTable({
         data: [],
         columns: [
@@ -33,7 +45,8 @@ $(document).ready(function(){
             { title: '' }
         ],
         columnDefs :[{orderable:false, targets : [3]}]
-    });   
+    }); 
+  // Load source parameters via AJAX and display daterange picker	
   $("#sys_source").change(function(){
     //get current value
     var source = $("#sys_source").val();
@@ -51,7 +64,7 @@ $(document).ready(function(){
     });
     $("#daterange").show();  
   });
-  
+  // Re-render file list table when requested operation changes
   $("#img_op").change(function(){
     //get current value
     var results = document.getElementById("img_files_container")
@@ -60,7 +73,7 @@ $(document).ready(function(){
     table.destroy();	
 	render_image_filelist(jsondata) 
   });  
-  
+ // Validate form inputs and trigger Python image analysis script via AJAX 
  $("#img_stats_submit").click(function(){
     //check form
 	var error = 0
@@ -117,6 +130,9 @@ $(document).ready(function(){
   }); 
 });
 
+/**
+ * Retrieves matching image files from the backend via AJAX.
+ */
 function get_list_files(){
     var table = $('#img_filelist').DataTable()
     table.destroy();
@@ -171,6 +187,11 @@ function get_list_files(){
     });
 }
 
+/**
+ * Formats and populates the image list DataTable.
+ * 
+ * @param {Object} data Dataset containing image information.
+ */
 function render_image_filelist(data){
     dataset = []
 	var coltitle = ""
@@ -216,6 +237,11 @@ function render_image_filelist(data){
     });    
 }
 
+/**
+ * Configures selection parameters for image comparison operations (difference A-B).
+ * 
+ * @param {HTMLElement} elem Select element triggering the change.
+ */
 function set_diff(elem){
 	var fname = elem.id
 	var pos = elem.value

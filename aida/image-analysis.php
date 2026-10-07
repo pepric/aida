@@ -1,3 +1,16 @@
+<?php
+/**
+ * Image Analysis Setup View.
+ *
+ * Renders the setup page for selecting image data sources and date ranges (UTC)
+ * to perform multi-image statistical analysis and comparison.
+ *
+ * @package    AIDA
+ * @subpackage Views\Images
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+ ?>
 <!doctype html>
 <html class="fixed">
 	<?php

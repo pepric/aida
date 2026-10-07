@@ -1,5 +1,24 @@
 <?php
+/**
+ * Chunked File Upload Processing Endpoint.
+ *
+ * Handles chunked data upload requests (e.g., via Plupload), combining binary parts
+ * into target destination files within user temporary directory spaces.
+ *
+ * @package    AIDA
+ * @subpackage Controllers\Upload
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+ 
 // (A) FUNCTION TO FORMULATE SERVER RESPONSE
+/**
+ * Formulate and output JSON response payload with HTTP status code.
+ *
+ * @param int    $ok   Success indicator flag (1 for success, 0 for error). Default 1.
+ * @param string $info Explanatory response message or error detail. Default empty string.
+ * @return void
+ */
 function verbose($ok=1,$info=""){
   // THROW A 400 ERROR ON FAILURE
   if ($ok==0) { http_response_code(400); }

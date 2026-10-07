@@ -1,4 +1,15 @@
 <?php
+/**
+ * Configuration File Upload Controller.
+ *
+ * Processes POST requests for uploaded JSON report configuration files, performs
+ * filename collision checks, writes files to disk, and updates database indices.
+ *
+ * @package    AIDA
+ * @subpackage Controllers\Reports
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
 include("functions.php");
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

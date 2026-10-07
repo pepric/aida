@@ -1,3 +1,18 @@
+/**
+ * XML-Driven Form Generator for Pre-generated Plot Archive Views.
+ *
+ * Loads XML configuration files via AJAX to dynamically construct input form elements
+ * for pre-generated plots and datasets.
+ *
+ * @package    AIDA
+ * @subpackage JS\Plots
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+
+/**
+ * Event listener: Triggers XML configuration fetch when data source changes.
+ */
 $(document).ready(function(){
   $("#hktm_source").change(function(){
     //get current value
@@ -9,6 +24,15 @@ $(document).ready(function(){
 	});
 });
 
+/**
+ * Reads XML form configuration and constructs corresponding HTML input elements.
+ *
+ * @param {string} f Path to XML configuration file.
+ * @param {string} source Data source name.
+ * @param {string} usecase Usecase identifier ('pre-generated').
+ * @param {string|null} plot Plot type identifier.
+ * @param {string} opmode Active system operating mode.
+ */
 function loadXMLDoc(f,source,usecase,plot,opmode) {
 	var xml_source, xml_usecase, base_form
 	var htmltag, htmltxt, tbl

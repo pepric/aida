@@ -1,4 +1,16 @@
 <?php
+/**
+ * Global Header and Session Guard Template.
+ *
+ * Checks user authentication status, initializes database connection and secure session,
+ * loads required HTML head assets (CSS, JS, JS9 libraries, Plotly), and renders the top header bar.
+ * If authentication fails and the current page is not index.php, redirects to not-logged.php.
+ *
+ * @package    AIDA
+ * @subpackage Views\Components
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
 	if(isset($_GET['error'])){
 		exit("<script type='text/javascript'>alert('Error Logging In! Please retry');
 								window.location.href='index.php';

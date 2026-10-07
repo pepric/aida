@@ -1,7 +1,27 @@
+<?php
+/**
+ * Available Analysis / Systems Information Page View.
+ *
+ * Page template that displays reference information regarding available systems,
+ * parameters, and analysis operations supported by AIDA based on the subject parameter.
+ *
+ * @package    AIDA
+ * @subpackage Views
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 <!doctype html>
 <html class="fixed">
 	<?php
 		include('functions.php');
+		/**
+		 * Process subject parameter from URL query string.
+		 *
+		 * @var string $origin   The subject or domain to display information for (default "Analysis").
+		 * @var int    $err_subj Error flag: 0 if subject parameter is set, 1 if missing.
+		 * @var string $title    Page title variable consumed by header.php.
+		 */
 		if(isset($_GET['subj'])){
   			$origin = $_GET['subj'];
           	$err_subj = 0;

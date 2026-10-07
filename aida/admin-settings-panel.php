@@ -1,3 +1,19 @@
+<?php
+/**
+ * Admin Dashboard Settings View.
+ *
+ * This template renders the administrative panel interface for managing application
+ * settings. It includes controls for:
+ * - Selecting and changing the active Operating Mode (e.g., Nominal, Commissioning)
+ * - Modal triggers for General Settings, SMTP configuration, and Data Export
+ * - Toggling and updating active system monitoring configurations
+ *
+ * @package    AIDA
+ * @subpackage Admin\Views
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 <div class="panel-body panel-dash">					
   <!-- start: page -->
   <div class="row">

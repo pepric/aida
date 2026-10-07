@@ -1,6 +1,14 @@
 #!/usr/bin/python
 
+"""
+Scikit-Learn Machine Learning Models Query Handler.
 
+This CGI script queries scikit-learn for available estimator model classes 
+filtered by machine learning task type (classifier, regressor, cluster).
+
+@package AIDA
+@module listMlModels
+"""
 
 from sklearn.utils import all_estimators
 import inspect
@@ -10,6 +18,13 @@ import json
 
 
 def main(data):
+    """Query and return available scikit-learn models for a specified ML technique.
+
+    Parameters
+    ----------
+    data : cgi.FieldStorage
+        HTTP POST payload containing target machine learning type filter.
+    """
     ml = data['ml_type'].value
     model_list = []
     error = 0

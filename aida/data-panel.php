@@ -1,3 +1,17 @@
+<?php
+/**
+ * Stored Experiments Tree Navigation Panel View.
+ *
+ * Renders two JS Tree containers for exploring stored experiment files, divided into:
+ * - User-specific private experiment archive (`#treeUser`)
+ * - Global public experiment archive (`#treeStored`)
+ *
+ * @package    AIDA
+ * @subpackage Views
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 <div class="panel-body panel-dash">
 
 			<div class="col-md-12 ">

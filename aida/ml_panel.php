@@ -1,3 +1,16 @@
+<?php
+/**
+ * Legacy Machine Learning Configuration Panel Template.
+ *
+ * Panel template for configuring Machine Learning models, feature/label inputs,
+ * date ranges, hyperparameters, and train-test data splitting.
+ *
+ * @package    AIDA
+ * @subpackage Views\MachineLearning
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 		<!-- start: page -->
 			<?php include("plotcontainer_ml.php"); ?>
 			<div class="row">

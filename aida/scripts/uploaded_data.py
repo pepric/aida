@@ -1,5 +1,16 @@
 #!/usr/bin/python
 
+"""
+Uploaded Data Processing and Parsing Utilities.
+
+This module provides helper functions to parse user-uploaded CSV, FITS, 
+and ASCII data files, inspect column headers, validate date formats, and 
+format structured time series payloads for AIDA analysis functions.
+
+@package AIDA
+@module uploaded_data
+"""
+
 import json
 import cgi, cgitb 
 cgitb.enable(display=0, logdir="cgi-logs")   # for troubleshooting
@@ -13,32 +24,33 @@ from dateutil.parser import parse
 from db_io import dbIO
 
 def get_fits_data(filename,cols=None):
-	"""Get data from uploaded FITS file. If cols is not defined, columns name are taken, else load data
-	Parameters
-	-----------
-	filename: str,
-		full file name with path
-	cols : list or None,
-		list of column names selected    
+	"""Inspect or extract data columns from an uploaded FITS binary table.
+
+    Parameters
+    ----------
+    filename : str
+        Full path to the uploaded FITS file.
+    cols : list of str or None, optional
+        Selected column names list, or None to retrieve header column names (default is None).
         
 	Returns
 	-----------
-		header : list or None,
-			list containing the names of file columns. Returned if cols is None.
-		error : 0, 1 or 2
-			error code: 0 is all ok, 1 if it is impossible to get the header, 2 if returned no header. Returned if cols is None.
-		result: dictionary
-			dictionary containing data retrieved from data repository. It is structured as follow:
-			result={
-					'date' : [0,1,...,len(data)-1],
-					'x': [<x_parameter_1 as string (or '0' if not required)>, <x_parameter_2>, ... ,<x_parameter_N>]
-					'y0': [<y0_parameter_1 as string>, <y0_parameter_2>, ... ,<y0_parameter_N>],
-					'y1': [<y1_parameter_1 as string>, <y1_parameter_2>, ... ,<y1_parameter_N>],
-					...
-					'y<M>': [<yM_parameter_1 as string>, <yM_parameter_2>, ... ,<yM_parameter_N>],
-				}
-			Records 'y1'...'y<M>' are reported only if they have been required from user. Missing data are replaced by -999. 
-			String data are replaced by -999 except for "date" in trend case.
+    header : list or None,
+        list containing the names of file columns. Returned if cols is None.
+    error : 0, 1 or 2
+        error code: 0 is all ok, 1 if it is impossible to get the header, 2 if returned no header. Returned if cols is None.
+    result: dictionary
+        dictionary containing data retrieved from data repository. It is structured as follow:
+        result={
+                'date' : [0,1,...,len(data)-1],
+                'x': [<x_parameter_1 as string (or '0' if not required)>, <x_parameter_2>, ... ,<x_parameter_N>]
+                'y0': [<y0_parameter_1 as string>, <y0_parameter_2>, ... ,<y0_parameter_N>],
+                'y1': [<y1_parameter_1 as string>, <y1_parameter_2>, ... ,<y1_parameter_N>],
+                ...
+                'y<M>': [<yM_parameter_1 as string>, <yM_parameter_2>, ... ,<yM_parameter_N>],
+            }
+        Records 'y1'...'y<M>' are reported only if they have been required from user. Missing data are replaced by -999. 
+        String data are replaced by -999 except for "date" in trend case.
 	"""
     # if cols is None, get the header
 	if cols is None:  
@@ -108,34 +120,35 @@ def get_fits_data(filename,cols=None):
 		return result
         
 def get_csv_data(filename, has_header=False, cols=None):
-	"""Get data from uploaded CSV file. If cols is not defined, columns name are taken, else load data
-	Parameters
-	-----------
-	filename: str,
-		full file name with path
-	has_header : False, "0" or "1",
-		value indicating if the file has the header ("1") or not ("0") or not required (False). Default is False
-	cols : list or None,
-		list of column names selected    
+    """Inspect or extract data columns from an uploaded CSV data file.
+
+    Parameters
+    ----------
+    filename : str
+        Full path to the uploaded CSV file.
+    has_header : str or False, optional
+        Header flag ("1" if header present, "0" otherwise, default is False).
+    cols : list of str or None, optional
+        Selected column names list, or None to retrieve header names (default is None).  
         
 	Returns
 	-----------
-		header : list or None,
-			list containing the names of file columns. If has_header="0", column names are defined as col<i>. Returned if cols is None.
-		error : 0, 1 or 2
-			error code: 0 is all ok, 1 if it is impossible to get the header, 2 if returned no header. Returned if cols is None.
-		result: dictionary
-			dictionary containing data retrieved from data repository. It is structured as follow:
-			result={
-					'date' : [0,1,...,len(data)-1],
-					'x': [<x_parameter_1 as string (or '0' if not required)>, <x_parameter_2>, ... ,<x_parameter_N>]
-					'y0': [<y0_parameter_1 as string>, <y0_parameter_2>, ... ,<y0_parameter_N>],
-					'y1': [<y1_parameter_1 as string>, <y1_parameter_2>, ... ,<y1_parameter_N>],
-					...
-					'y<M>': [<yM_parameter_1 as string>, <yM_parameter_2>, ... ,<yM_parameter_N>],
-				}
-			Records 'y1'...'y<M>' are reported only if they have been required from user. Missing data are replaced by -999. 
-			String data are replaced by -999 except for "date" in trend case.
+    header : list or None,
+        list containing the names of file columns. If has_header="0", column names are defined as col<i>. Returned if cols is None.
+    error : 0, 1 or 2
+        error code: 0 is all ok, 1 if it is impossible to get the header, 2 if returned no header. Returned if cols is None.
+    result: dictionary
+        dictionary containing data retrieved from data repository. It is structured as follow:
+        result={
+                'date' : [0,1,...,len(data)-1],
+                'x': [<x_parameter_1 as string (or '0' if not required)>, <x_parameter_2>, ... ,<x_parameter_N>]
+                'y0': [<y0_parameter_1 as string>, <y0_parameter_2>, ... ,<y0_parameter_N>],
+                'y1': [<y1_parameter_1 as string>, <y1_parameter_2>, ... ,<y1_parameter_N>],
+                ...
+                'y<M>': [<yM_parameter_1 as string>, <yM_parameter_2>, ... ,<yM_parameter_N>],
+            }
+        Records 'y1'...'y<M>' are reported only if they have been required from user. Missing data are replaced by -999. 
+        String data are replaced by -999 except for "date" in trend case.
 	"""  
     # if cols is None, get the header  
 	if cols is None:  
@@ -220,32 +233,38 @@ def get_csv_data(filename, has_header=False, cols=None):
 		return result
 
 def get_ascii_data(filename,cols=None):
+    """Pass-through stub for reading ASCII format uploaded files.
+
+    Parameters
+    ----------
+    filename : str
+        Full file path.
+    cols : list of str or None, optional
+        Column selection list (default is None).
+    """
 	pass  
   
 def get_cols(filename, fmt, header=False, origin=""):
-	"""Get columns from uploaded file.
-	Parameters
-	-----------
-	filename: str,
-		full file name with path
-	fmt : "fits", "csv", "ascii",
-    	file format
-	header : False, "0" or "1",
-		value indicating if the file has the header ("1") or not ("0") or not required (False). Default is False
-	origin : "local" or "",
-		if local, it indicates that file has been previously uploaded and it is in local DB. Default is "".    
-        
-	Returns
-	-----------
-		cols : list,
-			list containing the names of file columns.
-		error : int
-			0 is all ok; 
-			1 error, it is impossible to get cols, 
-			2 error, if no data
-			3 warning, file ok but it is impossible to store info into local DB
-			4 warning, file ok but already present into local DB, then updated
-	"""
+	"""Retrieve column header list from an uploaded data file and record in local database.
+
+    Parameters
+    ----------
+    filename : str
+        Full path to uploaded file.
+    fmt : str
+        File format identifier ('fits', 'csv', 'ascii').
+    header : str or False, optional
+        Header indicator flag ("1" or "0", default is False).
+    origin : str, optional
+        File origin context (e.g. "local", default is "").
+
+    Returns
+    -------
+    cols : list of str
+        List of column names found in file.
+    error : int
+        Status code (0: success, 1: parse error, 2: no data, 3: DB error, 4: duplicate entry).
+    """
 	#call different functions for different file format    
 	if fmt == "fits":
 		cols, error = get_fits_data(filename)
@@ -277,39 +296,40 @@ def get_cols(filename, fmt, header=False, origin=""):
 	return cols, error
   
 def get_uploaded_data(filename, fmt, plot, cols, header = False):
-	"""Get data from uploaded file.
-	Parameters
-	-----------
-	filename: str,
-		full file name with path
-	fmt : "fits", "csv", "ascii",
-    	file format
-	plot: string,
-		analysis to perform
-	cols : list,
-		list of columns selected        
-	header : False, "0" or "1",
-		value indicating if the file has the header ("1") or not ("0") or not required (False). Default is False
+	"""Extract selected column time series dataset from an uploaded file.
+
+    Parameters
+    ----------
+    filename : str
+        Full path to uploaded file.
+    fmt : str
+        File format identifier ('fits', 'csv', 'ascii').
+    plot : str
+        Analysis type or plot identifier string.
+    cols : list of str
+        List of selected column names.
+    header : str or False, optional
+        Header indicator flag ("1" or "0", default is False).
         
 	Returns
 	-----------
-		result: dictionary
-			dictionary containing data retrieved from data repository. It is structured as follow:
-			dictionary containing data retrieved from data repository. It is structured as follow:
-			result={
-					'date' : [<date_parameter_1>, <date_parameter_2>,...,<date_parameter_N>] ([0,1,...,len(data)-1] if not required)
-					'x': [<x_parameter_1 as string (or '0' if not required)>, <x_parameter_2>, ... ,<x_parameter_N>]
-					'y0': [<y0_parameter_1 as string>, <y0_parameter_2>, ... ,<y0_parameter_N>],
-					'y1': [<y1_parameter_1 as string>, <y1_parameter_2>, ... ,<y1_parameter_N>],
-					...
-					'y<M>': [<yM_parameter_1 as string>, <yM_parameter_2>, ... ,<yM_parameter_N>],
-					'errstatus' : 0, 
-					'warningstatus':0, 
-					'datastatus':0, 
-					'infostatus':0
-				}
-			Records 'y1'...'y<M>' are reported only if they have been required from user. Missing data are replaced by -999. 
-			If plot is a trend analysis, then list "x" is moved to "date" and list "x" is replaced by list of zeros.
+    result: dict
+        dictionary containing data retrieved from data repository. It is structured as follow:
+        dictionary containing data retrieved from data repository. It is structured as follow:
+        result={
+                'date' : [<date_parameter_1>, <date_parameter_2>,...,<date_parameter_N>] ([0,1,...,len(data)-1] if not required)
+                'x': [<x_parameter_1 as string (or '0' if not required)>, <x_parameter_2>, ... ,<x_parameter_N>]
+                'y0': [<y0_parameter_1 as string>, <y0_parameter_2>, ... ,<y0_parameter_N>],
+                'y1': [<y1_parameter_1 as string>, <y1_parameter_2>, ... ,<y1_parameter_N>],
+                ...
+                'y<M>': [<yM_parameter_1 as string>, <yM_parameter_2>, ... ,<yM_parameter_N>],
+                'errstatus' : 0, 
+                'warningstatus':0, 
+                'datastatus':0, 
+                'infostatus':0
+            }
+        Records 'y1'...'y<M>' are reported only if they have been required from user. Missing data are replaced by -999. 
+        If plot is a trend analysis, then list "x" is moved to "date" and list "x" is replaced by list of zeros.
 	"""   
 	result = {}
 	#call different functions for different file format    
@@ -331,18 +351,20 @@ def get_uploaded_data(filename, fmt, plot, cols, header = False):
 	return result        
 
 def is_date(string, fuzzy=False):
-	"""
-	Return whether the string can be interpreted as a date.
+	"""Check whether an input string can be parsed as a valid datetime.
 
-	Parameters
-	----------
-	string: str, string to check for date
-	fuzzy: bool, ignore unknown tokens in string if True
-    
-	Returns
-	---------
-	True if string can be interpreted as date, False otherwise
-	"""
+    Parameters
+    ----------
+    string : str
+        Text string to test for datetime format.
+    fuzzy : bool, optional
+        If True, ignores unrecognized tokens during parsing (default is False).
+
+    Returns
+    -------
+    bool
+        True if string can be parsed as a datetime, False otherwise.
+    """
 	try: 
 		parse(string, fuzzy=fuzzy)
 		return True
@@ -350,14 +372,14 @@ def is_date(string, fuzzy=False):
 		return False  
 	
 def main(data):
-	"""
-	Get data from uploaded file. If cols is not defined, columns name are taken, else load data
+	"""CGI main entry point for processing uploaded file column and data requests.
 
-	Parameters
-	----------
-	data: cgi Field Storage object,
-		object containing data posted by form
-	"""
+    Parameters
+    ----------
+    data : cgi.FieldStorage
+        HTTP POST request payload containing filename, format, action, user, and column selections.
+    """
+    
 	#get data from form    
 	filename = data['filename'].value
 	fmt = data['fmt'].value

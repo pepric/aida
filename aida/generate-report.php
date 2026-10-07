@@ -1,3 +1,17 @@
+<?php
+/**
+ * Generate Report View.
+ *
+ * View template for initiating report generation jobs. Provides options to:
+ * - Select and launch report generation from an existing, completed JSON configuration file
+ * - Upload a new JSON configuration file to execute report generation
+ *
+ * @package    AIDA
+ * @subpackage Views\Reports
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+ ?>
 <!doctype html>
 <html class="fixed">
 	<?php

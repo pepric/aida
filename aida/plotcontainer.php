@@ -1,3 +1,16 @@
+<?php
+/**
+ * Plot and Results Tabbed Container Component View.
+ *
+ * Renders the tabbed interface container for interactive plots, statistics tables,
+ * and exported data files.
+ *
+ * @package    AIDA
+ * @subpackage Views\Components
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 <div class="row" id = "plot_container" style="display:none;">
 	<div class="col-xs-12">
 		<div class="tabs tabs-primary">

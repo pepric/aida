@@ -1,3 +1,15 @@
+<?php
+/**
+ * Pre-generated Plot Selection View.
+ *
+ * Renders the data source selection form and container for displaying pre-generated plots.
+ *
+ * @package    AIDA
+ * @subpackage Views\Plots
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 <!doctype html>
 <html class="fixed">
 	<?php

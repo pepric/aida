@@ -1,5 +1,17 @@
 #!/usr/bin/python
 
+"""
+Report Generation Execution Pipeline.
+
+This module manages the execution of on-demand and periodic report generation workflows[cite: 18].
+It handles report configuration loading, data retrieval across multiple systems, parallel 
+processing via threads and multiprocessing, temporary data storage in HDF5 format, XML/PDF 
+report creation, and email notifications[cite: 18].
+
+@package AIDA
+@module generate_report
+"""
+
 import json
 import numpy as np
 import  argparse
@@ -28,78 +40,74 @@ import repos
 import traceback
 
 class reportConfig():
-    """Class to get configuration data for current report"""
+    """Load and manage configuration settings for report generation.
+
+    Parameters
+    ----------
+    configfile : str
+        Name of the report configuration file.
+    period : str
+        Report periodicity ('ondemand', 'daily', 'weekly', 'monthly', or 'custom').
+    conndata : dict
+        Local database connection configuration parameters.
+    user : str, optional
+        Name of the user who launched report generation (default is "auto").
+    tresume : float or None, optional
+        Epoch timestamp of datetime to resume execution from (default is None).
+    runid : int, optional
+        Unique ID of the current report experiment (default is 0).
+
+    Attributes
+    ----------
+    bm_dir : str
+        Directory path for performance benchmarking logs.
+    start_exp : str
+        UTC start datetime string for the experiment.
+    bm_tfile : str
+        File path for timing log records.
+    root : str
+        Root directory path of the web application.
+    cfile : str
+        Full file path to the report configuration file.
+    repdata : dict
+        Parsed JSON report configuration data.
+    period : str
+        Report periodicity mode.
+    user : str
+        User launching the report job.
+    tstart : str
+        Data acquisition start datetime string.
+    ts_stamp : float
+        Data acquisition start UTC timestamp.
+    t_window : float
+        Time window duration in hours for data search.
+    tstop_stamp : float
+        Data acquisition end UTC timestamp.
+    tstop : str
+        Data acquisition end datetime string.
+    tsarr : list of str
+        List of start datetime strings for acquisition steps.
+    tearr : list of str
+        List of end datetime strings for acquisition steps.
+    nacq : int
+        Number of acquisitions for on-demand reports.
+    tacq : float
+        Acquisition repetition interval in hours.
+    cadence : int
+        Data download cadence in hours.
+    systems : list of str
+        List of data systems under analysis.
+    pars : dict
+        Parameters to analyze grouped by system name.
+    sysclasses : list of object
+        Instantiated system class objects.
+    error : bool
+        True if an error occurred during configuration setup.
+    workdir : str
+        Working directory path for current experiment.
+    """
     
     def __init__(self, configfile, period, conndata, user = "auto", tresume = None, runid = 0):
-        """ reportConfig init.
-        Parameters
-        ----------
-        configfile : str,
-            name of report configuration file
-        period : "ondemand", "daily", "weekly", "monthly" or "custom"
-            report periodicity
-        conndata : dict,
-                local DB connection data
-        user : str,
-            name of the user who launched report generation,
-        tresume : float or None,
-            if not None, timestamp of datetime to start resume
-        runid : int,
-            id of the current experiment
-        
-        Attributes
-        ----------
-        bm_dir : str,
-            directory for benchmarking
-        start_exp : str,
-            experiment start UTC datetime
-        bm_tfile : str,
-            timeing file for benchmarking
-        bm_last_cadence_t : int or None,
-            start time for last cadence step
-        root : str,
-            webapp main directory
-        configfile : str
-            name of report configuration file
-        cfile : str
-            config file with complete path
-        repdata : dict,
-            experiment configuration data read from cfile
-        period : "ondemand", "daily", "weekly", "monthly" or "custom"
-            report periodicity
-        user : str,
-            name of the user who launched report generation,
-        tstart : str,
-            datetime of acquisition start date
-        ts_stamp : int,
-            timestamp of acquisition start date        
-        t_window : float,
-            duration (decimal hours) of the period in which existing data must be searched and collected
-        tstop_stamp : int,
-            timestamp of acquisition end date        
-        tstop : str,
-            datetime of acquisition end date
-        tsarr : list,
-            list with all tstart values (1 for single acquisition, more than one for usecase with number of acquisitions > 1)
-        tearr : list,
-            list with all tstop values (1 for single acquisition, more than one for usecase with number of acquisitions > 1)
-        nacq : int,
-            number of acquisition for an ondemand report
-        tacq : float,
-            frequency (decimal hours) of the acquisition repetitions (for nacq > 1, 0 otherwise)
-        cadence : int,
-            data download cadence (hours)
-        systems : list,
-            list of systems to analyze
-        pars : dict,
-            list of parameters to be analyzed, divided by systems ({<System A> : [<parameters>], <System B> : [<parameters>], ...})
-        sysclasses : list,
-            list of instantiated classes
-        error : bool,
-            True if an error occurred, False otherwise
-        workdir : str,
-            working directory for current experiment
-        """
         
         ############### FOR BENCHMARK ###############
         #BENCHMARK CONFIGURATION LINES FOR FILENAME
@@ -242,16 +250,17 @@ class reportConfig():
         # return results
 
     def get_general_info(self, period):
-        """Get general info from JSON data
+        """Extract general experiment metadata and sampling options from configuration JSON.
+
         Parameters
         ----------
-        period : "ondemand", "daily", "weekly", "monthly" or "custom"
-            report periodicity
-            
-        Returns    
-        --------
-        general_error : boolean,
-            True (1) if an error occurred when getting general info, False (0) otherwise
+        period : str
+            Report periodicity mode.
+
+        Returns
+        -------
+        general_error : int
+            0 on successful extraction, 1 if an error occurred.
         """
         general_error = 0
         try:
@@ -297,14 +306,14 @@ class reportConfig():
         return general_error
 
     def get_report_config(self):
-        """ Read report data from JSON configuration file.
-        
-        Returns    
-        --------
-        repdata :  dict,
-            dictionary containing data read from configuration file
-        error : boolean,
-            True (1) if an error occurred when reading configuration file, False (0) otherwise
+        """Read and parse the report JSON configuration file.
+
+        Returns
+        -------
+        repdata : dict
+            Parsed configuration data dictionary.
+        error : int
+            0 on success, 1 if file reading or parsing failed.
         """
         error = 0
         repdata = {}
@@ -322,16 +331,17 @@ class reportConfig():
         return repdata, error
 
     def set_workdir(self, runid):
-        """Set working directory for current experiment
+        """Create and set the working directory for the current experiment run.
+
         Parameters
-        ---------
-        runid : int or str,
-            id of the current experiment
-            
+        ----------
+        runid : int or str
+            Unique experiment run identifier.
+
         Returns
-        --------
-        self.workdir : str,
-            working directory for current experiment
+        -------
+        workdir : str
+            Path to the created working directory.
         """
         dirname = self.root+"users/report/temp_id"+str(runid)+sep
         self.workdir = dirname.replace("\\",sep).replace("/",sep)
@@ -341,65 +351,64 @@ class reportConfig():
         return self.workdir
 
 class reportData():
-    """Class to get and store experiment data from remote repositories"""
+    """Manage data acquisition and retrieval from remote repositories or databases.
+
+    Parameters
+    ----------
+    iodaconf : object
+        Instantiated repConfig configuration object.
+    f2use : list of str or None
+        List of files to read data from, or None for direct DB retrieval.
+    sysclass : object
+        Instantiated system class corresponding to the target system.
+    tempdir : str
+        Temporary working directory path for the current experiment.
+    nthreads : int
+        Number of parallel worker connections/processes.
+    ts : str
+        Acquisition range start datetime string.
+    te : str
+        Acquisition range stop datetime string.
+    params : list of str
+        List of parameter identifiers to analyze.
+    repo : object
+        Instantiated repository handler object.
+    sub : str or None, optional
+        Subsystem or data origin classification (default is None).
+
+    Attributes
+    ----------
+    tempdir : str
+        Temporary working directory path.
+    source : str
+        System source identifier.
+    f2use : list of str or None
+        List of files to read.
+    iodaconf : object
+        Repository configuration instance.
+    nthreads : int
+        Parallel processing allocation count.
+    tstart : float
+        Data range start UTC timestamp.
+    tstop : float
+        Data range stop UTC timestamp.
+    params : list of str
+        Target parameter list.
+    cls : object
+        System class handler instance.
+    download_error : bool
+        True if a file download error occurred.
+    readfile_error : bool
+        True if a file reading error occurred.
+    query_error : bool
+        True if a remote database query error occurred.
+    sub : str or None
+        Subsystem context identifier.
+    repo : object
+        Repository handler object.
+    """
     
     def __init__(self, iodaconf, f2use, sysclass, tempdir, nthreads, ts, te, params, repo, sub=None):
-        """ reportData init.
-        Parameters
-        ----------
-        iodaconf : object,
-            instantiated util.repConfig object containing webapp configuration and connection settings
-        f2use : list or None,
-            list of files to read data from. If None, data are retrieve from a DB directly
-        sysclass : object,
-            instantiated system class under analysis
-        tempdir : str,
-            working directory for current experiment
-        nthreads : int,
-            number of simultaneous connections to remote DB. If f2use is not None, nthreads definition is based on its value, else it is based on the number of parameters to analyze
-        ts : str,
-            datetime of acquisition start date
-        te : str,
-            datetime of acquisition stop date
-        params : list
-            list of parameters under analysis
-        repo : object,
-            instantiated class of repository to use during analysis
-        sub : str or None,
-            if not None, the data origin/usecase (for example, "htkm")
-
-        
-        Attributes
-        ----------
-        tempdir : str,
-            working directory for current experiment
-        source : string
-            source under analysis, as defined in AIDA forms/json
-        f2use : list or None,
-            list of files to read data from. If None, data are retrieve from a DB directly
-        iodaconf : object,
-            instantiated util.repConfig object containing webapp configuration and connection settings
-        nthreads : int,
-            number of simultaneous connections to remote DB.
-        tstart : int,
-            timestamp of acquisition start date 
-        tstop : int,
-            timestamp of acquisition end date
-        params : list
-            list of parameters under analysis
-        cls : object,
-            instantiated system class under analysis
-        download_error : boolean
-            if True, an error occurred while downloading a file, False otherwise
-        readfile_error : boolean
-            if True, an error occurred while reading a file, False otherwise
-        query_error : boolean
-            if True, an error occurred while querying remote DB, False otherwise        
-        sub : str or None,
-            if not None, the data origin/usecase (for example, "htkm")
-        repo : object,
-            instantiated class of repository to use during analysis
-        """        
         self.tempdir = tempdir
         self.source = sysclass.source
         self.f2use = f2use
@@ -416,12 +425,12 @@ class reportData():
         self.repo = repo
 
     def get_files(self):
-        """Get files from local (by copying them in temp directory) or remote repository (by downloading them)
-        
+        """Copy local or download remote repository files into temporary working directory.
+
         Returns
         -------
-        filesarray : ndarray
-            2-dimensional Numpy array containing the list of files downloaded/copied, divided by the defined number of threads
+        filesarray : numpy.ndarray
+            2D array of file lists partitioned by thread count.
         """
         #create tmp report directory        
         filepath = self.tempdir+self.cls.name
@@ -454,17 +463,17 @@ class reportData():
         return filesarray                       
 
     def read_data(self, filesarray=[]):
-        """Read data from files or DB
-        
+        """Extract dataset values from downloaded files or remote databases in parallel.
+
         Parameters
-        -----------
-        filesarray : ndarray
-            2-dimensional Numpy array containing the list of files downloaded/copied, divided by the defined number of threads
-        
+        ----------
+        filesarray : numpy.ndarray, optional
+            2D array of file lists partitioned by thread count.
+
         Returns
         -------
-        result_dict : dict,
-            dictionary containing the retrieved data in the form: {<parameter_1>:{"dates":<list of dates>, "values":<list of values}, ... , <parameter_n> : {...}}
+        result_dict : dict
+            Dictionary containing extracted dates and values per parameter.
         """        
         result_dict = {}  
         if self.f2use is not None:                
@@ -527,19 +536,19 @@ class reportData():
         return result_dict
 
     def get_data_from_db(self, parray):
-        """Read data from DB.
-        
+        """Query data directly from remote database for a partition of parameters.
+
         Parameters
-        -----------
-        parray : ndarray
-            1-D Numpy array containing the list of parameters to analyze in the current process.
-        
+        ----------
+        parray : numpy.ndarray
+            Array of parameter names to query.
+
         Returns
         -------
-        ret : dict,
-            dictionary containing the retrieved data in the form: {<parameter_1>:{"dates":<list of dates>, "values":<list of values}, ... , <parameter_n> : {...}}
-        errorquery : 0 or 1,
-            if 1, an error occurred while querying remote DB, 0 otherwise
+        ret : dict
+            Extracted parameter data dictionary.
+        errorquery : int
+            1 if a database query error occurred, 0 otherwise.
         """        
         ret = {}
         errorquery = 0 
@@ -552,22 +561,22 @@ class reportData():
         return ret, errorquery
       
     def get_data_from_file(self, f2use):
-        """Read data from files
-        
+        """Read parameter time series data from a list of local files.
+
         Parameters
-        -----------
-        f2use : ndarray
-            1-D Numpy array containing the list of files to analyze in the current process.
-        
+        ----------
+        f2use : numpy.ndarray
+            Array of filenames to read.
+
         Returns
         -------
-        ret : dict,
-            dictionary containing the retrieved data in the form: {<parameter_1>:{"dates":<list of dates>, "values":<list of values}, ... , <parameter_n> : {...}}
-        errordownstatus : 0 or 1,
-            if 1, an error occurred while dowloading/copying a file, 0 otherwise
-        errorfilestatus : 0 or 1,
-            if 1, an error occurred while reading a file, 0 otherwise
-        """ 
+        ret : dict
+            Extracted parameter data dictionary.
+        errordownstatus : int
+            1 if a missing file error occurred, 0 otherwise.
+        errorfilestatus : int
+            1 if a file parsing error occurred, 0 otherwise.
+        """
         #open file and get data
         ret = {}
         dirname = self.tempdir+sep
@@ -593,13 +602,13 @@ class reportData():
         return ret, errordownstatus, errorfilestatus
 
     def multidownload(self, f2use):
-        """Download files from remote DB
-        
+        """Download files from remote FTP or URI repository.
+
         Parameters
-        -----------
-        f2use : ndarray
-            1-D Numpy array containing the list of files to download in the current process.
-        """         
+        ----------
+        f2use : numpy.ndarray
+            Array of filenames to download.
+        """        
         ftp=""
         self.res = {}
         errorfilestatus = 0
@@ -619,65 +628,55 @@ class reportData():
                 self.repo.download_file(name, self.iodaconf, None, self.tempdir, self.cls.name)
 
 class threadSys(threading.Thread):
-    """Class to execute report experiment as multithreading process. Each thread represents a specific system under analysis."""    
+    """Execute report data collection as a multithreaded worker process per system.
+
+    Parameters
+    ----------
+    ThreadID : int
+        Thread numerical identifier.
+    name : str
+        Thread name identifier.
+    params : reportConfig
+        Instantiated reportConfig object containing experiment settings.
+    nthreads : int
+        Maximum allowed parallel subprocesses per thread.
+    runid : int or str
+        Unique experiment run ID.
+    start_time : str or None, optional
+        Start datetime string for periodic cadence step (default is None).
+
+    Attributes
+    ----------
+    name : str
+        Thread name.
+    id : int
+        Thread ID.
+    source : str
+        Target data system source name.
+    params : reportConfig
+        Report configuration reference.
+    tempdir : str
+        Working directory path.
+    nth : int
+        Maximum subprocess allocation count.
+    cls : object
+        System class handler object.
+    runid : int or str
+        Experiment run ID.
+    th_error : list of dict
+        Logged execution errors and warnings list.
+    start_time : str or None
+        Cadence step start datetime.
+    nsys : int
+        Total number of systems under analysis.
+    nacq : int
+        Total acquisition count.
+    par_pos : dict
+        Parameter chunk allocations per subprocess.
+    """
+  
     def __init__(self, ThreadID, name, params, nthreads, runid, start_time = None):
-        """ threadSys init.        
-        
-        Parameters
-        ----------
-        ThreadID : int,
-            current thread id
-        name : str,
-            current thread name
-        params : object,
-            instantiated reportConfig object containing current experiment configuration data
-        nthreads : int,
-            number of maximum parallel processes allowed to each thread
-        runid : int,
-            current report experiment id
-        start_time : str or None,
-            for a periodic report, it indicates the start datetime to use for the current report analysis. If None it is equal to the global start acquisition date.
-        
-        Attributes
-        ----------
-        name : str,
-            current thread name
-        ThreadID : int,
-            current thread id
-        source : str
-            source under analysis, as defined in AIDA forms/json
-        params : object,
-            instantiated reportConfig object containing current experiment configuration data
-        tempdir : str,
-            working directory for current experiment
-        nth : int,
-            number of maximum parallel processes allowed to each thread
-        indata : dict,
-            dictionary containing the retrieved data in the form: {<parameter_1>:{"dates":<list of dates>, "values":<list of values}, ... , <parameter_n> : {...}}
-        exppars : list
-            list of parameters to analyze
-        hktm_res : deprecated
-        science_res : deprecated
-        cls : list,
-            list of instantiated classes for the current thread
-        runid : int,
-            current report experiment id
-        th_error : list
-            list of all the errors/warnings occurred during experiment. Each error/warning is represented as a dictionary containing additional info:
-            "type": type of error/warning
-            "msg" : description of the error/warning
-            "sub" : involved subsystem/usecase
-            "level" : "serious" for an error, "warning" for a warning
-        start_time : str or None,
-            for a periodic report, it indicates the start datetime to use for the current report analysis. If None it is equal to the global start acquisition date.
-        nsys : int,
-            number of systems under analysis in the current experiment
-        nacq : int
-            number of acquisitions for an ondemand report
-        par_pos : dict,
-            dictionary reporting parameters divided by subprocess in the form:
-            {<repository> : {<usecase 1> : [<list of parameters for subprocess 1>,<list of parameters for subprocess 2>,...,<list of parameters for subprocess N>], ..., <usecase M> : [...]}}
-        """
+
         threading.Thread.__init__(self)
         self.name=name
         self.id=ThreadID
@@ -698,7 +697,7 @@ class threadSys(threading.Thread):
         self.par_pos = {}        
 
     def run(self):
-        """Method representing the thread’s activity."""
+        """Execute thread activity for on-demand or periodic pipeline processing."""
         threadLimiter.acquire()
         self.res = {}
       
@@ -749,16 +748,16 @@ class threadSys(threading.Thread):
         threadLimiter.release()
 
     def ondemand_pipe(self, report_conf, conf, e):
-        """Core function to generate ondemand reports.
-        
+        """Pipeline routine for processing on-demand report data retrieval.
+
         Parameters
         ----------
-        report_conf : object,
-            instantiated reportConfig object containing current experiment configuration data 
-        conf : object,
-            instantiated util.repConfig object containing webapp configuration and connection settings
-        e : object,
-            global instantiated util.statusMsg() object handling error flags and messages
+        report_conf : reportConfig
+            Report configuration instance.
+        conf : repConfig
+            System repository configuration instance.
+        e : statusMsg
+            Status and diagnostic message handler object.
         """
         s = self.cls
         nthreads = self.nth
@@ -822,17 +821,17 @@ class threadSys(threading.Thread):
         dbio.update_progress(self.runid, 6.0/self.nsys)             
 
     def periodic_pipe(self, report_conf, conf, e):
-        """Core function to generate periodic reports.
-        
+        """Pipeline routine for processing periodic report data retrieval with cadence delays.
+
         Parameters
         ----------
-        report_conf : object,
-            instantiated reportConfig object containing current experiment configuration data 
-        conf : object,
-            instantiated util.repConfig object containing webapp configuration and connection settings
-        e : object,
-            global instantiated util.statusMsg() object handling error flags and messages
-        """        
+        report_conf : reportConfig
+            Report configuration instance.
+        conf : repConfig
+            System repository configuration instance.
+        e : statusMsg
+            Status and diagnostic message handler object.
+        """       
         s = self.cls
         nthreads = self.nth
         
@@ -899,61 +898,73 @@ class threadSys(threading.Thread):
         dbio.update_progress(self.runid, 6.0/self.nsys)             
 
     def get_hktm_result(self):
-        """Get self.hktm_res. DEPRECATED"""
+        """Retrieve HKTM result dictionary (deprecated).
+
+        Returns
+        -------
+        dict
+            HKTM data result dictionary.
+        """
         return self.hktm_res
 
     def get_science_result(self):
-        """Get self.science_res. DEPRECATED"""
+        """Retrieve Science result dictionary (deprecated).
+
+        Returns
+        -------
+        dict
+            Science data result dictionary.
+        """
         return self.science_res
 
     def get_errors(self):
-        """Get the list of report errors/warnings.
-        
+        """Retrieve accumulated thread errors and warnings.
+
         Returns
-        --------
-        th_error : list
-            list of all the errors/warnings occurred during experiment. Each error/warning is represented as a dictionary containing additional info:
-            "type": type of error/warning
-            "msg" : description of the error/warning
-            "sub" : involved subsystem/usecase
-            "level" : "serious" for an error, "warning" for a warning
+        -------
+        th_error : list of dict
+            List of logged error and warning dictionaries.
         """
         return self.th_error
 
     def get_parameters_pos(self):
-        """Get parameters divided by subprocess.
-        
+        """Retrieve parameter allocation structure by subprocess.
+
         Returns
-        --------        
-        par_pos : dict,
-            dictionary reporting parameters divided by subprocess in the form:
-            {<repository> : {<usecase 1> : [<list of parameters for subprocess 1>,<list of parameters for subprocess 2>,...,<list of parameters for subprocess N>], ..., <usecase M> : [...]}}
+        -------
+        par_pos : dict
+            Dictionary mapping repository and origin to parameter lists.
         """
         return self.par_pos      
         
     def collect_data(self, acquid, report_conf, s, f2use, ioda_conf, ts, te, runstep, repo):
-        """Collect retrieved data and store them into HDF5 files.
-        
+        """Fetch parameter dataset values and serialize them into temporary HDF5 storage.
+
         Parameters
         ----------
-        acquid : int,
-            current acquisition id for an ondemand report
-        report_conf : object,
-            instantiated reportConfig object containing current experiment configuration data 
-        s : str,
-            the data origin/usecase (for example, "htkm")
-        f2use : list or None,
-            list of files to read data from. If None, data are retrieve from a DB directly
-        ioda_conf : object,
-            instantiated util.repConfig object containing webapp configuration and connection settings
-        ts : str,
-            datetime of acquisition start date
-        te : str,
-            datetime of acquisition stop date  
-        runstep : int,
-            number of acquisition steps defined by cadence value in report configuration
-        repo : object,
-            instantiated class of repository to use during analysis
+        acquid : int
+            Current acquisition step index.
+        report_conf : reportConfig
+            Report configuration instance.
+        s : str
+            Subsystem or origin identifier.
+        f2use : list of str or None
+            List of files to read, or None for direct database access.
+        ioda_conf : repConfig
+            Global repository configuration instance.
+        ts : str
+            Data range start datetime string.
+        te : str
+            Data range stop datetime string.
+        runstep : int
+            Current cadence step index.
+        repo : object
+            Repository handler object.
+
+        Returns
+        -------
+        basepar_chunk : numpy.ndarray
+            Parameter partitions processed by worker processes.
         """         
         #number of threads for ftp connections
         ftp_th = ioda_conf.nth_dict[s]
@@ -1059,28 +1070,27 @@ class threadSys(threading.Thread):
         return basepar_chunk    
 
 def data_to_hdf5(data, source, sub, acquid, procid, params, addpars, tempdir):
-    """Store data into HDF5 files.
-    
-    Parameters
-    ----------
-    data : dict,
-        dictionary containing main parameters' data collected. It is structured as follows:
-        {<parameter 1> : {"dates" : <list of dates>, "values" : <list of values>}, ... ,<parameter N> : {"dates" : <list of dates>, "values" : <list of values>}}
-    source : str,
-            current data source, as defined in AIDA forms/json
-    sub : str,
-        the data origin/usecase (for example, "htkm")
-    acquid : int,
-            current acquisition id for an ondemand report
-    procid : int,
-            current HDF5 creation process id
-    params : ndarray,
-            list of experiment main parameters
-    addpars : ndarray,
-            list of experiment additional parameters
-    tempdir : str,
-            working directory for current experiment
-    """
+    """Write extracted main and additional parameter series into HDF5 binary files.
+
+      Parameters
+      ----------
+      data : dict
+          Extracted parameter time series dictionary.
+      source : str
+          System source identifier.
+      sub : str
+          Subsystem or origin name.
+      acquid : int
+          Current acquisition step index.
+      procid : int
+          Process worker identifier.
+      params : numpy.ndarray
+          Array of primary parameter names.
+      addpars : numpy.ndarray
+          Array of additional filter parameter names.
+      tempdir : str
+          Temporary working directory path.
+      """
     addpars = np.unique(addpars)  
     h5file_main = tempdir+source+"_"+sub+"_"+str(procid)+".h5"
     hf = h5py.File(h5file_main,"a")
@@ -1152,26 +1162,26 @@ def data_to_hdf5(data, source, sub, acquid, procid, params, addpars, tempdir):
     hf.close()      
 
 def ondemand_report(confreport, connconfig, nthreads, runid, url, dirname, pid, email):
-    """Main function for an ondemand report generation.
-    
+    """Execute complete pipeline for generating an on-demand report.
+
     Parameters
     ----------
-    confreport : : object,
-            instantiated reportConfig object containing current experiment configuration data
-    connconfig : dict,
-               settings for connection to local DB
-    nthreads : int,
-            number of processors/threads dedicated for each system
-    runid : int,
-        id of the current experiment
-    url : str,
-        web application url
-    dirname : str,
-        working directory for the current experiment
-    pid : int,
-        process id assigned to the current experiment by the system
-    email : str,
-        user email address
+    confreport : reportConfig
+      Report configuration instance.
+    connconfig : dict
+      Local database connection credentials.
+    nthreads : int
+      Parallel thread allocation count.
+    runid : int or str
+      Unique experiment run ID.
+    url : str
+      Web application base URL.
+    dirname : str
+      Temporary working directory path.
+    pid : int
+      Operating system process ID.
+    email : str
+      Target notification email address.
     """
     #Init threadLimiter
     global threadLimiter
@@ -1279,26 +1289,26 @@ def ondemand_report(confreport, connconfig, nthreads, runid, url, dirname, pid, 
     ########################################################## 
 
 def periodic_report(confreport, connconfig, nthreads, runid, url, dirname, pid, email):
-    """Main function for an ondemand report generation.
-    
+    """Execute continuous execution pipeline for periodic report generation.
+
     Parameters
     ----------
-    confreport : : object,
-            instantiated reportConfig object containing current experiment configuration data
-    connconfig : dict,
-               settings for connection to local DB
-    nthreads : int,
-            number of processors/threads dedicated for each system
-    runid : int,
-        id of the current experiment
-    url : str,
-        web application url
-    dirname : str,
-        working directory for the current experiment
-    pid : int,
-        process id assigned to the current experiment by the system
-    email : str,
-        user email address
+    confreport : reportConfig
+      Report configuration instance.
+    connconfig : dict
+      Local database connection credentials.
+    nthreads : int
+      Parallel thread allocation count.
+    runid : int or str
+      Unique experiment run ID.
+    url : str
+      Web application base URL.
+    dirname : str
+      Temporary working directory path.
+    pid : int
+      Operating system process ID.
+    email : str
+      Target notification email address.
     """    
     #Init threadLimiter
     global threadLimiter
@@ -1377,27 +1387,26 @@ def periodic_report(confreport, connconfig, nthreads, runid, url, dirname, pid, 
         del errors        
     
 def main(configfile, nthreads, period, user, url, runid, email, t0):
-    """Start a new report generation with given run id
-    
+    """CGI entry point to launch report generation pipeline.
+
     Parameters
     ----------
-    configfile : str,
-            configuration file name
-    nthreads : int,
-            number of processors/threads dedicated for each system
-    period : "ondemand", "daily", "weekly", "monthly" or "custom"
-        report periodicity
-    user : str,
-        name of the user running the experiment
-    url : str,
-        web application url
-    runid : int,
-        id of the current experiment
-    email : str,
-        user email address
-    t0 : float or None,
-        if not None, timestamp of datetime to start resume
-    
+    configfile : str
+      Report configuration filename.
+    nthreads : int
+      Number of worker threads allocated.
+    period : str
+      Report periodicity mode.
+    user : str
+      Username initiating report generation.
+    url : str
+      Base web application URL.
+    runid : int or str
+      Unique experiment run ID.
+    email : str
+      Notification email address.
+    t0 : float or None
+      Epoch timestamp to resume execution from.
     """
     ############################ BENCHMARK ##################
     t0_bench_str, t0_bench_timestamp = util.get_time()   

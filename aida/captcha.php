@@ -1,9 +1,30 @@
 <?php
- 
+ /**
+ * CAPTCHA Image Generator Endpoint.
+ *
+ * Dynamically generates a PNG image containing a randomized alphanumeric CAPTCHA code,
+ * applies visual noise (distorted rectangles, variable colors, and TTF font rotations),
+ * and stores the generated verification string in the active user session.
+ *
+ * @package    AIDA
+ * @subpackage Security
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
 session_start();
- 
-$permitted_chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-  
+
+/**
+ * @var string $permitted_chars Alphanumeric character set used to build the CAPTCHA string.
+ */
+ $permitted_chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+
+/**
+ * Generate a randomized string from a given character set.
+ *
+ * @param string $input    The set of allowed characters.
+ * @param int    $strength The desired length of the generated string. Default 10.
+ * @return string The randomized CAPTCHA string.
+ */  
 function generate_string($input, $strength = 10) {
     $input_length = strlen($input);
     $random_string = '';
@@ -14,7 +35,9 @@ function generate_string($input, $strength = 10) {
   
     return $random_string;
 }
- 
+/**
+ * Initialize GD image canvas and configure visual noise/colors.
+ */ 
 $image = imagecreatetruecolor(200, 50);
  
 imageantialias($image, true);
@@ -24,7 +47,7 @@ $colors = [];
 $red = rand(125, 175);
 $green = rand(125, 175);
 $blue = rand(125, 175);
- 
+// Draw random background rectangles for visual noise 
 for($i = 0; $i < 5; $i++) {
   $colors[] = imagecolorallocate($image, $red - 20*$i, $green - 20*$i, $blue - 20*$i);
 }
@@ -40,7 +63,10 @@ for($i = 0; $i < 10; $i++) {
 $black = imagecolorallocate($image, 0, 0, 0);
 $white = imagecolorallocate($image, 255, 255, 255);
 $textcolors = [$black, $white];
- 
+
+/**
+ * Render CAPTCHA text on the canvas and store string in session.
+ */ 
 $fonts = [dirname(__FILE__).'/assets/fonts/Acme.ttf', dirname(__FILE__).'/assets/fonts/Ubuntu.ttf', dirname(__FILE__).'/assets/fonts/Merriweather.ttf', dirname(__FILE__).'/assets/fonts/PlayfairDisplay.ttf'];
 $string_length = 6;
 $captcha_string = generate_string($permitted_chars, $string_length);
@@ -53,7 +79,9 @@ for($i = 0; $i < $string_length; $i++) {
    
   imagettftext($image, 24, rand(-15, 15), $initial + $i*$letter_space, rand(25, 45), $textcolors[rand(0, 1)], $fonts[array_rand($fonts)], $captcha_string[$i]);
 }
- 
+/**
+ * Output PNG stream to client and destroy image resource.
+ */ 
 header('Content-type: image/png');
 imagepng($image);
 imagedestroy($image);

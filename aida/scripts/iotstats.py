@@ -1,5 +1,16 @@
 #!/usr/bin/python
 
+"""
+Custom Statistical Analysis Library.
+
+This module defines the Data class and functions for computing advanced 
+statistical metrics on numerical series, including biweight mean, 
+MAD, NMAD, robust standard deviation, and sigma clipping.
+
+@package AIDA
+@module iotstats
+"""
+
 import numpy as np
 import numpy.ma as ma
 import math
@@ -8,13 +19,19 @@ import warnings
 warnings.simplefilter("ignore", category=RuntimeWarning)
 
 class Data(object):
-    """Class to use for statistical analysis of input
+    """Provide methods for comprehensive statistical analysis on numerical data.
+
+    Parameters
+    ----------
+    myinput : array_like
+        Input sequence or array of numerical data values.
 
     Attributes
-    ---------
-        data: ndarray
-            Numpy array containing data
-
+    ----------
+    data : numpy.ndarray
+        Float64 1D array of input data values.
+    rdigits : int
+        Rounding precision for statistical result metrics.
     """
     
     def __init__(self, myinput):
@@ -24,22 +41,22 @@ class Data(object):
         self.rdigits = 6
 
     def dqc_biweight(self, iterMax=25, epsilon=1.0e-20):
-        """Calculate the mean of a data set using bisquare weighting. It works on 1D or 2D input arrays.  
+        """Calculate the mean of the dataset using bisquare weighting iterations.  
 
         Based on the biweight_mean routine from the AstroIDL User's Library [1]_.
         
         Parameters
-        --------
-            iterMax: int, optional
-                Maximum number of iterations to approximate the standard deviation of the distribution (default is 25).
-            epsilon: float, optional
-                Minimum value of the standard deviation to continue iterations (default is 1.0e-20).
-        
+        ----------
+        iterMax : int, optional
+            Maximum number of approximation iterations (default is 25).
+        epsilon : float, optional
+            Minimum standard deviation threshold to stop iteration (default is 1.0e-20).
+
         Returns
         -------
-            y0: float or ndarray
-                New array containing the biweight mean values. The value is a float if axis is None. 
-            
+        float
+            Calculated biweight mean value.
+   
         References
         ---------
             ..[1] http://idlastro.gsfc.nasa.gov/
@@ -96,38 +113,36 @@ class Data(object):
         return round(y0, self.rdigits)
 
     def dqc_kurtosis(self, axis = None, bias = True, nan_policy = 'omit'):
-        """Compute the skewness of an array, ignoring any NaNs.
+        """Compute the kurtosis of the dataset, ignoring NaN values.
 
         Parameters
-        --------
-            axis : int or None, optional
-                Axis along which kurtosis is calculated. If None, compute over the whole array a. Default is None.
-            bias : bool, optional
-                If False, then the calculations are corrected for statistical bias.
-            nan_policy : {‘propagate’, ‘raise’, ‘omit’}, optional
-                Defines how to handle when input contains nan. ‘propagate’ returns nan, ‘raise’ throws an error, ‘omit’ performs the calculations ignoring nan values. 
-                Default is ‘omit’.
+        ----------
+        axis : int or None, optional
+            Axis along which kurtosis is calculated (default is None).
+        bias : bool, optional
+            If False, corrects calculation for statistical bias (default is True).
+        nan_policy : {'propagate', 'raise', 'omit'}, optional
+            Policy for handling NaNs in input data (default is 'omit').
 
         Returns
         -------
-            kurtosis : ndarray
-                The kurtosis of values along an axis, returning 0 where all values are equal.
-
+        float
+            Calculated kurtosis value.
         """
         return round(kurtosis(self.data, axis, bias, nan_policy), self.rdigits)
 
     def dqc_mad(self, axis=None):
-        """Compute the Median Absolute Deviation (MAD) of an array along the specified axis. 
+        """Compute the Median Absolute Deviation (MAD) of the dataset.
 
         Parameters
-        --------
-            axis: int, optional
-                Axis along which the MAD is computed, according with Numpy definition (default is 'None').
+        ----------
+        axis : int or None, optional
+            Axis along which MAD is computed (default is None).
 
         Returns
         -------
-            float or ndarray
-                New array containing the MAD values. The value is a float if axis is None.
+        float
+            Calculated median absolute deviation value.
         """
         # MAD calculation
         med = np.nanmedian(self.data, axis=axis, keepdims=True)
@@ -136,36 +151,34 @@ class Data(object):
         return round(x, self.rdigits)
 
     def dqc_max(self):
-        """Return the maximum of an array ignoring any NaNs. 
+        """Return the maximum value of the array, ignoring NaNs.
 
         Returns
         -------
-            float
-                Maximum value of the array
-
+        float
+            Maximum data value.
         """
         # Max calculation
         return np.nanmax(self.data)
         
     def dqc_mean(self):
-        """Compute the standard mean of an array, ignoring any NaNs. 
+        """Compute the arithmetic mean of the array, ignoring NaNs.
 
         Returns
         -------
-            float 
-                Mean value of the array.
-
+        float
+            Arithmetic mean value.
         """
         # Mean calculation
         return round(np.nanmean(self.data),self.rdigits)
 
     def dqc_median(self):
-        """Compute the median of an array, ignoring any NaNs. 
+        """Compute the median value of the array, ignoring NaNs.
 
         Returns
         -------
-            float
-                Median value of the array. 
+        float
+            Median data value. 
 
         Notes
         -------
@@ -179,13 +192,12 @@ class Data(object):
         return round(np.nanmedian(self.data),self.rdigits)
      
     def dqc_min(self):
-        """Return the minimum of an array, ignoring any NaNs. 
+        """Return the minimum value of the array, ignoring NaNs.
 
         Returns
         -------
-            float
-                Minimum value of the array
-                
+        float
+            Minimum data value.
         """
         
         # Min calculation
@@ -197,14 +209,14 @@ class Data(object):
 
         Parameters
         --------
-            precision: float, optional
-                precision for mode evaluation. If precision is set, data will be arranged into bins of width = 2*precision and 
-                the median of values in each bin will be considered for calculation.
+        precision : float or None, optional
+            Binning precision width for mode evaluation (default is None). If precision is set, data will be arranged into bins of 
+            width = 2*precision and the median of values in each bin will be considered for calculation.
 
         Returns
         -------
-            result: str
-               String containing the mode values and their counts. 
+        result : str
+            HTML formatted string detailing mode value and count. 
         """
         if precision == 0:
             precision = None
@@ -241,18 +253,17 @@ class Data(object):
         return result
 
     def dqc_nmad(self, axis=None):
-        """Compute the Normalized Median Absolute Deviation (NMAD) of an array along the specified axis. 
+        """Compute Normalized Median Absolute Deviation (NMAD) of the dataset.
 
         Parameters
-        --------
-            axis: int, optional
-                Axis along which the NMAD is computed, according with Numpy definition (default is 'None').
+        ----------
+        axis : int or None, optional
+            Axis along which NMAD is computed (default is None).
 
         Returns
         -------
-            float or ndarray
-                New array containing the NMAD values. The value is a float if axis is None. 
-
+        float
+            Normalized median absolute deviation value.
         """
         # NMAD calculation
         mad = self.dqc_mad(axis=axis)
@@ -262,63 +273,59 @@ class Data(object):
         return round(x, self.rdigits)
 
     def dqc_percentile(self, quantile=None, interpolation="linear"):
-        """Compute the qth percentile of the data along the specified axis, while ignoring NaN values.
+        """Compute the q-th percentile of the data, ignoring NaN values.
 
         Parameters
         ----------
-            quantile : float in range of [0,100]
-                Percentile to compute, which must be between 0 and 100 inclusive.
-            interpolation : string, optional
-                Interpolation method to use when the desired quantile lies between two data points i < j.
-                Available values are "linear", "lower", "higher", "nearest" and "midpoint" (default is "linear"):
-
-                    linear: i + (j - i) * fraction, where fraction is the fractional part of the index 
-                        surrounded by i and j;
-                    lower: i;
-                    higher: j;
-                    nearest: i or j, whichever is nearest;
-                    midpoint: (i + j) / 2.
+        quantile : float
+            Percentile value in the range [0, 100].
+        interpolation : str, optional
+            Interpolation method to use when the desired quantile lies between two data points i < j.
+            Available values are "linear", "lower", "higher", "nearest" and "midpoint" (default is "linear"):
+                linear: i + (j - i) * fraction, where fraction is the fractional part of the index 
+                    surrounded by i and j;
+                lower: i;
+                higher: j;
+                nearest: i or j, whichever is nearest;
+                midpoint: (i + j) / 2.
 
         Returns
-        ---------
-            float or ndarray
-                New array containing the percentile values. The value is a float if axis is None.
-
+        -------
+        float
+            Calculated percentile value.
         """
         # Percentile calculation
         x = np.nanpercentile(self.data, quantile, interpolation=interpolation)
         return round(x, self.rdigits)
 
     def dqc_rms(self):
-        """Compute the Root Mean Square (RMS) of an array. 
+        """Compute the Root Mean Square (RMS) of the dataset.
 
         Returns
         -------
-            float
-                RMS value of the array
-
+        float
+            Calculated RMS value.
         """
 
         # RMS calculation
         return round(np.sqrt(np.nanmean(self.data**2)), self.rdigits)
 
     def dqc_robust_stdev(self, epsilon=None, Zero=False):#, dtype=None):
-        """Robust estimator of the standard deviation of a data set.  
+        """Calculate robust estimator of standard deviation based on AstroIDL robust_sigma.  
         
         Based on the robust_sigma function from the AstroIDL User's Library [1]_.
         
         Parameters
-        --------
-            epsilon: float
-                Minimum value allowed for the MAD to compute the robust standard deviation.
-            Zero: bool, optional
-                if True, the dispersion is calculated w.r.t. 0.0 rather 
-                than the central value of the array (default is False).
-        
+        ----------
+        epsilon : float or None
+            Minimum threshold for MAD computation.
+        Zero : bool, optional
+            If True, calculates dispersion relative to 0.0 (default is False).
+
         Returns
         -------
-            float
-                Robust standard deviation value. In case of failure, returns value of -1.0.
+        float
+            Robust standard deviation value, or -1.0 on failure.
 
         References
         ---------
@@ -368,19 +375,19 @@ class Data(object):
         If the data contains invalid values (NaNs or infs), they are automatically masked before performing 
         the sigma-clipping.
         
-        This method is a modified version of astropy.stats.sigma_clip, fitted for Euclid DQCT requirements
+        This method is a modified version of astropy.stats.sigma_clip.
 
         Parameters
-        -----------
-            sigma : float, optional
-                The number of standard deviations to use for both the lower and upper clipping limit. Defaults is 3.
-            function : 'biweight', 'median' or 'mean', optional
-                The statistic used to compute the center value for the clipping. The default is 'median'
+        ----------
+        sigma : float, optional
+            Standard deviation threshold limit for clipping (default is 3.0).
+        function : {'biweight', 'median', 'mean'}, optional
+            Central statistic used for clipping baseline (default is 'median').
 
         Returns
-        --------
-            result: str
-               String containing the list of points rejected or not by the algorithm, into separated lists.
+        -------
+        result : str
+            Formatted HTML string listing unclipped and outlier values.
         """
         data = self.data
 
@@ -446,54 +453,49 @@ class Data(object):
         return out
  
     def dqc_skewness(self, axis = None, bias = True, nan_policy = 'omit'):
-        """Compute the skewness of an array, ignoring any NaNs.
+        """Compute skewness of dataset values, ignoring NaNs.
 
         Parameters
-        --------
-            axis : int or None, optional
-                Axis along which skewness is calculated. If None, compute over the whole array a. Default is None.
-            bias : bool, optional
-                If False, then the calculations are corrected for statistical bias.
-            nan_policy : {‘propagate’, ‘raise’, ‘omit’}, optional
-                Defines how to handle when input contains nan. ‘propagate’ returns nan, ‘raise’ throws an error, ‘omit’ performs the calculations ignoring nan values. 
-                Default is ‘omit’.
+        ----------
+        axis : int or None, optional
+            Axis along which skewness is calculated (default is None).
+        bias : bool, optional
+            If False, corrects calculation for statistical bias (default is True).
+        nan_policy : {'propagate', 'raise', 'omit'}, optional
+            Policy for handling NaNs in input data (default is 'omit').
 
         Returns
         -------
-            skewness : ndarray
-                The skewness of values along an axis, returning 0 where all values are equal.
-
+        float
+            Calculated skewness value.
         """
         
         return round(skew(self.data, axis, bias, nan_policy), self.rdigits)
  
     def dqc_stdev(self, df=0):
-        """Compute the standard deviation of an array, ignoring any NaNs.
+        """Compute standard deviation of dataset values, ignoring NaNs.
 
         Parameters
-        --------
-            df: int, optional
-                Means Degrees of Freedom. The divisor used in calculations is N-df, where N is the number of elements.
-                (default is 0)
+        ----------
+        df : int, optional
+            Delta degrees of freedom divisor correction (default is 0).
 
         Returns
         -------
-            float 
-                Standard deviation of the array
-
+        float
+            Standard deviation value.
         """
 
         # Standard deviation calculation
         return round(np.nanstd(self.data, ddof=df), self.rdigits)
         
     def dqc_variance(self):
-        """Compute the variance of an array, ignoring any NaNs.
+        """Compute variance of dataset values, ignoring NaNs.
 
         Returns
         -------
-            float 
-                Variance value of the array 
-
+        float
+            Calculated variance value.
         """
 
         # Variance calculation
@@ -501,17 +503,17 @@ class Data(object):
     
 
 def calculateGlobal(datain):
-    """Calculate statistical estimators indicated in global_stats.
-    
+    """Calculate default global statistical metrics on input dataset.
+
     Parameters
-    -----------
-    datain : list or ndarray,
-        list of data to use
-    
+    ----------
+    datain : array_like
+        Input sequence or array of values.
+
     Returns
     -------
-        results : dict 
-            results of statistical analysis in the form {<stats name> : value} 
+    results : dict
+        Dictionary mapping metric names to calculated statistical values.
     """
     #input data
     data = Data(datain)

@@ -1,5 +1,16 @@
 #!/usr/bin/python
 
+"""
+Image Analysis Execution Engine.
+
+This module handles image processing operations on FITS images, including 
+image subtraction, stacking, statistical calculation, database tracking, 
+and email notification dispatching.
+
+@package AIDA
+@module run_img_analysis
+"""
+
 import cgi, cgitb 
 cgitb.enable()  # for troubleshooting
 from    os              import system, getpid, path, sep, mkdir, remove,sep
@@ -21,6 +32,19 @@ e = util.statusMsg()
 
 
 def subtract_images(img1,img2,outputUrl, imagesAlligned=True):
+    """Subtract pixel data of the second FITS image from the first and save to file.
+
+    Parameters
+    ----------
+    img1 : str
+        File path to the primary FITS image.
+    img2 : str
+        File path to the FITS image to subtract.
+    outputUrl : str
+        Output file path for the subtracted FITS image.
+    imagesAlligned : bool, optional
+        Flag indicating if input images are pre-aligned (default is True).
+    """
     fits1=fits.open(img1)
     fits2=fits.open(img2)
     dastaStruct=fits1.info(False)
@@ -30,6 +54,17 @@ def subtract_images(img1,img2,outputUrl, imagesAlligned=True):
     fits1.writeto(outputUrl, overwrite=True)
 
 def stack_images(imgList,outputUrl, imagesAlligned=True):
+    """Stack and average pixel data across a sequence of FITS images.
+
+    Parameters
+    ----------
+    imgList : list of str
+        List of file paths to FITS images to stack.
+    outputUrl : str
+        Output file path for the stacked FITS image.
+    imagesAlligned : bool, optional
+        Flag indicating if input images are pre-aligned (default is True).
+    """
     fits1=fits.open(imgList[0])
     dastaStruct=fits1.info(False)
     for img in range(1,len(imgList)):
@@ -42,6 +77,20 @@ def stack_images(imgList,outputUrl, imagesAlligned=True):
     fits1.writeto(outputUrl, overwrite=True)
     
 def stats_image(img1, imagesAlligned=True):
+    """Compute statistical metrics across FITS image data extensions.
+
+    Parameters
+    ----------
+    img1 : str
+        File path to the target FITS image.
+    imagesAlligned : bool, optional
+        Flag indicating if image is aligned (default is True).
+
+    Returns
+    -------
+    dictStat : dict
+        Dictionary containing calculated statistical metrics per HDU extension and overall.
+    """
     fits1=fits.open(img1)
     dastaStruct=fits1.info(False)
     dictStat={}
@@ -54,6 +103,38 @@ def stats_image(img1, imagesAlligned=True):
     return dictStat  
 
 def stat_to_db(pdata, usecase, plot, username, labels, stats, stat_res, operation, ts, te, tokeep=0):
+    """Insert temporary image analysis plot record into the database.
+
+    Parameters
+    ----------
+    pdata : dict or str
+        Image analysis data payload.
+    usecase : str
+        Data origin classification string.
+    plot : str
+        Plot or analysis operation type name.
+    username : str
+        Username initiating the analysis.
+    labels : list of str
+        List of parameter or file labels.
+    stats : str
+        Statistical mode identifier.
+    stat_res : dict or str
+        Statistical calculation results dictionary or JSON string.
+    operation : str
+        Name of performed operation.
+    ts : str
+        Data range start datetime string.
+    te : str
+        Data range end datetime string.
+    tokeep : int, optional
+        Persistence flag (0 for temporary, 1 for permanent, default is 0).
+
+    Returns
+    -------
+    plotid : int or None
+        Inserted database record ID, or None if insertion failed.
+    """
     #connect to DB
     connconf = util.repConfig().data['local_db']
     dbio = db_io.dbIO(connconf)
@@ -62,6 +143,26 @@ def stat_to_db(pdata, usecase, plot, username, labels, stats, stat_res, operatio
     return plotid   
 
 def do_calculation(indata, operation, user, filepath,dt):
+    """Perform requested image processing operation and calculate image statistics.
+
+    Parameters
+    ----------
+    indata : list of str
+        List of input image file paths.
+    operation : str
+        Image operation identifier name (e.g. 'difference').
+    user : str
+        Username requesting the calculation.
+    filepath : str
+        Target output directory path.
+    dt : str
+        Timestamp string for output naming.
+
+    Returns
+    -------
+    result : dict
+        Calculated image statistics dictionary.
+    """
     result = {}
     # Calculate statistics
     try:
@@ -79,6 +180,39 @@ def do_calculation(indata, operation, user, filepath,dt):
     return result
 
 class getFiles(threading.Thread):
+    """Worker thread for multi-threaded image file downloading or copying.
+
+    Parameters
+    ----------
+    ThreadID : int
+        Thread numerical identifier.
+    name : str
+        Thread name identifier.
+    params : list
+        Parameter bundle containing configuration, source, target temporary directory,
+        filenames list, copy queue list, and username.
+
+    Attributes
+    ----------
+    name : str
+        Thread name.
+    id : int
+        Thread ID.
+    conf : repConfig
+        Repository configuration object.
+    source : str
+        Target system source name.
+    tmpdir : str
+        Temporary working directory path.
+    filenames : list of str
+        Files assigned to this worker thread.
+    tocopy : list of str
+        Local files list to copy instead of downloading.
+    user : str
+        Username.
+    repo : object
+        Instantiated repository handler object.
+    """
     def __init__(self, ThreadID, name, params):
         threading.Thread.__init__(self)
         self.name=name
@@ -92,6 +226,7 @@ class getFiles(threading.Thread):
         self.repo = self.conf.repclass['image']        
         
     def run(self):
+        """Execute multi-threaded file copy or remote FTP download operations."""
         try:
             if self.repo.method=="ftp":
 
@@ -119,6 +254,14 @@ class getFiles(threading.Thread):
                 ftp.close()            
         
 def main(data):
+    """CGI main entry point for running image processing and analysis jobs.
+
+    Parameters
+    ----------
+    data : cgi.FieldStorage
+        HTTP POST request payload containing user, operation type, source system,
+        file list, and application URL.
+    """
     user = data['user'].value
     op = data['op'].value
     source = data['source'].value

@@ -1,3 +1,16 @@
+<?php
+/**
+ * JS9 Interactive Application Container Template.
+ *
+ * Renders JS9 GUI components (menubar, canvas, colorbar, magnifier, panner, info,
+ * navigation tree, plugins, and public/personal flag notes) for image analysis.
+ *
+ * @package    AIDA
+ * @subpackage Views\Images
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+ ?>
 <div class="row">
 	<div>
 		<section class="panel">

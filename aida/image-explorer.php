@@ -1,3 +1,16 @@
+<?php
+/**
+ * Image Explorer JS9 Main View.
+ *
+ * Renders the main container page for the JS9 web-based astronomical FITS image viewer,
+ * loading JS9 dependencies, plugins, and custom styles.
+ *
+ * @package    AIDA
+ * @subpackage Views\Images
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 <!doctype html>
 <html class="fixed">
 	<?php 

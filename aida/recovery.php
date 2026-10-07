@@ -1,3 +1,17 @@
+<?php
+/**
+ * Password Recovery Page View.
+ *
+ * Provides the user interface for password recovery. Renders the password reset form
+ * if valid key, email, and action query string parameters are present, or an email
+ * input form to request a password recovery link.
+ *
+ * @package    AIDA
+ * @subpackage Views\Auth
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 <!doctype html>
 <html class="fixed">
 	<head>

@@ -1,3 +1,16 @@
+<?php
+/**
+ * Available Systems Information View.
+ *
+ * Renders an overview panel listing available systems for a specific data subject/origin
+ * and provides interactive inspection of system parameter metadata.
+ *
+ * @package    AIDA
+ * @subpackage Views
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 <!doctype html>
 <html class="fixed">
 	<?php
@@ -14,7 +27,13 @@
 						<h2 class="panel-title">Systems Info</h2>
 					</header>
 					<div class="panel-body">
-						<?php if(isset($_GET['subj'])){
+						<?php 
+							/**
+							 * Process subject parameter from URL query string.
+							 *
+							 * @var string $origin Data origin identifier (e.g., 'hktm').
+							 */
+							if(isset($_GET['subj'])){
   								$origin = $_GET['subj'];
 								render_systems($origin);
 							}

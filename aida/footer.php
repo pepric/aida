@@ -1,11 +1,31 @@
 <?php   
-
+/**
+ * Landing Page Footer Component.
+ *
+ * Renders the global footer section specifically for the landing page (index/home).
+ * Includes useful external links, project description, organizational logos,
+ * and developer contact information.
+ *
+ * @package    AIDA
+ * @subpackage Views\Components
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
 	$homeurl = 'index.php';                               
 	$homepage = "";
 	$path = $_SERVER['REQUEST_URI'];
 	$current_array = explode("/", $path);
 	$currentpage = end($current_array);
-	//only for landing page
+
+/**
+ * Check if the requested URI corresponds to the landing page URL.
+ *
+ * @var string   $homeurl       Default homepage filename ('index.php').
+ * @var string   $homepage      Empty string representing root landing page.
+ * @var string   $path          Current request URI string ($_SERVER['REQUEST_URI']).
+ * @var array    $current_array Segmented URI elements array.
+ * @var string   $currentpage   Target page filename evaluated from request URI.
+ */
 	if($currentpage == $homepage or $currentpage == $homeurl) {?>
 		<footer class = "page-footer">
 			<div class = "col-md-2"></div>

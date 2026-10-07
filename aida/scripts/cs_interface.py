@@ -1,5 +1,18 @@
 #!/usr/bin/python
 
+"""
+Client-Server Interface Dispatcher.
+
+This module defines the central interface class and methods handling AJAX and CGI
+requests from the web frontend[cite: 13]. It manages operations such as database connectivity
+checks, date delta validations, file download/conversion, background report
+monitoring, user account administration, flag status reporting, and machine
+learning stored experiment queries.
+
+@package AIDA
+@module cs_interface
+"""
+
 import json
 import cgi, cgitb
 import classes
@@ -17,10 +30,24 @@ import ast
 import traceback
 
 class Interfaces(object):
+    """Container for client-server API interface methods invoked via CGI dispatch."""
     def __init__(self):
+        """Initialize the Interfaces class instance."""
         pass
 
     def check_connection(*args):
+        """Verify local database connectivity status.
+
+        Parameters
+        ----------
+        *args : tuple
+            Variable positional arguments containing request payload.
+
+        Returns
+        -------
+        dict
+            Dictionary containing 'error' key (0 for success, 1 for failure).
+        """
         error = 0
         try:
             connconfig = util.repConfig().data['local_db']
@@ -31,6 +58,18 @@ class Interfaces(object):
         return {'error' : error}
       
     def check_deltat(*args):
+        """Validate whether requested datetime range exceeds maximum configured plot threshold.
+
+        Parameters
+        ----------
+        *args : tuple
+            Contains CGI request arguments with source, tstart, tend, and usecase parameters.
+
+        Returns
+        -------
+        out : dict
+            Dictionary containing 'delta' flag (1 if threshold exceeded, 0 otherwise).
+        """
         #get data from client
         source = args[0]["source"].value
         tstart = util.format_date(args[0]["tstart"].value)
@@ -53,6 +92,18 @@ class Interfaces(object):
         return out
 
     def direct_download(*args):
+        """Retrieve direct download URL for repository file if supported by repository class.
+
+        Parameters
+        ----------
+        *args : tuple
+            Contains CGI request arguments with filename, source, and origin parameters.
+
+        Returns
+        -------
+        dict
+            Dictionary containing 'result' status code or base download URL.
+        """
         #get data from args
         filename = args[0]["filename"].value      
         source = args[0]["source"].value.lower()
@@ -76,6 +127,18 @@ class Interfaces(object):
                 return {"result" : repo.BASE_DSS_URL}
     
     def file_to_image(*args):
+        """Download remote repository image file into user's temporary working directory.
+
+        Parameters
+        ----------
+        *args : tuple
+            Contains CGI request arguments with username, filename, source (s), and origin (o).
+
+        Returns
+        -------
+        out : dict
+            Dictionary containing 'result' filename or error string.
+        """
         #get data from args
         username = args[0]["username"].value
         filename = args[0]["filename"].value      
@@ -126,6 +189,18 @@ class Interfaces(object):
         return out          
  
     def get_repo_list(*args):
+        """Inspect repository module code and return available class names and access methods.
+
+        Parameters
+        ----------
+        *args : tuple
+            Variable positional arguments.
+
+        Returns
+        -------
+        out : dict
+            Dictionary containing list of available repository classes and methods.
+        """        
         with open("repos.py","r") as repo:
             source=repo.read()
         p = ast.parse(source)
@@ -140,6 +215,18 @@ class Interfaces(object):
         return out
         
     def running_reports(*args):
+        """Fetch active running reports, check process IDs, and update report execution progress.
+
+        Parameters
+        ----------
+        *args : tuple
+            Contains CGI request parameters with username and user role.
+
+        Returns
+        -------
+        out : dict
+            DataTables formatted payload dictionary containing report progress and actions.
+        """
         maindir = "users/config"        
         username = args[0]["username"].value
         role = args[0]["role"].value
@@ -221,6 +308,18 @@ class Interfaces(object):
         return out            
       
     def users_tables(*args):
+        """Retrieve list of registered users filtered by activation status for administrative views.
+
+        Parameters
+        ----------
+        *args : tuple
+            Contains CGI request arguments with account status filter flag.
+
+        Returns
+        -------
+        out : dict
+            DataTables formatted dictionary containing user record details and administrative actions.
+        """
         status = int(args[0]["status"].value)
         data = []        
         try:        
@@ -268,6 +367,18 @@ class Interfaces(object):
         return out      
 
     def flagged_reports(*args):
+        """Fetch list of flagged report files and render metadata summaries for display.
+
+        Parameters
+        ----------
+        *args : tuple
+            Variable positional arguments.
+
+        Returns
+        -------
+        out : dict
+            DataTables formatted dictionary containing flagged report items and action links.
+        """
         data = []
         maindir = "users/report"
         extension = ".pdf"
@@ -321,6 +432,18 @@ class Interfaces(object):
         return out 
       
     def flagged_tables(*args):
+        """Retrieve flagged parameters or experiments for display in dashboard DataTables.
+
+        Parameters
+        ----------
+        *args : tuple
+            Contains CGI request arguments with username and target table list.
+
+        Returns
+        -------
+        out : dict
+            DataTables formatted payload dictionary grouped by table identifier.
+        """
         username = args[0]["user"].value
         tbl = args[0].getlist('tbl[]')
         tbl_map = {'datatable-anomalies' : {"mode" : "par", "archive" : "public"}, 
@@ -447,6 +570,13 @@ class Interfaces(object):
         return out        
             
     def resume_report(*args):
+        """Resume or restart execution of a paused, failed, or scheduled report generation process.
+
+        Parameters
+        ----------
+        *args : tuple
+            Contains CGI request payload with runid, username, configfile, period, start_time, and iodaurl.
+        """
         #get settings       
         username = args[0]["username"].value
         runid = args[0]["runid"].value
@@ -484,6 +614,18 @@ class Interfaces(object):
         os.system(cmd)
 
     def set_labels(*args):
+        """Fetch physical measurement units or ADU label for a target system parameter.
+
+        Parameters
+        ----------
+        *args : tuple
+            Contains CGI request parameters adu, par, s (system), and o (origin).
+
+        Returns
+        -------
+        result : dict
+            Dictionary containing formatted units string label.
+        """
         adu = args[0]["adu"].value
         par = args[0]["par"].value
         s = args[0]["s"].value
@@ -501,6 +643,18 @@ class Interfaces(object):
         return result        
         
     def view_plot_from_db(data):
+        """Retrieve stored plot or Machine Learning experiment record details from local database.
+
+        Parameters
+        ----------
+        data : cgi.FieldStorage or dict
+            Contains plotid and exptype parameters.
+
+        Returns
+        -------
+        result : dict
+            Database row record containing stored plot payload and configuration.
+        """
 
         #get plot id        
         plotid = data["plotid"].value
@@ -517,6 +671,18 @@ class Interfaces(object):
         return result
         
     def flagged_images(data):
+        """Retrieve flag status and user notes for a specific image file.
+
+        Parameters
+        ----------
+        data : cgi.FieldStorage or dict
+            Contains user and filename parameters.
+
+        Returns
+        -------
+        out : dict
+            DataTables formatted dictionary containing flag image paths and user notes.
+        """
         user = data['user'].value
         fullname = data['filename'].value
         filename = fullname.split("/")[-1]
@@ -546,10 +712,34 @@ class Interfaces(object):
         return out
 
     def update_systems(data):
+        """Pass through system settings data structure.
+
+        Parameters
+        ----------
+        data : cgi.FieldStorage or dict
+            Input system settings payload.
+
+        Returns
+        -------
+        dict
+            Output data dictionary.
+        """
         out = {"data" : data}
         return data
 
     def mlstored(*args):
+        """Retrieve list of stored Machine Learning experiments and download action links.
+
+        Parameters
+        ----------
+        *args : tuple
+            Variable positional arguments.
+
+        Returns
+        -------
+        out : dict
+            DataTables formatted dictionary containing stored ML model records and file links.
+        """
         data = []
 # #        maindir = "users/report"
 # #        extension = ".pdf"
@@ -597,6 +787,20 @@ class Interfaces(object):
 
 
 def set_status_img(status):
+    """Map status string token to corresponding UI image icon file path and numerical ID.
+
+    Parameters
+    ----------
+    status : str
+      Status string token ('nd', 'ok', 'warning', 'serious', 'Not Defined').
+
+    Returns
+    -------
+    img : str
+      Relative file path to status icon image.
+    imid : str
+      Numerical string identifier mapped to status.
+    """
     imgdir = "assets/images/"
     if status == "Not Defined":
         status = "nd"
@@ -606,6 +810,13 @@ def set_status_img(status):
     return img, imid
         
 def main(data):
+    """CGI main entry point executing requested interface method dynamically based on action parameter.
+
+      Parameters
+      ----------
+      data : cgi.FieldStorage
+          HTTP POST request payload containing action parameter and method specific parameters.
+      """
     try:
         action = data['action'].value
         method = getattr(Interfaces, action)

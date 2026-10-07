@@ -1,3 +1,23 @@
+/**
+ * Frontend Form Handling and Authentication Utilities.
+ *
+ * Provides functions for password hashing (SHA-512), user registration submission,
+ * password reset requests, and password change confirmation via AJAX.
+ *
+ * @package    AIDA
+ * @subpackage JS\Auth
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+ 
+/**
+ * Hashes a password field using SHA-512 and submits the form or executes an AJAX request.
+ *
+ * @param {HTMLFormElement} yourform  The target HTML form element.
+ * @param {HTMLInputElement} password The password input element to hash and clear.
+ * @param {string}          frompage  Action context ('login', 'new', 'change').
+ * @param {string}          [addmsg=""] Additional message string to append to alerts.
+ */ 
 function formhash(yourform, password, frompage, addmsg="") {
    // Create input that will be used as output field for cripted pwd
    var p = document.createElement("input");
@@ -111,6 +131,12 @@ function formhash(yourform, password, frompage, addmsg="") {
     }
 }
 
+/**
+ * Validates the signup form and invokes formhash for user registration.
+ *
+ * @param {HTMLFormElement} yourform The signup HTML form element.
+ * @param {string}          [msg=""] Optional additional notice message.
+ */
 function requestnewuser(yourform, msg=""){
     if($('#signupform').validate().form()) {
 		pwd = document.getElementById("password");
@@ -118,6 +144,9 @@ function requestnewuser(yourform, msg=""){
     }		
 }
 
+/**
+ * Validates the password reset form and sends an AJAX request to initiate recovery.
+ */
 function sendreset(){
 	if($('#resetform').validate().form()) {
 		var email = document.getElementById("email").value;
@@ -137,6 +166,9 @@ function sendreset(){
 	}		
 }
 
+/**
+ * Validates the update password form, hashes the new password, and submits via AJAX.
+ */
 function pwd_confirm(){
     if($('#updatepwd').validate().form()) {  
 		var email = document.getElementById('email').value

@@ -1,13 +1,26 @@
+<?php
+/**
+ * Analyze Local Data Page View.
+ *
+ * Provides the user interface for uploading local data files (FITS, CSV) via chunked upload
+ * or selecting previously uploaded temporary files to execute statistical and plotting tasks.
+ *
+ * @package    AIDA
+ * @subpackage Views
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+
+$title = "Analyze Local Data";
+include("header.php"); 
+?>
+
 <!doctype html>
 <html class="fixed">
-	<?php
-		$title = "Analyze Local Data";
-		include("header.php"); 
-	?>
-		<script src="assets/vendor/jquery/jquery.js"></script> 
-		<script src="assets/vendor/jquery-browser-mobile/jquery.browser.mobile.js"></script> 
-		<script src="assets/javascripts/lsst/jquery-progressbar.min.js"></script>  
-		<script src="assets/vendor/plupload/js/plupload.full.min.js"></script>
+	<script src="assets/vendor/jquery/jquery.js"></script> 
+	<script src="assets/vendor/jquery-browser-mobile/jquery.browser.mobile.js"></script> 
+	<script src="assets/javascripts/lsst/jquery-progressbar.min.js"></script>  
+	<script src="assets/vendor/plupload/js/plupload.full.min.js"></script>
 
 
 <script>

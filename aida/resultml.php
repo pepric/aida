@@ -1,3 +1,16 @@
+<?php
+/**
+ * Machine Learning Results Display View Template.
+ *
+ * Renders the page layout and container panels for displaying Machine Learning
+ * execution results and output scatter plots.
+ *
+ * @package    AIDA
+ * @subpackage Views\MachineLearning
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 <!doctype html>
 <html class="fixed">
 	<?php include("header.php"); ?>

@@ -1,3 +1,16 @@
+<?php
+/**
+ * Stored Machine Learning Experiments Dashboard Panel View.
+ *
+ * Renders the dashboard panel table listing executed Machine Learning experiments,
+ * including technique, model type, data source, date range, user, generation date, and download links.
+ *
+ * @package    AIDA
+ * @subpackage Views\MachineLearning
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 <div class="panel-body panel-dash">
 	<div class="col-md-12">
 		<header class="panel-heading">

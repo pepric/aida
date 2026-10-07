@@ -1,5 +1,15 @@
 #!/usr/bin/python
 
+"""
+Report I/O and Document Export Pipeline.
+
+This module manages parallel XML report creation, data aggregation from HDF5 
+storage, range checking, XML merging, and PDF document generation.
+
+@package AIDA
+@module report_io
+"""
+
 import numpy as np
 from    os          import path, environ, listdir, remove
 import ast
@@ -28,6 +38,47 @@ from pdfcreator import reportTemplate, xmlData, pdfBuilder, MyDocTemplate
 import traceback
 
 class xmlThread(threading.Thread):
+    """Multithreaded worker for compiling system-level XML report data.
+
+    Parameters
+    ----------
+    ThreadID : int
+        Thread numerical identifier.
+    name : str
+        Thread name.
+    s : str
+        System source identifier.
+    conf : reportConfig
+        Report configuration instance.
+    connconfig : dict
+        Database connection configuration.
+    runid : int or str
+        Experiment run ID.
+    nprocs : int
+        Number of multiprocessing workers.
+    parpos : dict
+        Parameter allocation mapping.
+
+    Attributes
+    ----------
+    source : str
+        System source name.
+    conf : reportConfig
+        Report configuration reference.
+    connconfig : dict
+        Database connection settings.
+    runid : int or str
+        Experiment run ID.
+    nprocs : int
+        Worker process count.
+    error_list : list of dict
+        Accumulated execution error dictionaries.
+    origins : dict
+        Origins dictionary for the target system.
+    parpos : dict
+        Parameter chunk mapping.
+    """
+    
     def __init__(self, ThreadID, name, s, conf, connconfig, runid, nprocs, parpos):
         threading.Thread.__init__(self)
         self.name=name
@@ -42,6 +93,7 @@ class xmlThread(threading.Thread):
         self.parpos = parpos        
 
     def run(self):
+        """Execute parallel XML report dataset compilation."""
 
         ############### FOR BENCHMARK ###############    
         ants, ants_ts = util.get_time()
@@ -156,6 +208,28 @@ class xmlThread(threading.Thread):
         ############################################################
 
 def check_out_range(data,minrange,maxrange,hminrange=-999,hmaxrange=-999):
+    """Identify values violating soft or hard limit range thresholds.
+
+    Parameters
+    ----------
+    data : dict
+        Data dictionary containing 'dates' and 'vals' lists.
+    minrange : float or int
+        Soft minimum threshold.
+    maxrange : float or int
+        Soft maximum threshold.
+    hminrange : float or int, optional
+        Hard minimum threshold (default is -999).
+    hmaxrange : float or int, optional
+        Hard maximum threshold (default is -999).
+
+    Returns
+    -------
+    outlist : list of tuple
+        Soft range violation (timestamp, value) tuples.
+    houtlist : list of tuple
+        Hard range violation (timestamp, value) tuples.
+    """
 
     if minrange == -999:
         minrange = -np.inf
@@ -177,6 +251,22 @@ def check_out_range(data,minrange,maxrange,hminrange=-999,hmaxrange=-999):
     return outlist, houtlist
         
 def check_out_range_GOOD(data,minrange,maxrange):
+    """Identify values violating soft limit range thresholds.
+
+    Parameters
+    ----------
+    data : dict
+        Data dictionary containing 'dates' and 'vals' lists.
+    minrange : float or int
+        Soft minimum limit.
+    maxrange : float or int
+        Soft maximum limit.
+
+    Returns
+    -------
+    outlist : list of tuple
+        List of (timestamp, value) tuples exceeding range.
+    """
 
     if minrange == -999:
         minrange = -np.inf
@@ -192,6 +282,22 @@ def check_out_range_GOOD(data,minrange,maxrange):
     return outlist
     
 def set_report_filename(conf, id, now):
+    """Construct standardized report output filename string.
+
+    Parameters
+    ----------
+    conf : reportConfig
+        Report configuration instance.
+    id : int or str
+        Experiment run ID.
+    now : datetime
+        Creation datetime object.
+
+    Returns
+    -------
+    filename : str
+        Formatted report filename.
+    """
 
     #get period
     period = conf.period
@@ -213,6 +319,32 @@ def set_report_filename(conf, id, now):
     return filename
   
 def xml_collect_results(procid, pardict, s, conf, connconfig, runid, parpos, errors):
+    """Multiprocess worker function collecting plot and statistics data into XML files.
+
+    Parameters
+    ----------
+    procid : int
+        Worker process index.
+    pardict : dict
+        Partitioned parameters dictionary.
+    s : str
+        System source identifier.
+    conf : reportConfig
+        Report configuration instance.
+    connconfig : dict
+        Database connection settings.
+    runid : int or str
+        Experiment run ID.
+    parpos : dict
+        Parameter chunk mapping.
+    errors : list
+        Shared multiprocessing list for logging errors.
+
+    Returns
+    -------
+    errors : list
+        Updated error log entries list.
+    """
     filerr = False  
     npars = 0
 
@@ -653,6 +785,20 @@ def xml_collect_results(procid, pardict, s, conf, connconfig, runid, parpos, err
     return errors  
 
 def xml_combine_output(conf, filename):
+    """Merge system XML fragments into unified report XML document.
+
+    Parameters
+    ----------
+    conf : reportConfig
+        Report configuration object.
+    filename : str
+        Output XML filename base.
+
+    Returns
+    -------
+    bool
+        True if combined XML was created successfully, False otherwise.
+    """
     base = ET.parse(conf.workdir+"general.xml").getroot()
     for f in conf.systems:
         listfiles = []
@@ -701,6 +847,15 @@ def xml_combine_output(conf, filename):
         return False  
   
 def change_xml(tmpfile, filename):
+    """Expand temporary XML placeholders with dataset values from HDF5 files.
+
+    Parameters
+    ----------
+    tmpfile : str
+        Path to temporary XML file.
+    filename : str
+        Path to final XML report file.
+    """
     final = open(filename,"w")  
     with open(tmpfile) as xml_file:
         s = None
@@ -789,6 +944,21 @@ def change_xml(tmpfile, filename):
     final.close()  
 
 def xml_sys_errors(ET, root, conf, errors, inner_err):
+    """Append system error diagnostic elements to XML report tree.
+
+    Parameters
+    ----------
+    ET : module
+        ElementTree module reference.
+    root : Element
+        Parent XML root element node.
+    conf : reportConfig
+        Report configuration instance.
+    errors : dict
+        System error logs mapping.
+    inner_err : list
+        Thread error items list.
+    """
     #update errors dict with inner_err
     for el in inner_err:
         curr_sys = el["system"]
@@ -813,6 +983,17 @@ def xml_sys_errors(ET, root, conf, errors, inner_err):
                 err_tag.text = el["msg"]
 
 def xml_exp_info(ET, root, conf):
+    """Append experiment configuration metadata to XML report tree.
+
+    Parameters
+    ----------
+    ET : module
+        ElementTree module reference.
+    root : Element
+        Parent XML root element node.
+    conf : reportConfig
+        Report configuration instance.
+    """
     expinfo = ET.SubElement(root, "exp_info")
     ET.SubElement(expinfo, "tstart").text = str(conf.tstart)
     ET.SubElement(expinfo, "time_window").text = str(conf.t_window)
@@ -837,6 +1018,21 @@ def xml_exp_info(ET, root, conf):
 
 
 def xml_general_info(ET, root, connconfig, conf, creation):
+    """Append general metadata block to XML report tree.
+
+    Parameters
+    ----------
+    ET : module
+        ElementTree module reference.
+    root : Element
+        Parent XML root element node.
+    connconfig : dict
+        Database connection parameters.
+    conf : reportConfig
+        Report configuration object.
+    creation : str
+        Creation timestamp string.
+    """
     general = ET.SubElement(root, "general")
     ET.SubElement(general, "generation_date").text = creation
     ET.SubElement(general, "user").text = conf.user
@@ -849,6 +1045,32 @@ def xml_general_info(ET, root, connconfig, conf, creation):
     ET.SubElement(general, "operating_mode").text = owner['opmode']
 
 def xml_values_from_db(par,runid,acqid,subsystem,tbl_name,connection, nitems="one", max_runstep=1):
+    """Fetch report dataset values from database tables.
+
+    Parameters
+    ----------
+    par : str or list of str
+        Parameter name or parameter list.
+    runid : int or str
+        Experiment run ID.
+    acqid : str
+        Acquisition ID string.
+    subsystem : str
+        Subsystem identifier name.
+    tbl_name : str
+        Base table name string.
+    connection : PyMySQL connection
+        Active database connection.
+    nitems : str, optional
+        Result format type ('one' or 'all', default is "one").
+    max_runstep : int, optional
+        Maximum cadence step count (default is 1).
+
+    Returns
+    -------
+    res : dict or list of dict
+        Query result rows.
+    """
     if isinstance(par, list):
         statement = "WHERE runID = '"+str(runid)+"' AND (param='"
         add_statement = "' OR param='".join(par)
@@ -865,28 +1087,31 @@ def xml_values_from_db(par,runid,acqid,subsystem,tbl_name,connection, nitems="on
     return res
 
 def create_xml_report(conf, runid, connconfig, nprocs, errors, parpos):
-    """Generate the xml report containing all the results of analysis for all systems
+    """Generate XML report containing analysis results for all configured systems.
 
     Parameters
-    --------
-        conf :
-        runid : str
-            experiment id assigned by AIDA
-        connconfig : dict
-            dictionary containing connection info to local AIDA DB
+    ----------
+    conf : reportConfig
+        Report configuration object.
+    runid : int or str
+        Experiment run ID.
+    connconfig : dict
+        Database connection settings.
+    nprocs : int
+        Number of worker processes per thread.
+    errors : dict
+        Accumulated execution errors mapping.
+    parpos : dict
+        Parameter allocations dictionary.
 
     Returns
-    --------
-        bool,
-        True if the xml output has been created, False otherwise
-
-        creation : string,
-            creation date
-
-        filename : string or None,
-            if not None, the file name of created xml
-
-
+    -------
+    created : bool
+        True if XML report was generated, False otherwise.
+    creation : str
+        Creation timestamp string.
+    filename : str or None
+        Generated XML filename base, or None on failure.
     """
 
     ############### FOR BENCHMARK ###############    
@@ -962,18 +1187,19 @@ def create_xml_report(conf, runid, connconfig, nprocs, errors, parpos):
         return False, creation, None
 
 def create_pdf_report(filename, plotfromfile = False):
-    """Generate the pdf report containing all the results of analysis for all systems
+    """Generate PDF report document from XML report contents.
 
     Parameters
-    --------
-        filename : string,
-            the file name of realated xml
+    ----------
+    filename : str
+        Base filename of target XML report.
+    plotfromfile : bool, optional
+        If True, reads pre-rendered plot figures from disk (default is False).
 
     Returns
-    --------
-        bool,
-        True if the pdf output has been created, False otherwise
-
+    -------
+    bool
+        True if PDF file was generated, False otherwise.
     """
 
     now = util.utc_now()
@@ -1088,6 +1314,26 @@ def create_pdf_report(filename, plotfromfile = False):
         return False
       
 def make_plot_file(data, labels, nodata, pclass, filename):
+    """Render plot figures and save them as PNG image files.
+
+    Parameters
+    ----------
+    data : object
+        Plot dataset structure.
+    labels : list of str
+        Parameter labels list.
+    nodata : list of str
+        Missing data parameters list.
+    pclass : object
+        Plot class instance.
+    filename : str
+        Output file path base string.
+
+    Returns
+    -------
+    error : bool
+        True if any plot creation failed, False otherwise.
+    """
     error = False
     created = []
     if pclass.splitplot == 0:
@@ -1113,6 +1359,15 @@ def make_plot_file(data, labels, nodata, pclass, filename):
     return error        
                    
 def xml_error_pdf(conf, filename):
+    """Append PDF generation failure error tag to general XML report.
+
+    Parameters
+    ----------
+    conf : reportConfig
+        Report configuration instance.
+    filename : str
+        XML report filename base.
+    """
     base = ET.parse(conf.workdir+"general.xml").getroot()
 
     notes = base.find("notes")

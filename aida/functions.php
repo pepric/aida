@@ -1,4 +1,17 @@
 <?php
+/**
+ * AJAX Action Handler and Core Backend Helper Functions.
+ *
+ * Serves as the main AJAX dispatch controller for frontend requests (handling user authentication,
+ * system settings, database management, report execution, file operations, and machine learning storage)
+ * and provides global core helper functions.
+ *
+ * @package    AIDA
+ * @subpackage Core
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+
 if(isset($_POST['action']) && !empty($_POST['action'])) {
     $action = $_POST['action'];
     switch($action) {
@@ -238,6 +251,16 @@ if(isset($_POST['action']) && !empty($_POST['action'])) {
     }
 }
 
+/**
+ * Build dynamic configuration option lists for repository parameter selection.
+ *
+ * @param string $source   Source system name.
+ * @param string $usecase  Data origin/use-case identifier.
+ * @param string $opmode   Active operating mode.
+ * @param string $filename Target repository settings JSON filename.
+ * @param int    $idx      Index of the required key in configuration array.
+ * @return array Associative array containing the upper-cased key and value list.
+ */
 function build_options($source,$usecase,$opmode,$filename,$idx){
 	//get repo from opmode
 	$source_conf = read_json_file(strtolower($source).".conf");
@@ -261,7 +284,12 @@ function build_options($source,$usecase,$opmode,$filename,$idx){
 } 
 
 
-
+/**
+ * Delete a configuration file record from the database.
+ *
+ * @param string $filename Name of the configuration file to remove.
+ * @return void
+ */
 function remove_configfile_db($filename){
 
 	$config = read_config_json("config.json");
@@ -276,11 +304,22 @@ function remove_configfile_db($filename){
 	mysqli_close($con);
 }
 
+/**
+ * Read web application settings from JSON configuration.
+ *
+ * @return array Decoded web application configuration array.
+ */
 function read_webapp_settings(){
 	$config = read_json_file("settings/webapp.json");	
 	return $config;
 }
 
+/**
+ * Retrieve display title for a specific plot type.
+ *
+ * @param string $p Plot identifier string.
+ * @return string Plot title string.
+ */
 function get_plot_title($p){
 
 	$config = read_config_json("config.json");
@@ -299,6 +338,11 @@ function get_plot_title($p){
   	return $value[0];
 }
 
+/**
+ * Query the database for the list of supported plot types.
+ *
+ * @return mysqli_result|bool Query result containing plot records.
+ */
 function get_plots_list(){
 
 	$config = read_config_json("config.json");
@@ -314,6 +358,13 @@ function get_plots_list(){
   	return $result;
 }
 
+/**
+ * Query measurement units for a given parameter.
+ *
+ * @param string $p   Parameter name.
+ * @param string $tbl Target database table name.
+ * @return array Associative array containing unit string.
+ */
 function get_units($p, $tbl){
 	$config = read_config_json("config.json");
 	$host = $config['host'];
@@ -335,7 +386,12 @@ function get_units($p, $tbl){
   	return $result;  
   
 }
-
+/**
+ * Delete an entry from the user history log table.
+ *
+ * @param int $id Record primary key ID.
+ * @return void
+ */
 function remove_history($id){
 
 	$config = read_config_json("config.json");
@@ -353,7 +409,12 @@ function remove_history($id){
   
 }
 
-
+/**
+ * Unlink and delete a PDF file from the filesystem.
+ *
+ * @param mixed $filename File object or path string.
+ * @return mixed The input filename argument.
+ */
 function deletepdf($filename){
 	unlink($filename->getRealPath());
 				$listfile = fopen('prova.txt', "w") or die("Unable to open file!");
@@ -361,7 +422,12 @@ function deletepdf($filename){
 				fclose($listfile);	
 	return $filename;
 }
-
+/**
+ * Read and decode a JSON file into an associative array.
+ *
+ * @param string $file Path to JSON file.
+ * @return array|null Decoded JSON data.
+ */
 function read_json_file($file){
 	$strJsonFileContents = file_get_contents($file);
 	$strJsonFileContents = str_replace("\\", "/",$strJsonFileContents);
@@ -370,13 +436,23 @@ function read_json_file($file){
 	return $array;
 }
 
-
+/**
+ * Read local database connection settings from configuration JSON.
+ *
+ * @param string $file Configuration file path.
+ * @return array Local database settings array.
+ */
 function read_config_json($file){
 	$array = read_json_file($file);	
 	$conf = $array["local_db"];
 	return $conf;
 }
-
+/**
+ * Read temporary file directory path from configuration JSON.
+ *
+ * @param string $file Configuration file path.
+ * @return string Temporary directory path.
+ */
 function read_tmpdir_json($file){
 	$array = read_json_file($file);
 	$tmpdir = $array["temp_file_dir"];
@@ -385,7 +461,12 @@ function read_tmpdir_json($file){
 }
 
 
-
+/**
+ * Purge all files and subdirectories from a user's temporary folder.
+ *
+ * @param string $username User folder owner.
+ * @return void
+ */
 function empty_dir($username){
   	$tmpdir = "users/".$username."/tmp";
 	$it = new RecursiveDirectoryIterator($tmpdir, RecursiveDirectoryIterator::SKIP_DOTS);
@@ -400,14 +481,25 @@ function empty_dir($username){
 	}
 }
 
-
+/**
+ * Read administrator email address from configuration JSON.
+ *
+ * @param string $file Configuration file path.
+ * @return string Administrator email address.
+ */
 function read_admin_json($file){
 	$array = read_json_file($file);	
 	$admin = $array["admin_email"];
 	
 	return $admin;
 }
-
+/**
+ * Query parameter values for a specific science QLA subsystem.
+ *
+ * @param string $prod_cat  Parameter name.
+ * @param string $prod_sys  Subsystem name.
+ * @return void
+ */
 function fetch_values($prod_cat, $prod_sys){
 
 	$config = read_config_json("config.json");
@@ -433,7 +525,14 @@ function fetch_values($prod_cat, $prod_sys){
 	echo $msg;
 	mysqli_close($con);
 }
-
+/**
+ * Query and render parameter options for a subsystem.
+ *
+ * @param string $prod_cat  Subsystem category name.
+ * @param string $prod_name System base name.
+ * @param string $filter    Optional extra filter. Default empty string.
+ * @return void
+ */
 function fetch_values_subsystem($prod_cat, $prod_name, $filter=""){
 
 	$config = read_config_json("config.json");
@@ -481,7 +580,15 @@ function fetch_values_subsystem($prod_cat, $prod_name, $filter=""){
 	mysqli_close($con);	
 	
 }
-
+/**
+ * Populate select dropdown options from database table records.
+ *
+ * @param string $table    Target database table.
+ * @param string $column   Column to retrieve.
+ * @param string $where    SQL WHERE clause condition.
+ * @param int    $distinct Whether to group by distinct column values. Default 0.
+ * @return void
+ */
 function populate_dropdown($table, $column, $where, $distinct=0){
 	$config = read_config_json("config.json");
 	$host = $config['host'];
@@ -560,7 +667,12 @@ function populate_dropdown($table, $column, $where, $distinct=0){
 		}
 	}
 }
-
+/**
+ * Retrieve detector layer ID for a specific detector coordinate.
+ *
+ * @param int|string $detcoor Detector coordinate ID.
+ * @return string Layer identifier string.
+ */
 function get_det_layer($detcoor){
 	$config = read_config_json("config.json");
 	$host = $config['host'];
@@ -602,7 +714,15 @@ function get_det_layer($detcoor){
 	
 	
 }
-
+/**
+ * Query local file records matching date range and subsystem.
+ *
+ * @param string $source    Data source.
+ * @param string $subsystem Subsystem name.
+ * @param int    $start     UTC start timestamp.
+ * @param int    $end       UTC end timestamp.
+ * @return mysqli_result|bool Result set object.
+ */
 function get_file_list($source, $subsystem, $start, $end){
 	$config = read_config_json("config.json");
 	$host = $config['host'];
@@ -639,7 +759,11 @@ function get_file_list($source, $subsystem, $start, $end){
 	
 	return $result;	
 }
-
+/**
+ * Fetch and render checkbox controls for available statistical estimators.
+ *
+ * @return void
+ */
 function populate_stats(){
 	$config = read_config_json("config.json");
 	$host = $config['host'];
@@ -691,8 +815,13 @@ function populate_stats(){
 }
 
 
-// LOGIN FUNCTIONS
-
+/**
+ * Authenticate login credentials and start user session.
+ *
+ * @param string $email User email address.
+ * @param string $p     Plaintext password.
+ * @return int 1 on success, 0 on failure.
+ */
 function process_login($email,$p){
 	$config = read_config_json("config.json");
 	$host = $config['host'];
@@ -712,7 +841,11 @@ function process_login($email,$p){
 }
 
 
-
+/**
+ * Start a secure, HTTP-only PHP user session.
+ *
+ * @return void
+ */
 function sec_session_start() {
         $session_name = 'euclid_iot_id'; // session name
         $secure = false; // true for https
@@ -724,7 +857,14 @@ function sec_session_start() {
         session_start(); // start php session.
         session_regenerate_id(); // Regenerate session and remove the old one.
 }
-
+/**
+ * Authenticate user credentials against database records and brute-force checks.
+ *
+ * @param string $email    User email.
+ * @param string $password User password.
+ * @param mysqli $mysqli   Active database connection.
+ * @return bool True on success, false on failure.
+ */
 function login($email, $password, $mysqli) {
    // Using 'prepared' sql statements it will not be possible to carry out a SQL injection attack.
    if ($stmt = $mysqli->prepare("SELECT id, username, password, salt, role, active, last_login FROM members WHERE email = ? LIMIT 1")) { 
@@ -791,7 +931,13 @@ function login($email, $password, $mysqli) {
       }
    }
 }
-
+/**
+ * Check if a user account is locked due to excessive failed login attempts.
+ *
+ * @param int    $user_id User account primary key.
+ * @param mysqli $mysqli  Active database connection.
+ * @return bool True if account is locked, false otherwise.
+ */
 function checkbrute($user_id, $mysqli) {
    // current timestamp
    $now = time();
@@ -810,7 +956,12 @@ function checkbrute($user_id, $mysqli) {
       }
    }
 }
-
+/**
+ * Verify active session login validity.
+ *
+ * @param mysqli $mysqli Active database connection.
+ * @return bool True if session is valid, false otherwise.
+ */
 function login_check($mysqli) {
    // Check session variables
    if(isset($_SESSION['user_id'], $_SESSION['username'], $_SESSION['login_string'])) {
@@ -848,7 +999,12 @@ function login_check($mysqli) {
    }
 }
 
-// password reset
+/**
+ * Initiate password reset process and send recovery link via email.
+ *
+ * @param string $email User email address.
+ * @return array Associative array with error or success status message.
+ */
 function reset_pwd($email){ 
   
 	$config = read_config_json("config.json");
@@ -911,7 +1067,13 @@ function reset_pwd($email){
 	return array("error" =>$error);
 }
 
-
+/**
+ * Query flagged experiment records from database archives.
+ *
+ * @param mysqli $con Database connection object.
+ * @param string $usr Archive owner or 'stored' for public.
+ * @return mysqli_result|string Query result object or 'error'.
+ */
 function get_flagged($con, $usr){
   	if($usr == "stored"){
 		//query	
@@ -929,7 +1091,16 @@ function get_flagged($con, $usr){
 	return $result;
 }
 
-
+/**
+ * Retrieve configuration file records matching statement criteria.
+ *
+ * @param mysqli $con       Database connection object.
+ * @param string $type      Period type string.
+ * @param string $statement SQL condition mode ('exclude', 'only', 'user').
+ * @param string $table     Base table name.
+ * @param string $add_stat  Additional SQL clauses.
+ * @return mysqli_result|string Query result object or 'error'.
+ */
 function get_list($con, $type, $statement, $table, $add_stat){
 
 	//query
@@ -967,7 +1138,15 @@ function get_list($con, $type, $statement, $table, $add_stat){
 
 	return $result;
 }
-
+/**
+ * Query reports list combined with stored experiment flags.
+ *
+ * @param mysqli $con       Database connection object.
+ * @param string $type      Period type string.
+ * @param string $statement SQL condition statement.
+ * @param string $table     Base table name.
+ * @return mysqli_result|string Query result object or 'error'.
+ */
 function get_reports($con, $type, $statement, $table){
   
 	$sql = "SELECT ".$table."_files.*, stored_files.status_exp, stored_files.comment_exp, stored_files.date_exp, stored_files.username as flaguser FROM ".$table."_files LEFT JOIN stored_files ON ".$table."_files.filename=stored_files.filename";  
@@ -993,7 +1172,15 @@ function get_reports($con, $type, $statement, $table){
 
 	return $result;
 }
-
+/**
+ * Query temporary local file records for a user session.
+ *
+ * @param mysqli $con     Database connection object.
+ * @param string $usr     Username.
+ * @param string $ftype   Optional filetype filter.
+ * @param string $exclude Optional filetype exclusion filter.
+ * @return mysqli_result|string Query result object or 'error'.
+ */
 function get_tmp_files($con, $usr, $ftype="", $exclude=""){
 	$sql="SELECT * FROM local_files WHERE username = '$usr'";
   	if($ftype!=""){
@@ -1013,7 +1200,12 @@ function get_tmp_files($con, $usr, $ftype="", $exclude=""){
 	}
 	return $result;
 }
-
+/**
+ * Render `<option>` elements for temporary local files select control.
+ *
+ * @param mysqli_result $result Query result containing file records.
+ * @return void
+ */
 function render_select_files($result){
 	while($rs=$result->fetch_assoc()){
 		echo "<option value='".$rs['data_source']."'>".$rs['filename']."</option>";      
@@ -1023,7 +1215,13 @@ function render_select_files($result){
 
 
 }
-
+/**
+ * Render table rows for temporary local files list.
+ *
+ * @param mysqli_result $result Query result containing file records.
+ * @param string        $ftype  Filetype filter string. Default empty string.
+ * @return void
+ */
 function render_tmp_files($result,$ftype=""){
 	$dir = "users/".$_SESSION['username']."/tmp";  
 	while($rs=$result->fetch_assoc()){
@@ -1070,7 +1268,12 @@ function render_tmp_files($result,$ftype=""){
   
   
 }
-
+/**
+ * Render HTML table rows for generated reports view.
+ *
+ * @param mysqli_result $report Result set containing report records.
+ * @return void
+ */
 function render_view_reports($report){
 		
 	$maindir = "users/";
@@ -1139,7 +1342,12 @@ function render_view_reports($report){
 		echo "</tr>";
 	}
 }
-
+/**
+ * Render HTML table rows for configuration files view.
+ *
+ * @param mysqli_result $conflist Result set containing configuration file records.
+ * @return void
+ */
 function render_view_config($conflist){
 		
 		$maindir = "users/";
@@ -1264,7 +1472,12 @@ function render_view_config($conflist){
 	}
 }
 
-
+/**
+ * Render HTML table rows for executable configuration files list.
+ *
+ * @param mysqli_result $conflist Result set containing runnable configurations.
+ * @return void
+ */
 function render_run_config($conflist){
 		
 		$maindir = "users/";
@@ -1328,7 +1541,12 @@ function render_run_config($conflist){
 }
 
 
-/*****************************/
+/**
+ * Render HTML table rows for general stored files.
+ *
+ * @param mysqli_result $res Result set containing file records.
+ * @return void
+ */
 function render_view_files($res){
 
 		$maindir = "users/";
@@ -1380,7 +1598,13 @@ function render_view_files($res){
 		echo "</tr>";
 	}
 }
-
+/**
+ * Render `<option>` elements for table filter dropdowns.
+ *
+ * @param mysqli_result $res Result set object.
+ * @param string        $key Target record field or metadata key.
+ * @return void
+ */
 function render_search_select($res, $key){
 	mysqli_data_seek($res, 0);
   
@@ -1409,7 +1633,13 @@ function render_search_select($res, $key){
 }
 
 
-
+/**
+ * Render HTML table rows for flagged experiments and parameters.
+ *
+ * @param mysqli_result $res  Result set containing flagged records.
+ * @param string        $view View mode ('par' for parameter view, 'exp' for experiment view).
+ * @return void
+ */
 function render_view_flagged($res, $view){
 
 	$maindir = "users/";
@@ -1520,7 +1750,12 @@ function render_view_flagged($res, $view){
         }
 	}
 }
-
+/**
+ * Return status image URL and integer code for a flag status string.
+ *
+ * @param string $status Flag status string ('ok', 'warning', 'serious', etc.).
+ * @return array Tuple containing [image_url, status_code].
+ */
 function set_status_img($status){
 	$imgdir = "assets/images/";
 
@@ -1537,7 +1772,15 @@ function set_status_img($status){
     return array($img, $imid);
 
 }
-
+/**
+ * Delete a file record from database and remove associated file from disk.
+ *
+ * @param int    $id       Record primary key ID.
+ * @param string $filename Target filename.
+ * @param string $filepath Folder path or table indicator.
+ * @param string $admin    Username executing the deletion.
+ * @return void
+ */
 function delete_file($id, $filename, $filepath, $admin){
 	$config = read_config_json("config.json");
 	$host = $config['host'];
@@ -1583,7 +1826,11 @@ function delete_file($id, $filename, $filepath, $admin){
 }
 
 /*****************************/
-
+/**
+ * Read maximum allowed history records count per user.
+ *
+ * @return int Limit count.
+ */
 function get_history_num(){
 	
 	$config = read_json_file("config.json");
@@ -1593,7 +1840,16 @@ function get_history_num(){
 	}
 	return $history;
 }
-
+/**
+ * Log a user action or system operation to database and history text files.
+ *
+ * @param string $username  User executing the operation.
+ * @param string $msg       Operation description message.
+ * @param string $input     Input parameter metadata.
+ * @param string $output    Output metadata.
+ * @param string $expconfig Configuration metadata.
+ * @return int Inserted history record primary key ID.
+ */
 function update_history($username, $msg, $input, $output, $expconfig){
 
 
@@ -1641,7 +1897,21 @@ function update_history($username, $msg, $input, $output, $expconfig){
 	
 	return $id;
 }
-
+/**
+ * Update database configuration list index and validate JSON structure.
+ *
+ * @param string $file_name  Target configuration filename.
+ * @param string $path       Folder destination path.
+ * @param string $username   Owner username.
+ * @param string $t          Creation/Update timestamp string.
+ * @param string $period     Report periodicity string.
+ * @param float  $t_custom   Custom window hours.
+ * @param string $page       Execution page context ('new', 'edit', 'upload').
+ * @param string $orig_fname Original submitted filename.
+ * @param int    $iscomplete Completion status flag (0 or 1).
+ * @param string $action     Requested action string.
+ * @return array Tuple containing [result_bool, error_message, isrunning_flag].
+ */
 function update_configlist($file_name, $path, $username, $t, $period, $t_custom, $page, $orig_fname, $iscomplete, $action){
 
 	$today = $t;
@@ -1750,7 +2020,15 @@ function update_configlist($file_name, $path, $username, $t, $period, $t_custom,
 
 	return [$result, $e, $isrunning];
 }
-
+/**
+ * Validate "General Info" section of a report configuration JSON.
+ *
+ * @param array  $f        Decoded configuration array.
+ * @param string $period   Periodicity label.
+ * @param string $page     Page context string.
+ * @param float  $t_custom Custom time window value.
+ * @return array Tuple containing [error_str, tstart, sampling, nacq, dts, dtacq, window].
+ */
 function check_general_info($f, $period, $page, $t_custom){
 	//check if all parameters are present
 	$e="";
@@ -1882,7 +2160,13 @@ function check_general_info($f, $period, $page, $t_custom){
 	
 	return [$e, $tstart, $sampling, $nacq, $dts, $dtacq, $window];
 }
-
+/**
+ * Check for filename collisions and generate timestamped filename if existing.
+ *
+ * @param string $file_name Submitted filename.
+ * @param string $p         Destination subpath.
+ * @return array Tuple containing [resolved_filename, full_file_path, collision_flag].
+ */
 function checkname($file_name, $p){
 	$path = 'users/'.$p.'/';
 	$file = $path . $file_name;
@@ -1904,7 +2188,12 @@ function checkname($file_name, $p){
 	}
 	return [$file_name, $file, $changename];
 }
-
+/**
+ * Open a new MySQLi connection using settings read from a JSON file.
+ *
+ * @param string $file Path to database settings JSON file.
+ * @return mysqli Active MySQLi connection instance.
+ */
 function new_conn_from_file($file){
 	$config = read_config_json($file);
 	$host = $config['host'];
@@ -1920,7 +2209,12 @@ function new_conn_from_file($file){
 	return $con;
 }
 
-
+/**
+ * Set report configuration status to 'running' (isrunning = 1) in database.
+ *
+ * @param string $file_name Configuration filename.
+ * @return bool True on success, false on failure.
+ */
 function update_isrunning($file_name){
 
 	$updated = [];
@@ -1933,7 +2227,15 @@ function update_isrunning($file_name){
 	$updated['res'] = $result;
 	return $result;
 }		
-
+/**
+ * Query user account records filtered by active status.
+ *
+ * @param mysqli $con      Database connection object.
+ * @param int    $isactive Active status flag value.
+ * @param string $statement Query filter mode.
+ * @param string $table     Table name.
+ * @return mysqli_result|string Result set object or 'error'.
+ */
 function list_users($con, $isactive, $statement, $table){
 	
 
@@ -1962,7 +2264,13 @@ function list_users($con, $isactive, $statement, $table){
 
 	return $result;
 }
-
+/**
+ * Retrieve flag comments for a specific experiment file.
+ *
+ * @param string $filename File name.
+ * @param string $tbl      Target table or user name.
+ * @return mysqli_result|string Result set object or 'error'.
+ */
 function get_flag_notes($filename, $tbl){
 	
 	$config = read_config_json("config.json");
@@ -1993,7 +2301,13 @@ function get_flag_notes($filename, $tbl){
 	return $result;
 }
 
-
+/**
+ * Render table rows for flag notes modal dialog.
+ *
+ * @param mysqli_result $res  Result set containing flag notes.
+ * @param string        $save Scope mode ('public' or 'personal').
+ * @return void
+ */
 function render_flag_notes($res, $save){
 
 	while($rs=$res->fetch_assoc()){
@@ -2022,7 +2336,12 @@ function render_flag_notes($res, $save){
 
 
 
-
+/**
+ * Render HTML table rows for user administration table.
+ *
+ * @param mysqli_result $res Result set containing user records.
+ * @return void
+ */
 function render_view_users($res){
 		
 	while($rs=$res->fetch_assoc()){
@@ -2066,8 +2385,12 @@ function render_view_users($res){
 	}
 }
 
-// Function to delete all files 
-// and directories 
+/**
+ * Recursively delete files and directory trees.
+ *
+ * @param string $str Path to file or directory.
+ * @return bool True on success, false on failure.
+ */
 function deleteAll($str) { 
       
     // Check for files 
@@ -2096,7 +2419,13 @@ function deleteAll($str) {
         return @rmdir($str); 
     } 
 } 
-
+/**
+ * Activate initial administrator user account and update system notification email.
+ *
+ * @param string $user    Administrator username.
+ * @param string $newmail Notification email address.
+ * @return int Error code (0 for success).
+ */
 function activate1st($user, $newmail){
 	$error = 0;
 	$con = new_conn_from_file("config.json");
@@ -2141,7 +2470,16 @@ function activate1st($user, $newmail){
 	return $error;	
 }
 
-
+/**
+ * Execute administrative operation (activate, deactivate, remove) on user account.
+ *
+ * @param int    $id    User primary key ID.
+ * @param string $op    Operation code ('active', 'deactive', 'remove').
+ * @param string $user  Target username.
+ * @param string $email Target user email.
+ * @param string $admin Executing administrator username.
+ * @return void
+ */
 function update_user_db($id, $op, $user, $email, $admin){
 	$con = new_conn_from_file("config.json");
 	
@@ -2202,7 +2540,13 @@ function update_user_db($id, $op, $user, $email, $admin){
 	$con -> close();
 	echo($error);
 }
-
+/**
+ * Create or remove disk directory structure for a user account.
+ *
+ * @param string $username Target user folder name.
+ * @param string $op       Operation code ('active' or 'remove').
+ * @return int Error code (0 for success).
+ */
 function manage_user_dir($username, $op){
 
 	require("PHPMailer/src/PHPMailer.php");
@@ -2243,7 +2587,11 @@ function manage_user_dir($username, $op){
 	return 0;
 }
 
-
+/**
+ * Construct current base URL string from server environment variables.
+ *
+ * @return string Current base URL string.
+ */
 function get_url(){
     if(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on')   
          $url = "https://";   
@@ -2265,7 +2613,14 @@ function get_url(){
 }
 
 
-
+/**
+ * Dispatch user account status confirmation/notification email via SMTP.
+ *
+ * @param string $username Recipient username.
+ * @param string $email    Recipient email address.
+ * @param string $op       Operation performed ('active', 'deactive', 'remove').
+ * @return int Error code (0 on success, 1 on failure).
+ */
 function send_confirmation_email($username, $email, $op){
 	require("PHPMailer/src/Exception.php");	
 	//administrator email
@@ -2372,7 +2727,14 @@ function send_confirmation_email($username, $email, $op){
 	return $error;
 }
 
-
+/**
+ * Dispatch password recovery email with reset link via SMTP.
+ *
+ * @param string $username Recipient username.
+ * @param string $email    Recipient email address.
+ * @param string $key      Generated recovery key.
+ * @return int Error code (0 on success, 1 on failure).
+ */
 function send_reset_email($username, $email, $key){
 
 	
@@ -2478,7 +2840,13 @@ function send_reset_email($username, $email, $key){
 	return $error;
 }
 
-
+/**
+ * Fetch running report execution processes and return JSON data for DataTables.
+ *
+ * @param string $username Requesting username.
+ * @param string $role     User role ('admin' or 'user').
+ * @return void
+ */
 function get_running_reports($username, $role){
 	
 	$config = read_config_json("config.json");
@@ -2565,7 +2933,12 @@ function get_running_reports($username, $role){
 
 }
 
-
+/**
+ * Query currently active operating mode or list all available operating modes.
+ *
+ * @param bool $enabled True to fetch active mode name, false for full query result. Default true.
+ * @return string|mysqli_result Upper-cased active mode string or result set.
+ */
 function get_opmode($enabled=true){
 	$config = read_config_json("config.json");
 	$host = $config['host'];
@@ -2593,7 +2966,13 @@ function get_opmode($enabled=true){
     }
   	return $res;
 }
-
+/**
+ * Query required and additional filter rules for a system source.
+ *
+ * @param string $sys     System name.
+ * @param string $usecase Origin/usecase string.
+ * @return array Associative array with 'required' and 'additional' filter settings.
+ */
 function get_filters($sys, $usecase){
 	$config = read_config_json("config.json");
 	$host = $config['host'];
@@ -2616,7 +2995,14 @@ function get_filters($sys, $usecase){
   	return $result;
 }
 
-
+/**
+ * Check if a parameter supports ADU/Calibration toggle checkbox.
+ *
+ * @param string $par     Parameter name.
+ * @param string $sys     System name.
+ * @param string $usecase Origin/usecase string.
+ * @return array Associative array containing 'hascalib' flag.
+ */
 function show_adu_checkbox($par, $sys, $usecase){
 	$config = read_config_json("config.json");
 	$host = $config['host'];
@@ -2638,7 +3024,14 @@ function show_adu_checkbox($par, $sys, $usecase){
   	return $result;  
 }
 
-
+/**
+ * Change user password after verifying current password.
+ *
+ * @param string $user Username.
+ * @param string $oldp Current password string.
+ * @param string $newp New password string.
+ * @return array Status array with error message and logout requirement flag.
+ */
 function change_pwd($user, $oldp, $newp){
 	
   
@@ -2687,7 +3080,12 @@ function change_pwd($user, $oldp, $newp){
 
 }
 
-
+/**
+ * Render system availability status table for General Info view.
+ *
+ * @param string $o Data origin string.
+ * @return void
+ */
 function render_systems($o){
 	$config = read_config_json("config.json");
 	$host = $config['host'];
@@ -2733,7 +3131,13 @@ function render_systems($o){
 
 
 }
-
+/**
+ * Query and render parameter information table for General Info view.
+ *
+ * @param string $s System name.
+ * @param string $o Data origin string.
+ * @return array Result array with status code and rendered HTML table string.
+ */
 function render_pars($s, $o){
 	$config = read_config_json("config.json");
 	$host = $config['host'];
@@ -2838,7 +3242,12 @@ function render_pars($s, $o){
 
 }
 
-
+/**
+ * Query and render available plots or statistics information table.
+ *
+ * @param string $o View subject string ('plots' or 'statistics').
+ * @return void
+ */
 function render_analysis($o){
       
     switch($o){
@@ -2885,7 +3294,15 @@ function render_analysis($o){
     mysqli_close($mysqli);
 }
 
-
+/**
+ * Save base64-encoded image string to temporary image directory on server.
+ *
+ * @param string $data Base64-encoded image string payload.
+ * @param string $name Target image file base name.
+ * @param string $user Owner username.
+ * @param string $tmp  Subdirectory name.
+ * @return void
+ */
 function export_img($data, $name, $user, $tmp){
 //	$error = 0;
 
@@ -2904,7 +3321,11 @@ function export_img($data, $name, $user, $tmp){
 
 // MACHINE LEARNING FUNCTIONS
 
-
+/**
+ * Execute Python script to list available Machine Learning models and output select options.
+ *
+ * @return void
+ */
 function populate_ml(){
 	$command = 'python scripts/listMlModels.py';
 	$result = shell_exec($command); 
@@ -2927,7 +3348,11 @@ echo '</select>';
 	
 }
 
-
+/**
+ * Execute Python script to list trained Machine Learning models and output select options.
+ *
+ * @return void
+ */
 function populate_ml_model(){
 	$command = 'python scripts/listMlTrainedModels.py';
 	$result = shell_exec($command); 
@@ -2950,7 +3375,12 @@ echo '</select>';
 	
 }
 
-
+/**
+ * Execute Python script to generate hyperparameter input form for a Machine Learning model.
+ *
+ * @param string $model Selected ML model class name.
+ * @return void
+ */
 function populate_ml_param($model){
 	
 	
@@ -2975,7 +3405,13 @@ echo '</table></div>';
 
 
 
-
+/**
+ * Render password recovery HTML form or invalid link error message.
+ *
+ * @param string $email Request email address.
+ * @param string $key   Recovery key.
+ * @return string HTML form markup string.
+ */
 function recovery_form($email, $key){
 	$config = read_config_json("config.json");
 	$host = $config['host'];
@@ -3011,7 +3447,13 @@ function recovery_form($email, $key){
     }
   	return $res;
 }
-
+/**
+ * Update user password after validating password reset token key.
+ *
+ * @param string $email User email address.
+ * @param string $newp  New password string.
+ * @return array Status array with message.
+ */
 function confirm_pwd_reset($email, $newp){
  
 	$config = read_config_json("config.json");
@@ -3051,7 +3493,14 @@ function confirm_pwd_reset($email, $newp){
 
 }
 
-
+/**
+ * Read form configuration settings for a given operating mode, source, and origin.
+ *
+ * @param string $opmode Active operating mode string.
+ * @param string $source Data source name.
+ * @param string $origin Data origin/usecase name.
+ * @return array Form settings array.
+ */
 function select_items_json($opmode, $source, $origin){
 	$settings = "";
 	if($source != "upload"){  
@@ -3077,7 +3526,13 @@ function select_items_json($opmode, $source, $origin){
 	return $settings;
 }
 
-
+/**
+ * Change system operating mode and log activity to history.
+ *
+ * @param string $new   New operating mode name.
+ * @param string $admin Executing administrator username.
+ * @return array Status array.
+ */
 function update_opmode($new, $admin){
 	$old_opmode = get_opmode();
 	if(strtoupper($new) != $old_opmode){	
@@ -3102,7 +3557,12 @@ function update_opmode($new, $admin){
 	
 }
 
-
+/**
+ * Stream binary TAR archive file to the client browser for download.
+ *
+ * @param string $filename Path to target TAR file.
+ * @return void
+ */
 function download_tar($filename){
   header( 'Content-type: archive/tar' );
   header( 'Content-Disposition: attachment; filename="' . basename( $filename ) . '"'  );
@@ -3111,7 +3571,11 @@ function download_tar($filename){
   readfile( $filename );
 
 }
-
+/**
+ * Query and render systems plot delta threshold settings controls.
+ *
+ * @return void
+ */
 function get_systems_plotdelta(){
 	$config = read_config_json("config.json");
 	$host = $config['host'];
@@ -3125,7 +3589,12 @@ function get_systems_plotdelta(){
 
 	render_systems_plotdelta($qresult);
 }
-
+/**
+ * Render HTML input controls for system plot delta threshold values.
+ *
+ * @param mysqli_result $systems Query result set containing system records.
+ * @return void
+ */
 function render_systems_plotdelta($systems){
 	//get opmode
 	$opmode = get_opmode();	
@@ -3150,7 +3619,12 @@ function render_systems_plotdelta($systems){
 	}
 }
 
-
+/**
+ * Query system status settings from database.
+ *
+ * @param bool $cumulative Whether to group origins by system name. Default true.
+ * @return mysqli_result Result set object.
+ */
 function get_systems_settings($cumulative=True){
 	$config = read_config_json("config.json");
 	$host = $config['host'];
@@ -3170,6 +3644,12 @@ function get_systems_settings($cumulative=True){
 	return $qresult;
 }
 
+/**
+ * Render HTML switch controls for enabling/disabling systems.
+ *
+ * @param mysqli_result $systems Result set containing system configuration records.
+ * @return void
+ */
 function render_systems_setting($systems){
 	//get opmode
 	$opmode = get_opmode();	
@@ -3247,6 +3727,14 @@ function render_systems_setting($systems){
 	}
 }
 
+/**
+ * Render error indicator table cell for missing system configuration files.
+ *
+ * @param string $name   System name.
+ * @param string $msg    Error message text.
+ * @param string $origin System origin label. Default empty string.
+ * @return void
+ */
 function error_system_json($name,$msg,$origin=""){
 	if($origin==""){
 		echo '<tr><td><b>'.$name.'</b></td>';
@@ -3263,7 +3751,13 @@ function error_system_json($name,$msg,$origin=""){
 	}
 }
 
-
+/**
+ * Update system enabled/disabled flags in database and log changes.
+ *
+ * @param array  $data  Associative array of system toggle inputs.
+ * @param string $admin Executing administrator username.
+ * @return array Result status array.
+ */
 function update_systems($data, $admin){
 	$out = [];
 	$config = read_config_json("config.json");
@@ -3353,6 +3847,13 @@ function update_systems($data, $admin){
 
 }
 
+/**
+ * Update global web application settings in `config.json` and database.
+ *
+ * @param string $data  URL-encoded POST form string.
+ * @param string $admin Executing administrator username.
+ * @return array Array containing JSON and database error status flags.
+ */
 function update_genset($data, $admin){
 	$tmpfile = 'tmp/tmpconf.json';
 	$updated = array();
@@ -3493,6 +3994,13 @@ function update_genset($data, $admin){
 	
 }
 
+/**
+ * Update SMTP server settings in `smtp.json` and log history.
+ *
+ * @param string $data  URL-encoded POST form string.
+ * @param string $admin Executing administrator username.
+ * @return array Array containing error status flag.
+ */
 function update_smtpset($data,$admin){
 	$tmpfile = 'tmp/tmpsmtpconf.json';
 	parse_str($data, $output);
@@ -3556,6 +4064,13 @@ function update_smtpset($data,$admin){
 
 }
 
+/**
+ * Send a test email using submitted SMTP credentials to verify configuration.
+ *
+ * @param string $data URL-encoded SMTP settings form string.
+ * @param string $to   Target recipient username.
+ * @return array Array containing error status flag.
+ */
 function test_smtp($data, $to){
 //	require("PHPMailer/src/PHPMailer.php");
 //	require("PHPMailer/src/SMTP.php");
@@ -3674,7 +4189,15 @@ function test_smtp($data, $to){
 
 }
 
-
+/**
+ * Query database table columns with optional condition and ordering clauses.
+ *
+ * @param string $tbl      Target database table.
+ * @param string $cols     Columns string to select. Default '*'.
+ * @param string $stat     SQL WHERE or condition clause. Default empty string.
+ * @param string $ordercol Column name to order by. Default empty string.
+ * @return mysqli_result Result set object.
+ */
 function get_cols_from_db($tbl, $cols="*", $stat="",$ordercol=""){
 	$config = read_config_json("config.json");
 	$host = $config['host'];
@@ -3695,6 +4218,14 @@ function get_cols_from_db($tbl, $cols="*", $stat="",$ordercol=""){
 	return $qresult;
 }
 
+/**
+ * Query distinct parameter groups (extra column) for a subsystem and render option tags.
+ *
+ * @param string $sys    System name.
+ * @param string $origin Data origin string.
+ * @param string $subs   Subsystem name.
+ * @return void
+ */
 function get_parameter_group($sys, $origin, $subs){
 	$config = read_config_json("config.json");
 	$host = $config['host'];
@@ -3718,6 +4249,12 @@ function get_parameter_group($sys, $origin, $subs){
 	echo $out;
 }
 
+/**
+ * Save Machine Learning experiment metadata, create recap text file, and store record in DB.
+ *
+ * @param array $data Associative array containing experiment configuration and metadata.
+ * @return void
+ */
 function store_ml_exp($data){
 	$con = new_conn_from_file("config.json");
 	$user = $data['username'];

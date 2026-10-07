@@ -1,3 +1,16 @@
+<?php
+/**
+ * Image Data Container Template.
+ *
+ * Renders the HTML container table displaying image lists and operation selection controls
+ * (e.g., Difference Stats) for image comparison workflows.
+ *
+ * @package    AIDA
+ * @subpackage Views\Images
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 <div class="row" id = "imgdata_container" style="display:none;">
 	<div class="col-xs-12">
 		<div class="tab-content" style="min-height: 400px; height: auto;">

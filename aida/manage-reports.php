@@ -1,3 +1,15 @@
+<?php
+/**
+ * Reports Handling View.
+ *
+ * Placeholder view template for managing reports.
+ *
+ * @package    AIDA
+ * @subpackage Views\Reports
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 <!doctype html>
 <html class="fixed">
 	<?php 

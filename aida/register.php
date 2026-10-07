@@ -1,4 +1,17 @@
 <?php
+/**
+ * User Account Registration and Account Activation Handler.
+ *
+ * Processes user account registration requests and initial administrator setup.
+ * Validates CAPTCHA tokens, checks for existing usernames/emails in the database,
+ * stores hashed credentials, and dispatches activation/notification emails via PHPMailer.
+ *
+ * @package    AIDA
+ * @subpackage Controllers\Auth
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+
 /* Namespace alias. 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;*/
@@ -96,6 +109,14 @@ if(isset($_POST['captcha_challenge']) && $_POST['captcha_challenge'] == $_SESSIO
 else{$error = 4;}
 echo $error;
 
+/**
+ * Dispatch an account activation email to a newly registered administrator.
+ *
+ * @param string $username   New administrator username.
+ * @param string $email      Administrator email address.
+ * @param string $notifemail Notification email address.
+ * @return int Error status code (0 on success, 1 on error).
+ */
 function send_activation_email($username, $email, $notifemail){
 	
 	$configmail = read_json_file("smtp.json");
@@ -179,7 +200,15 @@ function send_activation_email($username, $email, $notifemail){
 
 }
 
-
+/**
+ * Send a notification email to the system administrator for new user registration requests.
+ *
+ * @param string $username   Requesting user username.
+ * @param string $email      Requesting user email address.
+ * @param string $mail_admin System administrator email address.
+ * @param string $role       Requested user role.
+ * @return int Error status code (0 on success, 1 on error).
+ */
 function send_admin_email($username, $email, $mail_admin, $role){
 	
 /* 	require(".\PHPMailer\src\Exception.php");
@@ -276,6 +305,14 @@ function send_admin_email($username, $email, $mail_admin, $role){
 
 }
 
+/**
+ * Send a registration request confirmation email to the requesting user.
+ *
+ * @param string $username   Recipient username.
+ * @param string $email      Recipient email address.
+ * @param string $mail_admin Administrator email address.
+ * @return int Error status code (0 on success, 1 on error).
+ */
 function send_user_email($username, $email, $mail_admin){
 	
 	$configmail = read_json_file("smtp.json");
@@ -361,6 +398,14 @@ function send_user_email($username, $email, $mail_admin){
 	return $error;
 }
 
+/**
+ * Check if a given column value (username or email) already exists in the database.
+ *
+ * @param mysqli $con Database connection object.
+ * @param string $val Value to check.
+ * @param string $col Target database column name.
+ * @return bool True if record exists, false otherwise.
+ */
 function check_exist($con, $val, $col){
 	//query
 	

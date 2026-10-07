@@ -1,9 +1,15 @@
+/**
+ * Initializes the file navigation tree in the "Navigation" sidebar panel.
+ */
 $(document).ready(function(){
 		//get tree of files in "Navigation" panel
 		var name = document.getElementById("session-user").innerHTML;
 		files_tree("image", "#treeImg", ["fits", "png"], 1)  
 });	
 
+/**
+ * Loads FITS image into JS9 viewer if specified in query string and manages flag interface.
+ */
 $(document).ready(function(){
 	var file = document.getElementById("img_file").value;
   		
@@ -22,6 +28,9 @@ $(document).ready(function(){
 	}
 });	
 
+/**
+ * Toggles description and email field visibility based on selected flag status.
+ */
 $(document).ready(function(){
 	//Init flagging comments when changing flag status
 	$("input[type='radio'][name=optflag]").change(function(){
@@ -40,6 +49,9 @@ $(document).ready(function(){
 	});
 });
 
+/**
+ * Handles image flag storing and sets up modal form validation rules.
+ */
 $(document).ready(function() {
 	$(document).on('click', '#store-img-btn', function () {
 		//Store flag for the image
@@ -83,6 +95,17 @@ $(document).ready(function() {
     }); 
 });
 
+/**
+ * Stores image annotations, generates PDF summary, updates history log, and refreshes flag tables.
+ * 
+ * @param {string} filename Base image filename.
+ * @param {string} save Target archive ('public' or 'private').
+ * @param {string} expstatus Flag status ('ok', 'warning', 'serious', etc.).
+ * @param {string} descr Comment text.
+ * @param {string} email Alert recipient email address.
+ * @param {string} user Owner username.
+ * @param {string} source System data source.
+ */
 function exportImg(filename, save, expstatus, descr, email, user, source){
 	//store flagged image
 	$("#loader").show();
@@ -178,12 +201,17 @@ function exportImg(filename, save, expstatus, descr, email, user, source){
     });
 }
 
-
+/**
+ * Opens a new JS9 Image Explorer window.
+ */
 function open_panel(){
 		//New image explorer panel
 		window.open("image-explorer.php");
     }
 
+/**
+ * Triggers the modal dialog for image flagging.
+ */
 function flag_image(){
 	//open flag modal on click
 	if(JS9.GetImage()!=null){
@@ -223,6 +251,15 @@ function flag_image(){
     }
 }
 
+/**
+ * Fetches directory hierarchy and initializes jsTree navigation.
+ * 
+ * @param {string} name Main directory name.
+ * @param {string} classname Target DOM element container class/ID.
+ * @param {Array<string>} ext Array of file extensions.
+ * @param {number} openlink Whether to link items.
+ * @param {number} [refresh=0] Refresh flag indicator.
+ */
 function files_tree(name, classname, ext, openlink, refresh = 0){
 	//Init Navigation tree
 	$.ajax({
@@ -266,6 +303,11 @@ function files_tree(name, classname, ext, openlink, refresh = 0){
 	});
 };
 
+/**
+ * Exports JS9 canvas elements to JPEG images via html2canvas and saves them on server.
+ * 
+ * @param {string} el Target DOM element ID.
+ */
 function exportAndSaveCanvas(el)  {
 	//export image
   	html2canvas($("#"+el)[0]).then((canvas) => { 
@@ -290,7 +332,9 @@ function exportAndSaveCanvas(el)  {
 } // End exportAndSaveCanvas()
 
 
- //init flags table 
+/**
+ * Initializes personal and public flag tables upon DOM load.
+ */
 $( document ).ready(function() {
 	var isf = document.getElementById('isflagged').value
 	var filename = document.getElementById('img_file').value
@@ -301,7 +345,12 @@ $( document ).ready(function() {
 	render_flag_table(filename, user)
 });
 
-
+/**
+ * Queries flag notes for an image and populates DataTables.
+ * 
+ * @param {string} filename Target image filename.
+ * @param {string} [user="all"] Target user filter ('all' for public flags).
+ */
 function render_flag_table(filename, user = "all"){
 	//render Flags Info panel
 	onlyname_arr = filename.split("/")
@@ -345,6 +394,13 @@ function render_flag_table(filename, user = "all"){
 	});	
 }
 
+/**
+ * Converts raw catalog content into formatted tab-delimited catalog structure.
+ * 
+ * @param {string} catalog Raw input string.
+ * @param {string} [ext=".cat"] File format extension.
+ * @returns {string} Formatted string.
+ */
 function data2cat(catalog, ext=".cat"){
 
     switch(ext){
@@ -385,6 +441,14 @@ function data2cat(catalog, ext=".cat"){
 	return newcat
 }
 
+/**
+ * Helper to build line records and headers for catalog files.
+ * 
+ * @param {string} el Raw line string.
+ * @param {Array<string>} newcat Array accumulating output lines.
+ * @param {boolean} [header=false] Header flag.
+ * @returns {Array<string>} Updated output array.
+ */
 function build_record(el, newcat, header = false){
 	el = el.split(" ")
 	var newel = []

@@ -1,3 +1,20 @@
+<?php
+/**
+ * Main Left Navigation Sidebar View Component.
+ *
+ * Renders the primary collapsible navigation sidebar containing links to:
+ * - General Info (Systems Info, Analysis Info)
+ * - Local Data Analysis & Inspection
+ * - HKTM Plot generation, Statistics, and Machine Learning
+ * - Image Explorer
+ * - Report and Configuration file management
+ *
+ * @package    AIDA
+ * @subpackage Views\Components
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 <!-- start: sidebar -->
 				<aside id="sidebar-left" class="sidebar-left">
 				
@@ -83,6 +100,11 @@
 										</a>
                                       	<ul class="nav nav-children">
                                       	<?php  
+											/**
+											 * Query and render dynamic plot generation links in sidebar menu.
+											 *
+											 * @var mysqli_result $plot Query result set containing supported plot types.
+											 */
                                       		$plot = get_plots_list();
                                       		while ($row = mysqli_fetch_array($plot))
                                             {

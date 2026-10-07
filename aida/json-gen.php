@@ -1,4 +1,15 @@
 <?php
+/**
+ * AJAX Report Configuration JSON Template Generator.
+ *
+ * Generates a template JSON configuration structure from form POST inputs
+ * or loads existing temporary/config files from disk.
+ *
+ * @package    AIDA
+ * @subpackage Controllers\Reports
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
 include("functions.php");
 error_reporting(0);
 if(isset($_POST['action']) && !empty($_POST['action'])) {

@@ -1,9 +1,28 @@
+/**
+ * Plotly Customization Panel and Layout Utility Functions.
+ *
+ * Handles plot styling customization (backgrounds, fonts, margins, trace colors, line styles,
+ * axis ranges, grid spacing, zero lines, tick labels, and legends).
+ *
+ * @package    AIDA
+ * @subpackage JS\Plots
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+/**
+ * Toggles visibility of a target element.
+ *
+ * @param {string} id Element DOM ID.
+ */
 function toggle(id){
 
 	$("#"+id).toggle();
 	//$("#"+id).hide();
 }
-// PLOTS RESTYLE
+
+/**
+ * Resets all customization options to default values.
+ */
 function reset_custom_plot(){
 	reset_general()
 	reset_traces()
@@ -16,6 +35,9 @@ function reset_custom_plot(){
 	
 }	
 
+/**
+ * Resets trace style settings (colors, opacity, line width, text properties).
+ */
 function reset_traces(){
 //TRACES - COLOR AND NAME RESET ON FORM GENERATION
  	var plot = document.getElementById('plot_type').value;
@@ -80,6 +102,9 @@ function reset_traces(){
 	$("#img-color-trtext").css("background-color",'#000000')	
 }
 
+/**
+ * Resets axis settings (titles, lines, grid, zero lines, tick labels).
+ */
 function reset_axes(){
 	//console.log("VADIO")
 	document.getElementById("alla").checked = true;
@@ -154,6 +179,9 @@ function reset_axes(){
 
 }
 
+/**
+ * Resets general plot styling options (backgrounds, fonts, titles).
+ */
 function reset_general(){
 //GENERAL SETTINGS
 	//BACKGROUND
@@ -197,6 +225,9 @@ function reset_general(){
 	$("#cp-gen-title").hide()
 }
 
+/**
+ * Resets plot legend styling options.
+ */
 function reset_legend(){
 //LEGEND
 	//SHOW/HIDE
@@ -246,6 +277,9 @@ function reset_legend(){
 	$("#cp-leg-box").hide()	
 }
 
+/**
+ * Shows customization panel beside chart container and adjusts Plotly layout.
+ */
 function show_custom_plot(){
   var dom = document.getElementById('chartContainer');
 
@@ -284,6 +318,9 @@ function show_custom_plot(){
 	
 }
 
+/**
+ * Hides customization panel and restores chart container width.
+ */
 function hide_custom_plot(){
   document.getElementById("plot_settings").classList.remove('col-xs-2');
   document.getElementById("plot_settings").style.display = 'none';  
@@ -298,7 +335,10 @@ function hide_custom_plot(){
   var el = $('.modebar-btn[data-title="Customize Plot"]').show();  
 
 }
-	
+
+/**
+ * Event listener: Handles axis range selection (Auto vs. Custom) and configures range inputs.
+ */	
   $("input[type='radio'][name='range_sel']").change(function(){
 	var dom = document.getElementById('chartContainer');
 	var curr_layout = dom.layout
@@ -406,9 +446,9 @@ function hide_custom_plot(){
 	
   });	
 	
-	
-	
-	
+/**
+ * Event listener: Handles target axis selection (X, Y, All) in customization panel.
+ */
   $("input[type='radio'][name='axis_sel']").change(function(){
 	var dom = document.getElementById('chartContainer');
 	var curr_layout = dom.layout	
@@ -439,6 +479,11 @@ function hide_custom_plot(){
 	init_axis_form($(this).val())	
   });
 
+/**
+ * Populates axis settings form controls with current layout values.
+ *
+ * @param {string} [axis="all"] Target axis ('x', 'y', or 'all').
+ */
 function init_axis_form(axis="all"){
 	var dom = document.getElementById('chartContainer');
 	var curr_layout = dom.layout
@@ -534,6 +579,14 @@ function init_axis_form(axis="all"){
 	
 }
 
+/**
+ * Configures datetime picker bindings for date axis range inputs.
+ *
+ * @param {Object} axis_data Axis layout object.
+ * @param {string} axis Target axis identifier.
+ * @param {string} minval Minimum range value.
+ * @param {string} maxval Maximum range value.
+ */
 function range_dates_jq(axis_data, axis, minval, maxval){
 	var dom = document.getElementById('chartContainer');
 	var atype = axis_data["type"]
@@ -582,7 +635,12 @@ function range_dates_jq(axis_data, axis, minval, maxval){
 	
 }	
 
-
+/**
+ * Populates range configuration controls based on axis layout settings.
+ *
+ * @param {Object} axis_data Axis configuration.
+ * @param {string} axis Target axis identifier.
+ */
 function range_defaults(axis_data, axis){
 	//axis type
 	var atype = axis_data["type"]
@@ -644,6 +702,12 @@ function range_defaults(axis_data, axis){
 
 }
 
+/**
+ * Populates tick label controls based on axis layout settings.
+ *
+ * @param {Object} axis_data Axis configuration.
+ * @param {string} axis Target axis identifier.
+ */
 function ticks_defaults(axis_data, axis){
 	//tick labels show/hide
 	if("showticklabels" in axis_data){
@@ -731,6 +795,12 @@ function ticks_defaults(axis_data, axis){
 
 }
 
+/**
+ * Populates line and grid controls based on axis layout settings.
+ *
+ * @param {Object} axis_data Axis configuration.
+ * @param {string} axis Target axis identifier.
+ */
 function lines_defaults(axis_data, axis){
 	var dom = document.getElementById('chartContainer');
 	//axis line show/hide
@@ -910,6 +980,11 @@ function lines_defaults(axis_data, axis){
 	}	
 }
 
+/**
+ * Populates axis title controls based on layout settings.
+ *
+ * @param {Object} axis_data Axis configuration.
+ */
 function title_defaults(axis_data){
 	if("title" in axis_data){
 		//title text
@@ -963,7 +1038,9 @@ function title_defaults(axis_data){
 	
 }
 
-
+/**
+ * Event listener: Toggles legend visibility.
+ */
   $("input[type='radio'][name='legend_sel']").change(function(){
 	var dom = document.getElementById('chartContainer');
 	var curr_layout = dom.layout
@@ -987,6 +1064,9 @@ function title_defaults(axis_data){
 	
   });  
 
+/**
+ * Event listener: Toggles grid lines visibility for selected axes.
+ */
   $("input[type='radio'][name='grid_show']").change(function(){
 	var dom = document.getElementById('chartContainer');
 	var curr_layout = dom.layout
@@ -1016,6 +1096,9 @@ function title_defaults(axis_data){
 	
   });
 
+/**
+ * Event listener: Toggles tick labels visibility for selected axes.
+ */
   $("input[type='radio'][name='tickl_show']").change(function(){
 	var dom = document.getElementById('chartContainer');
 	var curr_layout = dom.layout
@@ -1045,6 +1128,9 @@ function title_defaults(axis_data){
 	
   });
 
+/**
+ * Event listener: Toggles main axis line visibility for selected axes.
+ */
   $("input[type='radio'][name='axis_show']").change(function(){
 	var dom = document.getElementById('chartContainer');
 	var curr_layout = dom.layout
@@ -1073,6 +1159,9 @@ function title_defaults(axis_data){
 	  Plotly.update(dom, {}, curr_layout);
   });
 
+/**
+ * Event listener: Toggles zero line visibility for selected axes.
+ */
   $("input[type='radio'][name='zerol_show']").change(function(){
 	var dom = document.getElementById('chartContainer');
 	var curr_layout = dom.layout
@@ -1101,6 +1190,9 @@ function title_defaults(axis_data){
 	  Plotly.update(dom, {}, curr_layout);
   });
 
+/**
+ * Event listener: Sets tick label placement side (top/bottom or left/right).
+ */
   $("input[type='radio'][name='tickpos_show']").change(function(){
 	var dom = document.getElementById('chartContainer');
 	var curr_layout = dom.layout
@@ -1116,8 +1208,13 @@ function title_defaults(axis_data){
 	Plotly.update(dom, {}, curr_layout);		
   }); 
 
-
-
+/**
+ * Binds change handlers for grid step size and offset controls.
+ *
+ * @param {HTMLElement} dom Plotly container.
+ * @param {string} axis Target axis name.
+ * @param {string} [fmt=""] Format identifier ('date' or numeric).
+ */
 function grid_spacing_jq(dom, axis, fmt=""){
 	if(fmt=="date"){
 		$("#gridsizeinput").on("change", function () {
@@ -1170,8 +1267,9 @@ function grid_spacing_jq(dom, axis, fmt=""){
 	
 }
 
-
-  //grid spacing layout update
+/**
+ * Event listener: Toggles grid spacing mode (Auto vs. Custom).
+ */
   $("input[type='radio'][name='grid_spacing']").change(function(){
 	var dom = document.getElementById('chartContainer');
 	var curr_layout = dom.layout
@@ -1244,6 +1342,14 @@ function grid_spacing_jq(dom, axis, fmt=""){
 		}
   });
 
+/**
+ * Updates font attributes (family, size, color) across specified layout elements.
+ *
+ * @param {string} s Font value string.
+ * @param {string} section Target layout section ('all', 'title', 'axis', 'legend').
+ * @param {string} tag Property key ('family', 'size', 'color').
+ * @param {string} [object=""] Specific target object type.
+ */
 function set_font(s, section, tag, object=""){
 
 //  console.log(s)
@@ -1588,35 +1694,14 @@ function set_font(s, section, tag, object=""){
   Plotly.update(dom, {}, layout);
 }
 
-
-
-
-
-/* QUESTA VA BENE PER LINE
-
-function set_border(s,elem,tag){
-	var dom = document.getElementById('chartContainer');	
-	const traceid = document.getElementById('tracelist').value	
-	var fulltrace = dom.data[traceid]
-	console.log(fulltrace)
-	var settings = fulltrace[elem]
-	if(settings != null){
-		if(elem == "marker"){
-			if(settings["line"] == null){
-				settings["line"] = {}
-			}
-		}
-	}
-	else{
-		settings = {}
-		settings["line"] = {}	
-	}
-	settings["line"][tag] = s
-	settings["line"]["color"] = "#FF0000"	
-
-	Plotly.restyle(dom, settings, traceid);	
-} */
-
+/**
+ * Applies color changes to plot elements (background, margins, grid, legend, traces).
+ *
+ * @param {string} object Target element type.
+ * @param {string} newcolor Hex/RGB color string.
+ * @param {string} tochange Attribute key.
+ * @param {number|string|null} [dataelem=null] Target trace index.
+ */
 function apply_color(object, newcolor, tochange, dataelem = null){
 	var dom = document.getElementById('chartContainer');
 	var curr_layout = dom.layout
@@ -1804,6 +1889,9 @@ function apply_color(object, newcolor, tochange, dataelem = null){
 	
 }
 
+/**
+ * DOM Load Listener: Binds input listeners to color picker elements.
+ */
 $(document).ready(function(){
 	document.querySelectorAll('.color-pick').forEach(item => {
 		item.addEventListener("input", function(event) {
@@ -1814,6 +1902,12 @@ $(document).ready(function(){
 	
 })
 
+/**
+ * Handles color picker input change and updates Plotly chart layout.
+ *
+ * @param {HTMLElement} item Color input element.
+ * @param {Event} event Input change event object.
+ */
 function change_color(item,event){
 
 	//console.log(dom, curr_layout)
@@ -1831,6 +1925,11 @@ function change_color(item,event){
 
 }
 
+/**
+ * Handles manual hex color text input and updates Plotly layout.
+ *
+ * @param {HTMLInputElement} item Text input element.
+ */
 function change_color_from_text(item){
 	var object = item.getAttribute("data-change")
 	var dataelem = item.getAttribute("data-elem")	
@@ -1842,11 +1941,9 @@ function change_color_from_text(item){
 	apply_color(object, newcolor, idsplt,dataelem)	
 }
 
-
-
-
-
-// Update the current slider value (each time you drag the slider handle)
+/**
+ * Input Listener: Updates plot horizontal title position from range slider input.
+ */
 document.getElementById("hslider").oninput = function() {
 	var dom = document.getElementById('chartContainer');
 	var curr_layout = dom.layout
@@ -1856,6 +1953,9 @@ document.getElementById("hslider").oninput = function() {
 	Plotly.update(dom, {}, curr_layout);	
 }
 
+/**
+ * Input Listener: Updates plot horizontal title position slider and triggers layout update.
+ */
 document.getElementById("listenSlider2").oninput = function() {
 	var dom = document.getElementById('chartContainer');
 	var curr_layout = dom.layout
@@ -1868,19 +1968,12 @@ document.getElementById("listenSlider2").oninput = function() {
 	Plotly.update(dom, {}, curr_layout);	
 }
 
-// Update points opacity slider
-/* document.getElementById("slider-p-opac").oninput = function() {
-	var dom = document.getElementById('chartContainer');
-	const traceid = document.getElementById('tracelist').value
-	document.getElementById("p-opac").value = this.value;	
-	var update = {
-		opacity: this.value/100
-	};	
-} */
-
-
-
-
+/**
+ * Sets layout or trace text content (title, legend, axis, trace name).
+ *
+ * @param {string} val Text content.
+ * @param {string} elem Target section or trace index.
+ */
 function set_text(val, elem){
 	var dom = document.getElementById('chartContainer');
 	var curr_layout = dom.layout
@@ -1933,7 +2026,12 @@ function set_text(val, elem){
 	
 }
 
-
+/**
+ * Sets border or line thickness for legend, grid, axis, or zero lines.
+ *
+ * @param {number|string} val Thickness value.
+ * @param {string} item Element category.
+ */
 function set_thickness(val, item){
 	var dom = document.getElementById('chartContainer');
 	var curr_layout = dom.layout	
@@ -1999,6 +2097,11 @@ function set_thickness(val, item){
 	Plotly.update(dom, {}, curr_layout);	
 }
 
+/**
+ * Sets tick label rotation angle for active axes.
+ *
+ * @param {number|string} val Angle degree.
+ */
 function set_angle(val){
 	var dom = document.getElementById('chartContainer');
 	var curr_layout = dom.layout	
@@ -2013,6 +2116,11 @@ function set_angle(val){
 	Plotly.update(dom, {}, curr_layout);	
 }
 
+/**
+ * Determines which axis (X, Y, or both) is currently selected in form.
+ *
+ * @returns {Array<string>} Array of selected axis identifiers.
+ */
 function set_rangetype(val){
 	var dom = document.getElementById('chartContainer');
 	var curr_layout = dom.layout	
@@ -2034,7 +2142,11 @@ function set_rangetype(val){
 	Plotly.update(dom, {}, curr_layout);	
 }
 
-
+/**
+ * Determines which axis (X, Y, or both) is currently selected in form.
+ *
+ * @returns {Array<string>} Array of selected axis identifiers.
+ */
 function which_axis(){
 	var chkval = $("input[type='radio'][name='axis_sel']:checked").val()
 
@@ -2058,6 +2170,11 @@ function which_axis(){
 
 
 //TRACE FUNCTIONS
+/**
+ * Sets trace fill area mode.
+ *
+ * @param {string} val Fill mode ('none', 'tozeroy', etc.).
+ */
 function fill_area(val){
 	var dom = document.getElementById('chartContainer');	
 	const traceid = document.getElementById('tracelist').value	
@@ -2070,7 +2187,12 @@ function fill_area(val){
 	Plotly.restyle(dom, update, traceid);	
 }
 
-
+/**
+ * Sets trace marker size or line width.
+ *
+ * @param {number} s Size value.
+ * @param {string} elem Target trace element ('marker' or 'line').
+ */
 function set_size(s, elem){
 	var dom = document.getElementById('chartContainer');	
 	const traceid = document.getElementById('tracelist').value
@@ -2099,7 +2221,13 @@ function set_size(s, elem){
 
 }
 
-
+/**
+ * Sets trace marker line border properties.
+ *
+ * @param {*} s Property value.
+ * @param {string} elem Target element.
+ * @param {string} tag Target property key.
+ */
 function set_border(s,elem,tag){
 	var dom = document.getElementById('chartContainer');	
 	const traceid = document.getElementById('tracelist').value	
@@ -2130,6 +2258,12 @@ function set_border(s,elem,tag){
 	Plotly.restyle(dom, update, traceid);	
 }
 
+/**
+ * Updates marker or line opacity for a selected trace.
+ *
+ * @param {HTMLInputElement} elem Input slider/number element.
+ * @param {string} what Element category ('points' or 'lines').
+ */
 function set_opacity(elem,what){
 	var dom = document.getElementById('chartContainer');
 	const traceid = document.getElementById('tracelist').value
@@ -2230,6 +2364,12 @@ function set_opacity(elem,what){
 
 }
 
+/**
+ * Converts hex color string to RGB object.
+ *
+ * @param {string} hex Hexadecimal color string.
+ * @returns {Object|null} Object with r, g, b numeric properties.
+ */
 function hexToRgb(hex) {
   var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result ? {
@@ -2239,10 +2379,25 @@ function hexToRgb(hex) {
   } : null;
 }
 
+/**
+ * Converts RGB numerical components to hex color string.
+ *
+ * @param {number} r Red component.
+ * @param {number} g Green component.
+ * @param {number} b Blue component.
+ * @returns {string} Hexadecimal color string.
+ */
 function rgbToHex(r, g, b) {
   return "#" + (1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1);
 }
 
+/**
+ * Helper to update input values and background color previews for color fields.
+ *
+ * @param {string} id Input field ID prefix.
+ * @param {string} color Color hex string.
+ * @param {number|string|null} [traceid=null] Target trace index.
+ */
 function set_color(id, color, traceid = null){
 	$("#"+id).val(color)
 	$("#img-"+id).val(color)
@@ -2254,6 +2409,17 @@ function set_color(id, color, traceid = null){
 	}
 }
 
+/**
+ * Sets default values for trace style properties.
+ *
+ * @param {number} traceid Target trace index.
+ * @param {string} main_key Main trace property key.
+ * @param {string} item Specific property item.
+ * @param {string} id Input field DOM ID.
+ * @param {*} dval Default value fallback.
+ * @param {number} [multiplier=1] Value scaling multiplier.
+ * @param {string|null} [add_id=null] Optional paired slider DOM ID.
+ */
 function set_trace_defaults(traceid, main_key, item, id, dval, multiplier=1, add_id=null){
 	var dom = document.getElementById('chartContainer');
 	var def_marker = dom.data[traceid][main_key]
@@ -2276,6 +2442,14 @@ function set_trace_defaults(traceid, main_key, item, id, dval, multiplier=1, add
 	
 }
 
+/**
+ * Sets default values for trace marker border lines.
+ *
+ * @param {number} traceid Target trace index.
+ * @param {string} item Property item key.
+ * @param {string} id Input DOM ID.
+ * @param {*} dval Default fallback value.
+ */
 function set_markerline_defaults(traceid, item, id, dval){
 	var dom = document.getElementById('chartContainer');
 	var fulltrace = dom.data[traceid]
@@ -2289,6 +2463,11 @@ function set_markerline_defaults(traceid, item, id, dval){
 	$("#"+id).val(dval)
 }
 
+/**
+ * Constructs and populates the trace customization form for a selected trace.
+ *
+ * @param {number} traceid Target trace index.
+ */
 function build_trace_form(traceid){
 	var dom = document.getElementById('chartContainer');
 	var fulltrace = dom.data[traceid]
@@ -2519,6 +2698,11 @@ function build_trace_form(traceid){
 	$("#trace_set").show()	
 }
 
+/**
+ * Populates trace text style form controls.
+ *
+ * @param {number} traceid Target trace index.
+ */
 function set_trtext_defaults(traceid){
 	var dom = document.getElementById('chartContainer');
 	var trace = dom.data[traceid]
@@ -2588,7 +2772,13 @@ function set_trtext_defaults(traceid){
 	}
 }
 
-
+/**
+ * Configures display section controls according to trace type ('bar', 'scattergl').
+ *
+ * @param {Object} tracedata Trace data payload object.
+ * @param {string} prefix Element ID prefix.
+ * @returns {boolean} Mode support flag.
+ */
 function set_display_box(tracedata, prefix){
 	var tr_type = tracedata.type
 	var res, inputchk
@@ -2634,6 +2824,12 @@ function set_display_box(tracedata, prefix){
 	
 }
 
+/**
+ * Sets trace line dash or shape mode.
+ *
+ * @param {string} val Line style value.
+ * @param {string} key Property key ('dash' or 'shape').
+ */
 function set_linetype(val, key){
 	var dom = document.getElementById('chartContainer');
 	var traceid = document.getElementById('tracelist').value	
@@ -2653,6 +2849,11 @@ function set_linetype(val, key){
 	Plotly.restyle(dom, update,traceid);	
 }
 
+/**
+ * Toggles connectgaps property on selected trace.
+ *
+ * @param {HTMLInputElement} el Checkbox element.
+ */
 function connectgaps(el){
 	var dom = document.getElementById('chartContainer');
 	var traceid = document.getElementById('tracelist').value	
@@ -2667,6 +2868,12 @@ function connectgaps(el){
 
 }
 
+/**
+ * Configures trace text annotation display field and position.
+ *
+ * @param {string} val Value key or position string.
+ * @param {string} other Evaluation context tag.
+ */
 function display_text(val, other){
 	var dom = document.getElementById('chartContainer');
 	var traceid = document.getElementById('tracelist').value
@@ -2705,6 +2912,12 @@ function display_text(val, other){
 	console.log(trace)
 }
 
+/**
+ * Toggles display mode components (markers, lines, text) on target trace.
+ *
+ * @param {string} what Display component token ('markers', 'lines', 'text').
+ * @param {string} id Checkbox element DOM ID.
+ */
 function display_plot_elem(what, id){
 	var outmode
 	var dom = document.getElementById('chartContainer');
@@ -2748,6 +2961,9 @@ function display_plot_elem(what, id){
 
 }
 
+/**
+ * Sets trace text font family and size.
+ */
 function set_trace_font(){
 	var dom = document.getElementById('chartContainer');
 	var traceid = document.getElementById('tracelist').value

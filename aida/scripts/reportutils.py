@@ -1,5 +1,16 @@
 #!/usr/bin/python
 
+"""
+Report Generation Utilities and Helper Functions.
+
+This module provides utility classes and helper functions for running parallel 
+and serial statistical analysis, intersecting dataset time series, updating database 
+records, generating plots, and sending notification emails for report jobs.
+
+@package AIDA
+@module reportutils
+"""
+
 # import json
 import ast
 import numpy as np
@@ -21,6 +32,48 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
 class dbThread(threading.Thread):
+    """Thread worker for executing database queries to insert or update report data.
+
+    Parameters
+    ----------
+    ThreadID : int
+        Thread numerical identifier.
+    name : str
+        Thread name.
+    th_pars : list
+        Parameter tuple containing data, runid, source, subsystem, acquisition ID,
+        runstep, process ID, parameters list, configuration, and DB connection.
+
+    Attributes
+    ----------
+    name : str
+        Thread name.
+    id : int
+        Thread numerical identifier.
+    data : dict
+        Data dictionary containing parameter values and timestamps.
+    runid : int or str
+        Unique experiment run ID.
+    source : str
+        System source name.
+    sub : str
+        Subsystem identifier name.
+    acquid : int or str
+        Acquisition step ID.
+    runstep : int
+        Cadence runstep counter.
+    procid : int
+        Process worker ID.
+    params : list of str
+        Parameters list to persist in database.
+    conf : repConfig
+        Report configuration object.
+    dbconnection_in : pymysql.connections.Connection
+        Active database connection handle.
+    dberror : int
+        Database execution error flag (0 for success, 1 on failure).
+    """
+    
     def __init__(self, ThreadID, name, th_pars):
         threading.Thread.__init__(self)
         self.name=name
@@ -38,6 +91,7 @@ class dbThread(threading.Thread):
         self.dberror = 0
 
     def run(self):
+        """Execute database insertion or update queries for report dataset records."""
         use_runstep = False
         for p in self.params:
             if not use_runstep:
@@ -87,9 +141,42 @@ class dbThread(threading.Thread):
         self.dbconnection_in.close()
 
     def get_error(self):
+        """Retrieve database execution error status.
+
+        Returns
+        -------
+        int
+            0 if queries succeeded, 1 if an error occurred.
+        """
         return self.dberror
 
 def analysis(conf,jsonconf,syscls,nproc,runid,origin="",acquid = 1):
+    """Execute statistical analysis on report parameters in parallel or serial mode.
+
+    Parameters
+    ----------
+    conf : repConfig
+        Global repository configuration object.
+    jsonconf : reportConfig
+        Report configuration instance.
+    syscls : object
+        System class instance under analysis.
+    nproc : int
+        Number of parallel processes allocated.
+    runid : int or str
+        Experiment run ID.
+    origin : str, optional
+        Data origin classification (default is "").
+    acquid : int, optional
+        Acquisition step index (default is 1).
+
+    Returns
+    -------
+    result : dict
+        Dictionary containing statistical calculation results.
+    error : int
+        0 on success, non-zero error code on failure.
+    """
     result = {}
     error = 0
     source = syscls.source
@@ -136,6 +223,22 @@ def analysis(conf,jsonconf,syscls,nproc,runid,origin="",acquid = 1):
     return result, error
 
 def data_intersect(xdata, ydata):
+    """Find timestamp intersection between X and Y datasets and return aligned values.
+
+    Parameters
+    ----------
+    xdata : dict
+        X dataset dictionary containing 'dates' and 'vals' arrays.
+    ydata : dict
+        Y dataset dictionary containing 'dates' and 'vals' arrays.
+
+    Returns
+    -------
+    xfinal : numpy.ndarray
+        Filtered X data array matching intersected timestamps.
+    yfinal : numpy.ndarray
+        Filtered Y data array matching intersected timestamps.
+    """
      
     if xdata['dates'].shape[0] > 0 and ydata['dates'].shape[0] > 0:
         xdates = xdata["dates"]
@@ -155,6 +258,20 @@ def data_intersect(xdata, ydata):
     return xfinal, yfinal
 
 def intersect_lists(x,y):
+    """Return the set intersection of two lists or arrays.
+
+    Parameters
+    ----------
+    x : array_like
+        First sequence of elements.
+    y : array_like
+        Second sequence of elements.
+
+    Returns
+    -------
+    intersection : list
+        List of common elements between x and y.
+    """
     #if x is not None and y is not None:
     if len(x) > 0 and len(y) > 0:    
         intersection = list(set(x).intersection(y))
@@ -163,12 +280,60 @@ def intersect_lists(x,y):
     return intersection
 
 def parallel_analysis(params, source, origin, runid, acquid, jsonconf, conf, qstats, parstruct, hasorig, return_dict):
+    """Process worker target function for computing parameter statistics in parallel.
+
+    Parameters
+    ----------
+    params : numpy.ndarray
+        Array of parameter names assigned to this process.
+    source : str
+        System source name.
+    origin : str
+        Data origin classification.
+    runid : int or str
+        Experiment run ID.
+    acquid : int
+        Acquisition step index.
+    jsonconf : dict or object
+        Report configuration data.
+    conf : repConfig
+        Repository configuration instance.
+    qstats : list of dict
+        Database statistical function definitions.
+    parstruct : dict
+        Parameter structure dictionary.
+    hasorig : bool
+        Flag indicating whether system uses explicit origin nodes.
+    return_dict : multiprocessing.managers.DictProxy
+        Shared dictionary proxy for storing calculation results.
+    """
+    
     res, error = serial_analysis(params, source, origin, runid, acquid, jsonconf, conf, qstats, parstruct, hasorig)   
     return_dict.update(res)
     if error > 0:
         exit(error)
 
 def get_operation_branches(p, jsonconf, source, origin, hasorig):
+    """Extract operation configuration branch dictionary for a target parameter.
+
+    Parameters
+    ----------
+    p : str
+        Parameter identifier name.
+    jsonconf : dict
+        Report configuration dictionary.
+    source : str
+        System source name.
+    origin : str
+        Data origin classification name.
+    hasorig : bool
+        Flag indicating if origin level is present in configuration hierarchy.
+
+    Returns
+    -------
+    dict
+        Operation configuration mapping for parameter p.
+    """
 
     if hasorig:
         br_root = jsonconf[source][origin]
@@ -191,6 +356,38 @@ def get_operation_branches(p, jsonconf, source, origin, hasorig):
     return final_fd[p]
 
 def serial_analysis(params, source, origin, runid, acquid, jsonconf, conf, qstats, parstruct, hasorig):
+    """Sequentially compute configured statistical metrics for a parameter list.
+
+    Parameters
+    ----------
+    params : list of str
+        List of parameter names to analyze.
+    source : str
+        System source name.
+    origin : str
+        Data origin classification.
+    runid : int or str
+        Experiment run ID.
+    acquid : int
+        Acquisition step index.
+    jsonconf : dict or object
+        Report configuration data.
+    conf : repConfig
+        Repository configuration instance.
+    qstats : list of dict
+        Database statistical function definitions.
+    parstruct : dict
+        Parameter structure dictionary.
+    hasorig : bool
+        Flag indicating whether system uses explicit origin nodes.
+
+    Returns
+    -------
+    res : dict
+        Calculated statistics dictionary per parameter.
+    error : int
+        0 on success, non-zero error code if queries fail.
+    """
  
     res = {}
     error = 0
@@ -274,6 +471,26 @@ def serial_analysis(params, source, origin, runid, acquid, jsonconf, conf, qstat
     return res, error
 
 def create_datadict(procnum, params, data, parlist, return_dict):
+    """Structure parameter dataset values from raw process output arrays.
+
+    Parameters
+    ----------
+    procnum : int
+        Process worker index.
+    params : list of str
+        List of parameters handled by this process.
+    data : list
+        Raw data tuples list.
+    parlist : numpy.ndarray
+        Full parameter names array.
+    return_dict : dict or DictProxy
+        Output dictionary to store parameter series.
+
+    Returns
+    -------
+    return_dict : dict or DictProxy
+        Updated dictionary mapping parameter names to data series lists.
+    """
     for i in range(len(params)):
         ypos = np.where(parlist == params[i])[0][0]
         y = [v[1][ypos] for v in data]
@@ -281,6 +498,24 @@ def create_datadict(procnum, params, data, parlist, return_dict):
     return return_dict
 
 def get_keys(data, allowed=[], exclude=[]):
+    """Extract dictionary keys filtered by whitelist and blacklist rules.
+
+    Parameters
+    ----------
+    data : dict
+        Source dictionary object.
+    allowed : list of str, optional
+        Allowed key names whitelist (default is []).
+    exclude : list of str, optional
+        Ignored key names blacklist (default is []).
+
+    Returns
+    -------
+    final_keys : list of str
+        Filtered key list.
+    error : int
+        0 if all keys are allowed, 1 if disallowed keys were encountered.
+    """
     final_keys = []
     error = 0
     keys = list(data.keys())
@@ -294,6 +529,22 @@ def get_keys(data, allowed=[], exclude=[]):
     return final_keys, error
 
 def get_subs(repdata, system, origin = ""):
+    """Extract subsystem keys for a given system and origin.
+
+    Parameters
+    ----------
+    repdata : dict
+        Report configuration dictionary.
+    system : str
+        System identifier name.
+    origin : str, optional
+        Origin classification name (default is "").
+
+    Returns
+    -------
+    keys : list of str
+        List of subsystem keys.
+    """
     try:
         if origin != "":
             keys = get_keys(repdata[system][origin])[0]
@@ -304,7 +555,21 @@ def get_subs(repdata, system, origin = ""):
     return keys
 
 def get_add(obj,keys):
-    """Pull all values of specified key from nested JSON."""
+    """Recursively extract values of matching keys from nested JSON dictionary.
+
+    Parameters
+    ----------
+    obj : dict or list
+        Source JSON structure.
+    keys : list of str
+        Target key names to search for.
+
+    Returns
+    -------
+    results : list
+        Flat list of extracted matching values.
+    """
+
     arr = []
 
     try:
@@ -334,6 +599,18 @@ def get_add(obj,keys):
     return results
 
 def get_pars(dictionary):
+    """Extract unique parameter names from nested operation dictionary keys.
+
+    Parameters
+    ----------
+    dictionary : dict
+        Input dictionary structure.
+
+    Returns
+    -------
+    unique_list : list of str
+        List of unique parameter names before '.Operation' suffix.
+    """
     full_list = util.concat_keys(dictionary)
     unique_list = []
     for item in full_list:
@@ -343,6 +620,26 @@ def get_pars(dictionary):
     return unique_list
 
 def get_y_data2(p, y, jsonop, data, addpos):
+    """Extract primary and additional Y parameter series using positional index mapping.
+
+    Parameters
+    ----------
+    p : str
+        Primary Y parameter name.
+    y : list
+        Primary Y data values series.
+    jsonop : dict
+        Operation configuration dictionary.
+    data : list
+        Raw data array.
+    addpos : dict
+        Dictionary mapping parameter names to array column indices.
+
+    Returns
+    -------
+    ydata : dict
+        Dictionary mapping parameter names to extracted data value series.
+    """
     #get first ydata
     ydata = {p : y}
     #get additional parameters (if present)
@@ -358,6 +655,26 @@ def get_y_data2(p, y, jsonop, data, addpos):
     return ydata
 
 def get_y_data(p, y, jsonop, data, parlist):
+    """Extract primary and additional Y parameter series using parameter array matching.
+
+    Parameters
+    ----------
+    p : str
+        Primary Y parameter name.
+    y : list
+        Primary Y data values series.
+    jsonop : dict
+        Operation configuration dictionary.
+    data : list
+        Raw data array.
+    parlist : numpy.ndarray
+        Full parameter names array.
+
+    Returns
+    -------
+    ydata : dict
+        Dictionary mapping parameter names to extracted data value series.
+    """
     #get first ydata
     ydata = {p : y}
     #get additional parameters (if present)
@@ -373,22 +690,98 @@ def get_y_data(p, y, jsonop, data, parlist):
     return ydata
 
 def make_histogram(ydata, binsize, fname):
+    """Generate and save histogram chart file.
+
+    Parameters
+    ----------
+    ydata : dict
+        Dictionary mapping parameter names to data series.
+    binsize : list
+        Bin configuration settings [iswidth, binval].
+    fname : str
+        Output file path.
+
+    Returns
+    -------
+    filename : list of str or str
+        Generated image filenames list or empty string on failure.
+    """
     filename = generate_plot([], ydata, fname, ptype="histogram", binsize = binsize)
 
     return filename
 
 def make_trend(xdatastr, ydata, fname, fit = False):
+    """Generate and save time-series trend plot file.
+
+    Parameters
+    ----------
+    xdatastr : list of str
+        List of datetime string timestamps.
+    ydata : dict
+        Dictionary mapping parameter names to data series.
+    fname : str
+        Output file path.
+    fit : bool, optional
+        Linear fit flag (default is False).
+
+    Returns
+    -------
+    filename : list of str or str
+        Generated image filenames list or empty string on failure.
+    """
     xdata = [datetime.strptime(date, "%Y-%m-%d %H:%M:%S") for date in xdatastr]
     filename = generate_plot(xdata, ydata, fname, ptype="trend")
 
     return filename
 
 def make_scatter(xdata, ydata, fname, xpar = "", fit = False):
+    """Generate and save scatter plot file.
+
+    Parameters
+    ----------
+    xdata : list
+        X parameter data values series.
+    ydata : dict
+        Dictionary mapping Y parameter names to data series.
+    fname : str
+        Output file path.
+    xpar : str, optional
+        X-axis parameter name label (default is "").
+    fit : bool, optional
+        Linear fit flag (default is False).
+
+    Returns
+    -------
+    filename : list of str or str
+        Generated image filenames list or empty string on failure.
+    """
     filename = generate_plot(xdata, ydata, fname, ptype="scatter", xlabel = xpar)
 
     return filename
 
 def generate_plot(xdata, ydata, fname, ptype, xlabel = "", binsize = []):
+    """Dispatch single or multi-panel plot figure creation.
+
+    Parameters
+    ----------
+    xdata : list
+        X-axis series data.
+    ydata : dict
+        Y-axis series data dictionary.
+    fname : str
+        Output file path.
+    ptype : str
+        Plot type name ('trend', 'scatter', 'histogram').
+    xlabel : str, optional
+        X-axis label string (default is "").
+    binsize : list, optional
+        Bin settings for histogram (default is []).
+
+    Returns
+    -------
+    filename : list of str or str
+        Generated plot image filenames list or empty string.
+    """
     filename = []
 
     if len(ydata) > 1:
@@ -413,6 +806,26 @@ def generate_plot(xdata, ydata, fname, ptype, xlabel = "", binsize = []):
     return filename
 
 def single_plot(xdata, ydata, fname, ptype, binsize = []):
+    """Render single chart figure and save to file.
+
+    Parameters
+    ----------
+    xdata : list
+        X-axis series data.
+    ydata : dict
+        Y-axis series data dictionary.
+    fname : str
+        Output file path.
+    ptype : str
+        Plot type name ('trend', 'scatter', 'histogram').
+    binsize : list, optional
+        Bin settings for histogram (default is []).
+
+    Returns
+    -------
+    filename : str
+        Output image file path if created, or empty string on failure.
+    """
     if ptype=="histogram":
         iswidth = binsize[0]
         binval = binsize[1]
@@ -479,6 +892,17 @@ def single_plot(xdata, ydata, fname, ptype, binsize = []):
     return filename
 
 def set_axes(plt, ax, ptype):
+    """Apply custom background color, tick formatting, and grid styling to plot axes.
+
+    Parameters
+    ----------
+    plt : module
+        Matplotlib.pyplot module reference.
+    ax : Axes
+        Matplotlib Axes object.
+    ptype : str
+        Plot type identifier string.
+    """
     ax.set_facecolor('#e5ecf6')
     if ptype != "histogram":
         plt.grid(color='white')
@@ -498,6 +922,28 @@ def set_axes(plt, ax, ptype):
     plt.yticks(fontsize = 10)
 
 def multi_plot(xdata, ydata, fname, ptype, xlabel = "", binsize = []):
+    """Render multi-panel chart figures and save them to files.
+
+    Parameters
+    ----------
+    xdata : list
+        X-axis series data.
+    ydata : dict
+        Y-axis series data dictionary.
+    fname : str
+        Output file path.
+    ptype : str
+        Plot type name ('trend', 'scatter', 'histogram').
+    xlabel : str, optional
+        X-axis label string (default is "").
+    binsize : list, optional
+        Bin settings for histogram (default is []).
+
+    Returns
+    -------
+    filename : list of str or str
+        Generated image filenames list or empty string.
+    """
 
     if ptype=="histogram":
         iswidth = binsize[0]
@@ -582,6 +1028,20 @@ def multi_plot(xdata, ydata, fname, ptype, xlabel = "", binsize = []):
     return filename
 
 def get_bins(jsonop):
+    """Extract bin width or bin count parameters from operation configuration.
+
+    Parameters
+    ----------
+    jsonop : dict
+        Operation configuration node.
+
+    Returns
+    -------
+    iswidth : bool
+        True if 'Bin Size' is defined, False if 'Number of Bins' is used.
+    b : float or int
+        Numeric bin width or bin count value.
+    """
     #get binsize
     try:
         b = float(jsonop["Bin Size"])
@@ -592,6 +1052,26 @@ def get_bins(jsonop):
     return iswidth, b
 
 def send_report_mail(mailuser, mailadmin, okreport, maildata, errortype = ""):
+    """Construct and send email notifications for report generation status.
+
+    Parameters
+    ----------
+    mailuser : str
+        Recipient user email address.
+    mailadmin : str
+        Administrator email address.
+    okreport : bool
+        Report generation success flag.
+    maildata : list
+        Metadata list containing filename, user, dates, and URL.
+    errortype : str, optional
+        Error code token ('noxml', 'conferr', 'locerr', default is "").
+
+    Returns
+    -------
+    error : int
+        0 if email sent successfully, 1 on error.
+    """
 
     error_descr = {"noxml" : "No XML report generated",
                 "conferr" : "Error reading report configuration file",
@@ -631,6 +1111,17 @@ def send_report_mail(mailuser, mailadmin, okreport, maildata, errortype = ""):
     return error
 
 def update_progress(connection, runid, percent="final"):
+    """Update report execution completion percentage in database table.
+
+    Parameters
+    ----------
+    connection : pymysql.connections.Connection
+        Active database connection handle.
+    runid : int or str
+        Report experiment run ID.
+    percent : float or "final", optional
+        Progress percentage increment, or "final" to reach 100% (default is "final").
+    """
     sql_get = "SELECT exp_status FROM running_reports WHERE id = "+str(runid)
     with connection.cursor() as cursor:
         cursor.execute(sql_get)

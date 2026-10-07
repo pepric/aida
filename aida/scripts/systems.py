@@ -1,5 +1,16 @@
 #!/usr/bin/python
 
+"""
+System Source Handlers and Interface Implementations.
+
+This module provides class implementations for system sources (e.g., Efd, Fake)
+handling report validation, database queries, file retrieval, and plot data 
+aggregation within the AIDA framework.
+
+@package AIDA
+@module systems
+"""
+
 import numpy as np
 import json
 from os import sep, path, mkdir, remove
@@ -26,6 +37,31 @@ from astropy.time import Time
 import pandas as pd
 
 class Efd():
+    """System handler for the USDF / Rubin Observatory Engineering and Facility Database (EFD).
+
+    Attributes
+    ----------
+    allowed_origin : list of str
+        Supported data origin categories ('HKTM', 'SCIENCE').
+    db_cols : str
+        Database table columns required for metadata queries.
+    exp_par_info : dict
+        Parameter configuration mapping for analysis.
+    name : str
+        Internal system identifier name ('efd').
+    source : str
+        Form source identifier string ('EFD').
+    parstruct : dict
+        Structural parameter hierarchy mappings per origin.
+    br_depth : dict
+        Configuration tree depth mappings per origin.
+    hasorig : bool
+        Flag indicating if origin classifications are present.
+    parallel : bool
+        Flag indicating if parallel processing is enabled.
+    runid_to_dir : dict
+        Mapping indicating if run ID directories are used per origin.
+    """
     def __init__(self):
         #data origin (housekeeping/scientific)
         self.allowed_origin = ["HKTM","SCIENCE"]
@@ -44,6 +80,28 @@ class Efd():
         self.runid_to_dir = {"hktm" : True, "science" : True}
 
     async def get_data_from_efd(self, par, fields, t_start, t_end, client="usdf_efd", prefix ="lsst.sal"):
+        """Asynchronously query time series data from the EFD client.
+
+        Parameters
+        ----------
+        par : str
+            Target topic parameter name.
+        fields : list of str
+            List of topic field names to retrieve.
+        t_start : astropy.time.Time
+            Start time for time series query.
+        t_end : astropy.time.Time
+            End time for time series query.
+        client : str, optional
+            EFD client environment identifier (default is "usdf_efd").
+        prefix : str, optional
+            SAL topic prefix (default is "lsst.sal").
+
+        Returns
+        -------
+        result : pandas.DataFrame
+            Retrieved time series dataset.
+        """
         # The EFD Python client for the USDF environment
         efd_client = EfdClient(efd_name=client)
         par2get = prefix+"."+par
@@ -90,22 +148,17 @@ class Efd():
         # return sql
 
     def check_report_tree(self, check):
-        """ Check if the configuration tree for a system in the configuration file has been  correctly compiled.
+        """Validate report configuration structure for EFD system sub-branches.
 
         Parameters
-        --------
-            check: class
-                class containing methods to check the report tree, as defined by config_validation.configCheck()
+        ----------
+        check : configCheck
+            Configuration validation instance.
 
         Returns
         -------
-            dictionary
-                dictionary containing the result of check in the following structure:
-                {
-                    'isvalid' : <True if the check is ok, False otherwise>,
-                    'msg' : <message to display in the web application (or "" is check is ok)>
-                }
-
+        dict
+            Dictionary containing 'isvalid' boolean and 'msg' string.
         """
     
         isvalid = True
@@ -195,22 +248,23 @@ class Efd():
 
 
     def get_params_list(self, subsys, connection, stat=""):
-        """ Retrieve the list of all available parameters and (optionally) the related list of values for the selected subsystem from AIDA db
+        """Retrieve list of available EFD parameters from AIDA database tables.
 
         Parameters
-        --------
-            subsys: string
-                second level key ("HKTM"/"SCIENCE") as defined in the report configuration file.
-            connection: class
-                opened connection to AIDA db
+        ----------
+        subsys : str
+            Target subsystem or origin category.
+        connection : pymysql.connections.Connection
+            Active local database connection.
+        stat : str, optional
+            Additional SQL WHERE statement (default is "").
 
         Returns
         -------
-            listpar: list
-                list of all available parameters
-            listval: list of lists
-                list containing the lists of available values for each available parameter. For each element listpar[i], the corresponding values list is listval[i]. For this system, listval = [].
-
+        listpar : list of str
+            List of parameter names.
+        listval : list
+            Empty list of discrete parameter values.
         """
 
         try:
@@ -234,28 +288,32 @@ class Efd():
         return listpar, listval
 
     def get_plot_data(self, connection, data, nthreads, remlist, conf, e, repo = "", metadata={"data" : {}}):
-        """Collect data to plot in online web application from data repository.
+        """Collect and aggregate EFD time series data for web plot visualization.
 
         Parameters
-        --------
-            connection : class
-                opened connection to AIDA db
-            data : class
-                cgi.FieldStorage class containing data collected from web application form
-            nthreads : int
-                maximum number of parallel threads to run
-            remlist : list of dictionaries
-                list containing retrieved info about files to use. For each file, info are collected as dictionary as retrieved by the query to metadata archive
-            conf : class
-                main AIDA configuration (from functions.repConfig())
-            e : class
-                class to handle with errors
+        ----------
+        connection : pymysql.connections.Connection
+            Active local database connection.
+        data : cgi.FieldStorage or dict
+            Input request form payload.
+        nthreads : int
+            Maximum parallel processing thread count.
+        remlist : list
+            List of remote metadata records.
+        conf : repConfig
+            Global system configuration instance.
+        e : statusMsg
+            Status and diagnostic message handler.
+        repo : object, optional
+            Repository interface instance (default is "").
+        metadata : dict, optional
+            Additional metadata rules dictionary (default is {"data": {}}).
 
         Returns
         -------
-            result: dictionary
+            output: dictionary
                 dictionary containing data retrieved from data repository. It is structured as follow:
-                    result={
+                    output={
                         'date' : [<datetime_1 ('YYYY-MM-DD HH:mm:ss')>, <datetime_2>, ... ,<datetime_N>],
                         'x': [<x_parameter_1 as string (or '0' if not required)>, <x_parameter_2>, ... ,<x_parameter_N>]
                         'y0': [<y0_parameter_1 as string>, <y0_parameter_2>, ... ,<y0_parameter_N>],
@@ -395,16 +453,16 @@ class Efd():
         return output      
     
     def get_report_params(self, report_data):
-        """ Update self.params with all the report parameters for the system, divided by role (main keys or additional)
+        """Extract all system report parameters partitioned into primary keys and extra parameters.
 
         Parameters
-        --------
-            report_data: dictionary
-                dictionary containing configuration data as defined in reportConfig().repdata
+        ----------
+        report_data : dict
+            Parsed report configuration tree.
 
         Returns
         -------
-            self.params: dictionary
+            self.params: dict
                 all the report parameters for the system, divided by role (main keys or additional)
                 It is structured as follow:
                 {
@@ -426,6 +484,24 @@ class Efd():
         return self.params    
 
     def get_report_data(self, pars, t0, tf):
+        """Query report time series data asynchronously from EFD.
+
+        Parameters
+        ----------
+        pars : dict
+            Dictionary mapping topics to lists of field names.
+        t0 : str
+            Start datetime string.
+        tf : str
+            End datetime string.
+
+        Returns
+        -------
+        result : pandas.DataFrame
+            Retrieved time series dataset.
+        e : int
+            0 on success, 1 on data query failure.
+        """
         tstart = t0.replace(" ","T")
         tend = tf.replace(" ","T")
         t_start = Time(tstart, scale="utc", format="isot")
@@ -440,28 +516,29 @@ class Efd():
                 e = 1
 
         return result, e
+        
     def report_data_from_db(self, par, sub, conf, tstart = None, tstop = None, result={}):
-        """ Read data by querying remote DB
+        """Retrieve EFD time series data for report execution pipeline.
 
         Parameters
-        --------
-            par : list
-                list of all parameters to query, indipendently from being main or additional parameters
-            sub: string
-                second level key ("hktm"/"science") as defined in the report configuration file in lowercase format.                
-            conf : class
-                main AIDA configuration (from functions.repConfig())
-            tstart : int
-                timestamp of start date/time (UTC)
-            tstop : int
-                timestamp of end date/time (UTC)
-            result : dictionary, optional
-                results dictionary to update. Default : {}
+        ----------
+        par : list of str
+            List of parameter topic/field strings to query.
+        sub : str
+            Data origin category name.
+        conf : repConfig
+            Global configuration instance.
+        tstart : float or None, optional
+            Start timestamp (default is None).
+        tstop : float or None, optional
+            Stop timestamp (default is None).
+        result : dict, optional
+            Existing result dictionary to update (default is {}).
 
         Returns
         -------
             result: dictionary
-                results dictionary updated with extracted values. Its structure is:
+                Updated dictionary mapping parameter names to dates and values arrays. Its structure is:
                     ret={<parameter> : {"dates" : [datetime string in the form 'YYYY-MM-DD HH:mm:ss'], "values" : [values]}
         """
         
@@ -601,167 +678,25 @@ class Efd():
 
         return result       
     
-    # def read_data_from_file(self, input, temp_dir, par, conf, tstart = None, tstop = None, adu=None, det=None, repo = None, metadata={}, result = {}):
-        # """ Read useful data from files in the temporary report directory
-
-        # Parameters
-        # --------
-            # input : string
-                # file to open
-            # tmp_dir : string
-                # temporary report directory
-            # par : list
-                # list of all parameters to get from file, indipendently from being main or additional parameters
-            # conf : class
-                # main AIDA configuration (from functions.repConfig())
-            # tstart : int
-                # timestamp of start date/time (UTC)
-            # tstop : int
-                # timestamp of end date/time (UTC)
-            # result : dictionary, optional
-                # results dictionary to update. Default : {}
-
-        # Returns
-        # -------
-            # result: dictionary
-                # results dictionary updated with extracted values. Its structure is:
-                    # ret={<parameter> : {"dates" : [datetime string in the form 'YYYY-MM-DD HH:mm:ss'], "values" : [values]}
-        # """
-
-        # if repo.metadata is not None:
-            # metadata = repo.metadata
-        # result = self.read_eas_file(input, temp_dir, par, conf, tstart, tstop, adu, det, metadata, result)
-        
-        # return result        
-
-    # def read_eas_file(self, input, temp_dir, par, conf, tstart, tstop, adu, det, metadata, result):       
-        # f2open = temp_dir+self.name+sep+input
-
-        # if tstart is None:
-            # tstart = self.exp_par_info['tstart']
-        # if tstop is None:
-            # tstop = self.exp_par_info['tstop']        
-
-        # if conf.usecase == "science":
-            # for k,par_meta in metadata["data"].items():
-                # values = []
-                # dates=[]
-                # det = k.split(".")[-2]
-                # p = k.split(".")[-1]
-                # if input in par_meta['hkfitsfile']:
-                    # #index of input in file list
-                    # idx = par_meta['hkfitsfile'].index(input)
-                    # #set date
-                    # curr_date = par_meta['obt'][idx]
-                    # tbl = det.replace("_","")+".RAW"
-                    
-                    # #search for parameter in the table header
-                    # try:
-                        # data = Table.read(f2open, hdu=tbl)                    
-                        # data_par = data.meta[p]
-                        # dates.append(curr_date)
-                        # values.append(data_par)                        
-                    # except:
-                        # pass
-                    # try:
-                        # stored_d = result[k]["dates"]
-                        # stored_v = result[k]["values"]
-                        # new_dates = stored_d+dates
-                        # new_values = stored_v+values
-                        # result.update({k:{"dates":new_dates, "values":new_values}})
-                    # except:
-                        # result.update({k:{"dates":dates, "values":values}})
-        # elif conf.usecase == "hktm":
-            # hdus = metadata["data"][input]
-            # for h in hdus:
-                # dates = []
-                # values = []
-                # data = Table.read(f2open, hdu=h)
-                # par = data.colnames[1]
-                # datelist = data['timestamp']
-                # for i,d in enumerate(datelist):
-                    # if int(str(d)[:-6]) >= tstart and int(str(d)[:-6])<= tstop :
-                        # dates.append(datetime.utcfromtimestamp(d/1000000).strftime('%Y-%m-%d %H:%M:%S.%f'))     #POSSIBILE BUG TIMESTAMP FILE SOC HKTM
-                        # values.append(data[par][i])
-                # try:
-                    # stored_d = result[par]["dates"]
-                    # stored_v = result[par]["values"]
-                    # new_dates = stored_d+dates
-                    # new_values = stored_v+values
-                    # result.update({par:{"dates":new_dates, "values":new_values}})
-                # except:
-                    # result.update({par:{"dates":dates, "values":values}})
-                   
-        # return result                
-    
-    # def set_par_summary(self, par, info):
-        # """Set dictionary containing parameters info to be stored in PDF report summary table
-
-        # Parameters
-        # --------
-            # par: string
-                # name of parameter
-            # info: list of dictionaries
-                # list of dictionaries obtained by self.get_par_info
-
-        # Returns
-        # -------
-            # out: dictionary
-                # dictionary containing parameter data to be summarized into PDF report table
-
-        # """
-        # out = {"Parameter" : par}
-        # for item in info:
-            # if item['param'] == par:
-                # #get subsystem
-                # sub = item['subsystem'].strip()
-                # #get description
-                # descr = item['description']
-                # if (descr is None) or (len(descr)==0):
-                    # descr = "-"
-                # #get rangeval
-                # try :
-                    # minval = item['minval']
-                    # if int(minval) == -999:
-                        # minval ="ND"
-                # except:
-                    # minval = "ND"
-                # try :
-                    # maxval = item['maxval']
-                    # if int(maxval) == -999:
-                        # maxval ="ND"
-                # except:
-                    # maxval = "ND"
-                # if minval != "ND" and maxval != "ND":
-                    # rangeval = "["+str(minval)+", "+str(maxval)+"]"
-                # else:
-                    # rangeval = "ND"
-                # #set detector
-                # det = ""
-                # break
-        # out.update({"Subsystem" : sub, "Description" : descr, "Allowed Range" : rangeval, "Detector" : det})
-
-        # return out
 
     def set_pdf_params_items(self, p, conn, tbl, usecase = "hktm"):
-        """Retrieve description data for paramaters from AIDA db
+        """Retrieve parameter description for PDF report summary tables.
 
         Parameters
-        --------
-            p: string
-                name of parameter
-            conn: class
-                opened connection to AIDA db
-            tbl: string
-                table containing 'description' column,
-            usecase : "hktm" or "science"
-                origin of data. Default is "hktm"
+        ----------
+        p : str
+            Parameter identifier name.
+        conn : pymysql.connections.Connection
+            Active database connection.
+        tbl : str
+            Target parameter database table name.
+        usecase : str, optional
+            Data origin classification (default is "hktm").
 
         Returns
         -------
-            list
-                list containing name, subsystem and description of the input parameter
-
+        list
+            List containing [param, subsystem, description, extra_dict].
         """
 
         par_arr = p.split(".")
@@ -787,6 +722,31 @@ class Efd():
         
         
 class Fake():
+    """Mock/testing system class implementation for local telemetry parsing.
+
+    Attributes
+    ----------
+    allowed_origin : list of str
+        Supported origins list ('HKTM', 'SCIENCE').
+    db_cols : str
+        Metadata database columns string.
+    exp_par_info : dict
+        Analysis parameter information container.
+    name : str
+        System identifier name ('fake').
+    source : str
+        Form source identifier string ('FAKE').
+    parstruct : dict
+        Parameter structure hierarchy per origin.
+    br_depth : dict
+        Branch depth mappings.
+    hasorig : bool
+        Flag indicating origin presence.
+    parallel : bool
+        Flag indicating parallel capability.
+    runid_to_dir : dict
+        Mapping indicating run ID directory use per origin.
+    """
     def __init__(self):
         #data origin (housekeeping/scientific)
         self.allowed_origin = ["HKTM","SCIENCE"]
@@ -844,22 +804,17 @@ class Fake():
         return sql
 
     def check_report_tree(self, check):
-        """ Check if the configuration tree for a system in the configuration file has been  correctly compiled.
+        """Validate report configuration structure for Fake system sub-branches.
 
         Parameters
-        --------
-            check: class
-                class containing methods to check the report tree, as defined by config_validation.configCheck()
+        ----------
+        check : configCheck
+            Configuration validation object.
 
         Returns
         -------
-            dictionary
-                dictionary containing the result of check in the following structure:
-                {
-                    'isvalid' : <True if the check is ok, False otherwise>,
-                    'msg' : <message to display in the web application (or "" is check is ok)>
-                }
-
+        dict
+            Dictionary with keys 'isvalid' (bool) and 'msg' (str).
         """
     
         isvalid = True
@@ -942,24 +897,23 @@ class Fake():
         return {'isvalid':isvalid, 'msg':msg}
 
     def copylocal(self, f2use, orig_path, final_path, usecase = "report"):
-        """ Copy files from local repository to temporary directory
+        """Copy data files from local repository directory to temporary directory.
 
         Parameters
-        --------
-            f2use: list
-                list of files to copy
-            orig_path: string
-                path of local repository (from configuration)
-            final_path: string
-                path of destination (temporary path)
-            usecase : string, optional
-                experiment from which the call is done ("report", "plot"...), Deafult is "report"
+        ----------
+        f2use : list of str
+            List of filenames to copy.
+        orig_path : str
+            Local repository base directory path.
+        final_path : str
+            Target temporary working directory path.
+        usecase : str, optional
+            Execution usecase context (default is "report").
 
         Returns
         -------
-            file_ok: boolean
-                True if all the files in the list f2use have been successfully copied, False otherwise
-
+        file_ok : bool
+            True if all files were copied successfully, False otherwise.
         """
         orig_path = orig_path.replace("/", sep)
         file_ok_arr = []
@@ -979,19 +933,19 @@ class Fake():
         return file_ok
 
     def count_params(self, conf, sub):
-        """ Return the number of main parameters for the selected sub.
+        """Return count of configured primary parameters for a subsystem.
 
         Parameters
-        --------
-            conf: class
-                class generate_report.reportConfig() containing report configuration from configuration file
-            sub : string
-                second level key ("HKTM"/"SCIENCE") as defined in the report configuration file.
+        ----------
+        conf : reportConfig
+            Report configuration instance.
+        sub : str
+            Subsystem key name.
 
         Returns
         -------
-            npar : int
-                number of parameters
+        npar : int
+            Total parameter count.
         """
 
         npar = 0
@@ -1000,34 +954,69 @@ class Fake():
         return npar
 
     def db_statement_filelist(self, addstatement, tstart, tstop):
-        """Set the MYSQL WHERE statement to get the list of files to download from the metadata archive
+        """Construct MySQL WHERE clause statement for metadata file listing.
 
         Parameters
-        --------
-            addstatement : string
-                "condition" defined in the system configuration file
-            tstart : string
-                start datetime in the form compliant to the metadata db format (YYYY-MM-DD HH:mm:ss)
-            tstop : string
-                end datetime in the form compliant to the metadata db format (YYYY-MM-DD HH:mm:ss)
+        ----------
+        addstatement : str
+            Additional query conditions string.
+        tstart : str
+            Start datetime string (%Y-%m-%d %H:%M:%S).
+        tstop : str
+            End datetime string (%Y-%m-%d %H:%M:%S).
 
         Returns
         -------
-            statement: string
-                MYSQL WHERE statement
-
+        statement : str
+            Formatted SQL WHERE statement.
         """
 
         statement = "WHERE startdate <= '"+tstop+"' AND enddate >= '"+tstart+"' "+addstatement+" AND swcomponentid <> 1"
         return statement
 
     def download_file(self, fname, conf, ftp, tmp_dir, repo):
+        """Download telemetry file from repository to temporary directory.
+
+        Parameters
+        ----------
+        fname : str
+            Filename to download.
+        conf : repConfig
+            Global system configuration object.
+        ftp : ftplib.FTP
+            FTP connection handle.
+        tmp_dir : str
+            Temporary directory path.
+        repo : object
+            Repository handler object.
+
+        Returns
+        -------
+        completed : bool
+            True if download succeeded, False otherwise.
+        """
         tmppath = tmp_dir+self.name+sep
         completed = repo.download_file(fname, tmppath)
          
         return completed
         
     def get_data_from_db(self, data, conf, e):
+        """Retrieve database telemetry records for online plot visualization.
+
+        Parameters
+        ----------
+        data : cgi.FieldStorage or dict
+            CGI request payload.
+        conf : dict
+            Database configuration parameters.
+        e : statusMsg
+            Status diagnostic handler object.
+
+        Returns
+        -------
+        result : dict
+            Extracted date, X, and Y parameter series dictionary.
+        """
         #Import data parameters
         source, plot, n_ypar, tstartdb, tenddb = du.get_base_data(data)
         try:
@@ -1155,24 +1144,23 @@ class Fake():
         return result      
     
     def get_files2use(self,report_conf, origin, pars, remotelist):
-        """ Select useful files from the list of all files in the selected period taken from the metadata archive
+        """Filter metadata file list using Parameter List File (PLF) rules.
 
         Parameters
-        --------
-            report_conf: class
-                class generate_report.reportConfig() containing report configuration from configuration file
-            origin: string
-                second level key ("hktm"/"science") as defined in the system configuration file .conf
-            pars: list
-                list of parameters to analyze for the selected system/origin
-            remotelist: list
-                list of files to consider in the defined period, obtained from metadata archive
+        ----------
+        report_conf : reportConfig
+            Report configuration object.
+        origin : str
+            Data origin category name.
+        pars : list of str
+            Target parameters list.
+        remotelist : list of str
+            Candidate files list.
 
         Returns
         -------
-            f2use: list
-                list of files to use for the analysis, after cleaning
-
+        f2use : list of str
+            Cleaned and filtered filenames list.
         """
         f2use = []
         fwithf = []        
@@ -1193,22 +1181,21 @@ class Fake():
         return f2use
     
     def get_par_info(self, listpar, conn, sub):
-        """ Retrieve parameters info from AIDA db
+        """Query database parameter metadata records.
 
         Parameters
-        --------
-            listpar: list
-                list of main keys parameters for which getting info
-            conn: class
-                opened connection to AIDA db
-            sub: string
-                second level key ("HKTM"/"SCIENCE") as defined in the report configuration file.
+        ----------
+        listpar : list of str
+            Parameter names list.
+        conn : pymysql.connections.Connection
+            Active database connection.
+        sub : str
+            Subsystem category name.
 
         Returns
         -------
-            infopar: list of dictionaries
-                list of dictionaries containing all parameters info directly from AIDA db table "<sub.lower()>_<self.name>_params" (for instance "hktm_nisp_params")
-
+        infopar : list of dict
+            Retrieved parameter metadata rows list.
         """
 
         infopar = []
@@ -1224,22 +1211,23 @@ class Fake():
         return infopar
 
     def get_params_list(self, subsys, connection, stat=""):
-        """ Retrieve the list of all available parameters and (optionally) the related list of values for the selected subsystem from AIDA db
+        """Retrieve list of available parameter names from database table.
 
         Parameters
-        --------
-            subsys: string
-                second level key ("HKTM"/"SCIENCE") as defined in the report configuration file.
-            connection: class
-                opened connection to AIDA db
+        ----------
+        subsys : str
+            Subsystem category name.
+        connection : pymysql.connections.Connection
+            Active database connection.
+        stat : str, optional
+            Additional SQL statement (default is "").
 
         Returns
         -------
-            listpar: list
-                list of all available parameters
-            listval: list of lists
-                list containing the lists of available values for each available parameter. For each element listpar[i], the corresponding values list is listval[i]. For this system, listval = [].
-
+        listpar : list of str
+            Available parameter names.
+        listval : list
+            Empty values list.
         """
 
         try:
@@ -1263,36 +1251,40 @@ class Fake():
         return listpar, listval
 
     def get_plot_data(self, connection, data, nthreads, remlist, conf, e, repo = "", metadata={"data" : {}}):
-        """Collect data to plot in online web application from data repository.
+        """Collect telemetry series from repository files for web plot rendering.
 
         Parameters
-        --------
-            connection : class
-                opened connection to AIDA db
-            data : class
-                cgi.FieldStorage class containing data collected from web application form
-            nthreads : int
-                maximum number of parallel threads to run
-            remlist : list of dictionaries
-                list containing retrieved info about files to use. For each file, info are collected as dictionary as retrieved by the query to metadata archive
-            conf : class
-                main AIDA configuration (from functions.repConfig())
-            e : class
-                class to handle with errors
+        ----------
+        connection : pymysql.connections.Connection
+            Active database connection.
+        data : cgi.FieldStorage or dict
+            Input CGI request payload.
+        nthreads : int
+            Worker thread count allocation.
+        remlist : list
+            Candidate file records list.
+        conf : repConfig
+            Global system configuration object.
+        e : statusMsg
+            Status diagnostic handler object.
+        repo : object, optional
+            Repository interface object (default is "").
+        metadata : dict, optional
+            Extracted metadata rules (default is {"data": {}}).
 
         Returns
         -------
-            result: dictionary
-                dictionary containing data retrieved from data repository. It is structured as follow:
-                    result={
-                        'date' : [<datetime_1 ('YYYY-MM-DD HH:mm:ss')>, <datetime_2>, ... ,<datetime_N>],
-                        'x': [<x_parameter_1 as string (or '0' if not required)>, <x_parameter_2>, ... ,<x_parameter_N>]
-                        'y0': [<y0_parameter_1 as string>, <y0_parameter_2>, ... ,<y0_parameter_N>],
-                        'y1': [<y1_parameter_1 as string>, <y1_parameter_2>, ... ,<y1_parameter_N>],
-                        ...
-                        'y<M>': [<yM_parameter_1 as string>, <yM_parameter_2>, ... ,<yM_parameter_N>],
-                    }
-                Records 'y1'...'y<M>' are reported only if they have been required from user.
+        result: dictionary
+            dictionary containing data retrieved from data repository. It is structured as follow:
+                result={
+                    'date' : [<datetime_1 ('YYYY-MM-DD HH:mm:ss')>, <datetime_2>, ... ,<datetime_N>],
+                    'x': [<x_parameter_1 as string (or '0' if not required)>, <x_parameter_2>, ... ,<x_parameter_N>]
+                    'y0': [<y0_parameter_1 as string>, <y0_parameter_2>, ... ,<y0_parameter_N>],
+                    'y1': [<y1_parameter_1 as string>, <y1_parameter_2>, ... ,<y1_parameter_N>],
+                    ...
+                    'y<M>': [<yM_parameter_1 as string>, <yM_parameter_2>, ... ,<yM_parameter_N>],
+                }
+            Records 'y1'...'y<M>' are reported only if they have been required from user.
 
         """
 
@@ -1480,25 +1472,25 @@ class Fake():
         return result      
     
     def get_report_params(self, report_data):
-        """ Update self.params with all the report parameters for the system, divided by role (main keys or additional)
+        """Extract all system report parameters divided into primary keys and additional parameters.
 
         Parameters
-        --------
-            report_data: dictionary
-                dictionary containing configuration data as defined in reportConfig().repdata
+        ----------
+        report_data : dict
+            Parsed report configuration tree.
 
         Returns
         -------
-            self.params: dictionary
-                all the report parameters for the system, divided by role (main keys or additional)
-                It is structured as follow:
-                {
-                    <sub name 1("hktm"/"science")> : {
-                        'keys': [<par1>, <par2>,...,<parN>],
-                        'add': [<par1>, <par2>,...,<parN>]
-                    },
-                    <sub name 2> : ...
-                }
+        self.params: dictionary
+            all the report parameters for the system, divided by role (main keys or additional)
+            It is structured as follow:
+            {
+                <sub name 1("hktm"/"science")> : {
+                    'keys': [<par1>, <par2>,...,<parN>],
+                    'add': [<par1>, <par2>,...,<parN>]
+                },
+                <sub name 2> : ...
+            }
 
         """
         self.params = {}
@@ -1511,28 +1503,28 @@ class Fake():
         return self.params    
     
     def report_data_from_db(self, par, sub, conf, tstart = None, tstop = None, result={}):
-        """ Read data by querying remote DB
+        """Query database for parameter telemetry time series for report processing.
 
         Parameters
-        --------
-            par : list
-                list of all parameters to query, indipendently from being main or additional parameters
-            sub: string
-                second level key ("hktm"/"science") as defined in the report configuration file in lowercase format.                
-            conf : class
-                main AIDA configuration (from functions.repConfig())
-            tstart : int
-                timestamp of start date/time (UTC)
-            tstop : int
-                timestamp of end date/time (UTC)
-            result : dictionary, optional
-                results dictionary to update. Default : {}
+        ----------
+        par : list of str
+            Parameter names list.
+        sub : str
+            Subsystem category string.
+        conf : repConfig
+            Configuration object.
+        tstart : float or None, optional
+            Start timestamp (default is None).
+        tstop : float or None, optional
+            Stop timestamp (default is None).
+        result : dict, optional
+            Existing result dictionary to update (default is {}).
 
         Returns
         -------
-            result: dictionary
-                results dictionary updated with extracted values. Its structure is:
-                    ret={<parameter> : {"dates" : [datetime string in the form 'YYYY-MM-DD HH:mm:ss'], "values" : [values]}
+        result: dict
+            results dictionary updated with extracted values. Its structure is:
+                ret={<parameter> : {"dates" : [datetime string in the form 'YYYY-MM-DD HH:mm:ss'], "values" : [values]}
         """
 
         conndata = conf.dbconfig[sub]
@@ -1583,30 +1575,38 @@ class Fake():
         return result       
     
     def read_data_from_file(self, input, temp_dir, par, conf, tstart = None, tstop = None, adu=None, det=None, repo = None, metadata={}, result = {}):
-        """ Read useful data from files in the temporary report directory
+        """Extract parameter telemetry values from a local temporary data file.
 
         Parameters
-        --------
-            input : string
-                file to open
-            tmp_dir : string
-                temporary report directory
-            par : list
-                list of all parameters to get from file, indipendently from being main or additional parameters
-            conf : class
-                main AIDA configuration (from functions.repConfig())
-            tstart : int
-                timestamp of start date/time (UTC)
-            tstop : int
-                timestamp of end date/time (UTC)
-            result : dictionary, optional
-                results dictionary to update. Default : {}
+        ----------
+        input : str
+            Filename to open.
+        temp_dir : str
+            Path to temporary directory.
+        par : list of str
+            Parameter names list.
+        conf : repConfig
+            Configuration object.
+        tstart : float or None, optional
+            Start timestamp (default is None).
+        tstop : float or None, optional
+            Stop timestamp (default is None).
+        adu : list or str, optional
+            ADU calibration flags.
+        det : list or str, optional
+            Detector identifiers.
+        repo : object, optional
+            Repository object.
+        metadata : dict, optional
+            Metadata mapping (default is {}).
+        result : dict, optional
+            Result dictionary to update (default is {})
 
         Returns
         -------
-            result: dictionary
-                results dictionary updated with extracted values. Its structure is:
-                    ret={<parameter> : {"dates" : [datetime string in the form 'YYYY-MM-DD HH:mm:ss'], "values" : [values]}
+        result: dict
+            Updated parameter time series dictionary.. Its structure is:
+                ret={<parameter> : {"dates" : [datetime string in the form 'YYYY-MM-DD HH:mm:ss'], "values" : [values]}
         """
 
         if repo.metadata is not None:
@@ -1615,7 +1615,37 @@ class Fake():
         
         return result        
 
-    def read_eas_file(self, input, temp_dir, par, conf, tstart, tstop, adu, det, metadata, result):       
+    def read_eas_file(self, input, temp_dir, par, conf, tstart, tstop, adu, det, metadata, result):
+        """Parse FITS telemetry file tables and extract time series values.
+
+        Parameters
+        ----------
+        input : str
+            Filename to read.
+        temp_dir : str
+            Temporary directory path.
+        par : list of str
+            Parameter names list.
+        conf : repConfig
+            Configuration object.
+        tstart : float or None
+            Start timestamp.
+        tstop : float or None
+            Stop timestamp.
+        adu : list or str
+            ADU calibration flags.
+        det : list or str
+            Detector layout identifiers.
+        metadata : dict
+            Metadata mapping dictionary.
+        result : dict
+            Result dictionary to update.
+
+        Returns
+        -------
+        result : dict
+            Updated parameter values dictionary.
+        """
         f2open = temp_dir+self.name+sep+input
 
         if tstart is None:
@@ -1676,20 +1706,19 @@ class Fake():
         return result                
     
     def set_par_summary(self, par, info):
-        """Set dictionary containing parameters info to be stored in PDF report summary table
+        """Format parameter summary information for PDF report tables.
 
         Parameters
-        --------
-            par: string
-                name of parameter
-            info: list of dictionaries
-                list of dictionaries obtained by self.get_par_info
+        ----------
+        par : str
+            Parameter name.
+        info : list of dict
+            Parameter database info records list.
 
         Returns
         -------
-            out: dictionary
-                dictionary containing parameter data to be summarized into PDF report table
-
+        out : dict
+            Formatted summary dictionary.
         """
         out = {"Parameter" : par}
         for item in info:
@@ -1725,24 +1754,23 @@ class Fake():
         return out
 
     def set_pdf_params_items(self, p, conn, tbl, usecase = "hktm"):
-        """Retrieve description data for paramaters from AIDA db
+        """Retrieve description and metadata items for PDF report parameter summaries.
 
         Parameters
-        --------
-            p: string
-                name of parameter
-            conn: class
-                opened connection to AIDA db
-            tbl: string
-                table containing 'description' column,
-            usecase : "hktm" or "science"
-                origin of data. Default is "hktm"
+        ----------
+        p : str
+            Parameter identifier string.
+        conn : pymysql.connections.Connection
+            Active database connection.
+        tbl : str
+            Database table name.
+        usecase : str, optional
+            Data origin classification (default is "hktm").
 
         Returns
         -------
-            list
-                list containing name, subsystem and description of the input parameter
-
+        list
+            List containing [param, subsystem, description, extra_dict].
         """
 
         par_arr = p.split(".")

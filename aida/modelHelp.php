@@ -1,3 +1,16 @@
+<?php
+/**
+ * Machine Learning Model Help View.
+ *
+ * Page template that retrieves and displays documentation and parameter details
+ * for a specified Machine Learning model by invoking a Python helper script (`helpMlModel.py`).
+ *
+ * @package    AIDA
+ * @subpackage Views\MachineLearning
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+ ?>
 <!doctype html>
 <html class="fixed">
 

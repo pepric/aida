@@ -1,3 +1,16 @@
+<?php
+/**
+ * Machine Learning Experiment Execution Page View.
+ *
+ * View template wrapping `ml_run_panel.php` for configuring and submitting
+ * Machine Learning training and evaluation jobs.
+ *
+ * @package    AIDA
+ * @subpackage Views\MachineLearning
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+ ?>
 <!doctype html>
 <html class="fixed">
 	<?php

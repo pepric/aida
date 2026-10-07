@@ -1,134 +1,19 @@
-<?php include("header-js9.php"); ?>
-<!--<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-   "http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<head> 
-  <meta name="publisher" content="Center for Astrophysics">
-  <meta name="language" content="en">
-  <meta name="date" content="2019-05-01">
-  <meta name="author" content="Eric Mandel, CfA">
-  <meta name="keywords" content="Harvard Smithsonian Astrophysics high-energy chandra x-ray astronomy visualization DS9 JS9 telescope observatory research">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" > 
-  <link type="image/x-icon" rel="shortcut icon" href="js9/favicon.ico">
-  <link type="text/css" rel="stylesheet" href="js9/js9support.css">
-  <link type="text/css" rel="stylesheet" href="js9/js9.css">
-  <link rel="apple-touch-icon" href="js9/images/js9-apple-touch-icon.png">
-  <script type="text/javascript" src="js9/js9prefs.js"></script>
-  <script type="text/javascript" src="js9/js9support.min.js"></script>
-  <script type="text/javascript" src="js9/js9.min.js"></script>
-  <script type="text/javascript" src="js9/js9plugins.js"></script>
-  <style type="text/css">
-      h2 {
-        margin-bottom: 0px;
-      }
-      #myTabsContainer {
-        background: -webkit-gradient(linear, left top, left bottom, color-stop(0.0, #ebebeb, color-stop(1.0, #d5d5d5)));
-        background: -webkit-linear-gradient(top, #ebebeb, #d5d5d5);
-        background: -moz-linear-gradient(top, #ebebeb, #d5d5d5);
-        background: -ms-linear-gradient(top, #ebebeb, #d5d5d5);
-        background: -o-linear-gradient(top, #ebebeb, #d5d5d5);
-        background: linear-gradient(top, #ebebeb, #d5d5d5);
-        color: #4d494d;
-        padding: 8px;
-      }
-      #myTabsContainer .indentmenu ul li a{
-        border-right-width: 6px;
-        border-right-style: solid;
-        -webkit-border-image: -webkit-gradient(linear, left top, left bottom, color-stop(0.0, #ebebeb, color-stop(1.0, #d5d5d5)));
-        -webkit-border-image: -webkit-linear-gradient(top, #ebebeb, #d5d5d5);
-        -moz-border-image: -moz-linear-gradient(top, #ebebeb, #d5d5d5);
-        -o-border-image: -o-linear-gradient(top, #ebebeb, #d5d5d5);
-        border-image: linear-gradient(top, #ebebeb, #d5d5d5);
-        border-image-slice: 1;
-      }
-      #myTabsContainer .indentmenu ul li a.selected{
-          background: #696969;
-      }
-      #myTabsDiv {
-        background: #E9E9E9;
-        border-width: 0px;
-        font: normal 14px Arial;
-        min-height: 553px;
-        height: 100%;
-        width: 450px;
-      }
-      #myAnalysisDiv {
-        background: #E9E9E9;
-        border-width: 0px;
-        overflow: auto;
-      }
-      #myAnalysisResults {
-        padding: 5px;
-        margin:  5px;
-        min-height: 440px;
-      }
-      #myButtonsDiv {
-        background: #E9E9E9;
-        border-width: 1px;
-        border-color: black;
-        padding-top: 5px;
-        font: normal 12px Arial;
-        height: 25px;
-      }
-      #intro, #docs, #demos, #status, #get, #thanks {
-        padding: 10px;
-      }
-      .mytabcontent {
-        max-width: 440px;
-      }
-      .myfooter {
-        font: normal 12px Arial;
-      }
-      .mycontact {
-	text-decoration: none;
-	color: #0000FF
-      }
-      .mycontact1 {
-        font: normal 12px Arial;
-        margin-top:  8px;
-        margin-left: 2px;
-        float: left;
-      }
-      .mycontact2 {
-        font: normal 12px Arial;
-        margin-top:   8px;
-        margin-right: 2px;
-        float: right;
-      }
-      .pluginContainer {
-        padding: 5px;
-        padding-left: 4px;
-        background: #E9E9E9;
-      }
-      .plugin {
-        display: inline-block;
-        width: 210px;
-        height: 210px;
-      }
-      /* http://stephen.io/mediaqueries/ */
-      /* For general ipad layouts */
-      @media only screen
-      and (min-device-width : 768px)
-      and (max-device-width : 1024px) {
-      }
-      /* For general iphone layouts */
-      @media only screen
-      and (min-device-width : 375px)
-      and (max-device-width : 667px) {
-        #myTabsDiv {
-            font: normal 8px Arial;
-        }
-        .myfooter {
-            font: normal 8px Arial;
-        }
-      }
+<?php 
+/**
+ * JS9 Standalone Viewer Interface View.
+ *
+ * Renders the primary HTML container layout for the JS9 web-based astronomical viewer,
+ * including menubars, toolbars, main image display, colorbar, and tabbed panels
+ * (Intro, Plugins, Server-side Analysis, Demos, Help, Status, Download links, and Credits).
+ *
+ * @package    AIDA
+ * @subpackage Views\Images
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 
-  </style>
-<title>JS9: astronomical image display everywhere</title>
-</head>-->
-
+	include("header-js9.php"); ?>
     
     <table cellspacing="5">
     <tr valign="top">

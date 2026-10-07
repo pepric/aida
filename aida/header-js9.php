@@ -1,4 +1,16 @@
 <?php
+/**
+ * JS9 Application Page Header and Navigation Router.
+ *
+ * Specialized header component for JS9 image viewing tools. Validates user sessions,
+ * loads `header.html` and `sidebar.php` depending on the current page, and restricts
+ * unauthorized access to view-only modes.
+ *
+ * @package    AIDA
+ * @subpackage Views\Components
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
 	if(isset($_GET['error'])){
 		exit("<script type='text/javascript'>alert('Error Logging In! Please retry');
 								window.location.href='index.php';

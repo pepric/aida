@@ -1,3 +1,16 @@
+<?php
+/**
+ * Feature Under Construction Placeholder View.
+ *
+ * Standalone placeholder page displayed for features or tools currently
+ * in development.
+ *
+ * @package    AIDA
+ * @subpackage Views
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 <!doctype html>
 <html class="fixed">
 	<?php

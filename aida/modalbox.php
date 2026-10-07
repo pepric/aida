@@ -1,5 +1,22 @@
 <?php
-
+/**
+ * Application Modal Dialogs View Template.
+ *
+ * Renders dynamic Bootstrap modal dialogs for report flagging, image storing,
+ * experiment storing, login errors, password change, data import/export, and installation feedback.
+ *
+ * @package    AIDA
+ * @subpackage Views\Components
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+ 
+/**
+ * Output modal dialog HTML structure based on target case parameter.
+ *
+ * @param string $case Modal type identifier ('report', 'img', 'exp', 'loginerr', 'pwd').
+ * @return void
+ */ 
 function show_modal($case){
   switch ($case){
     case "report":

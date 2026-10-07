@@ -1,10 +1,27 @@
+<?php
+/**
+ * Main Application Dashboard View.
+ *
+ * Primary tabbed interface displaying:
+ * - Active operating mode and last user login session timestamp
+ * - Reports, User Activity History, Stored Experiments, and Machine Learning Experiments tabs
+ * - Restricted Administration tabs (Users and Settings) conditionally rendered for 'admin' role
+ *
+ * @package    AIDA
+ * @subpackage Views
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+
+
+?>
 <!doctype html>
 <html class="fixed">
-	<?php 
-		$title = "Dashboard";
-		include("header.php"); ?>
 	<!-- start: page -->
-	
+	<?php
+	$title = "Dashboard";
+	include("header.php"); 
+	?>
 
 	<div class="row">
 		<div class="col-xs-12" style="margin-bottom:15px">

@@ -1,6 +1,25 @@
+<?php
+/**
+ * User Registration View.
+ *
+ * Renders the user sign-up interface, supporting standard user registration
+ * or initial administrator setup based on the presence of the installation trigger file.
+ * Features CAPTCHA challenge verification and password confirmation fields.
+ *
+ * @package    AIDA
+ * @subpackage Views\Auth
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 <!doctype html>
 
 <?php
+/**
+ * Check if the installation trigger file exists.
+ *
+ * @var int $firstinst Flag set to 1 if the '.install' file is present, 0 otherwise.
+ */
 	if(file_exists(".install")){
 		$firstinst = 1;
 	}

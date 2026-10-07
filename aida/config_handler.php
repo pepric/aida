@@ -1,5 +1,25 @@
 <?php
+/**
+ * JSON Report Configuration Save & Update Handler.
+ *
+ * AJAX processing endpoint responsible for saving or updating report JSON configuration
+ * files to disk, updating database configuration records, verifying file integrity,
+ * and logging user actions in the history stack.
+ *
+ * @package    AIDA
+ * @subpackage Controllers\Reports
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
 	include("functions.php");
+/**
+ * @var array  $out       Associative array collecting output status, messages, and filenames for JSON response.
+ * @var string $file_name Target configuration filename sent via POST request.
+ * @var string $text      Raw JSON string payload to write to disk.
+ * @var string $period    Report execution periodicity (e.g., daily, weekly, ondemand).
+ * @var string $username  Active user username.
+ * @var string $path      Relative destination directory path for configuration files.
+ */
 	$out=[];
 	$file_name = $_POST['file'];
 	$text = $_POST['jsontext'];
@@ -21,8 +41,9 @@
 	$todaystr = str_replace(array("-",":"), "", $today);
 	$todaystr = str_replace(array(" "), "_", $todaystr);
 		
-	//Try to upload
-
+/**
+ * Resolve target file path and check for existing file collisions.
+ */
 		if($page == "new"){
 			$newname = checkname($file_name, $path);
 			$fname = $newname[0];
@@ -36,12 +57,16 @@
 			$changename = 0;
 		}
 
-		//save file
+/**
+ * Write configuration JSON payload to disk.
+ */
 		$f = fopen($file, 'w');
 		fwrite($f, $text);
 		fclose($f);
 
-		//check if file has been saved
+/**
+ * Verify file creation on repository filesystem.
+ */
 		$filelist = scandir("users/".$path);
 		$isfile = in_array($fname, $filelist);
 		
@@ -59,7 +84,9 @@
 			$out['status'] = 'failed';
 		}
 		
-		// Try to update DB and check file integrity
+/**
+ * Synchronize local database index and log activity to user history.
+ */
 		if($out['status'] != 'failed'){
 			$r = update_configlist($fname, $path, $username, $today, $period, $t_custom, $page, $file_name, $iscomplete, $action);
 			$conn_err =$r[0];
@@ -101,6 +128,8 @@
 			$out['file']=$fname;
 			$out['isrunning']=$isrunning;
 		}
-		
+/**
+ * Return JSON-encoded response payload to client.
+ */		
 	echo json_encode($out);
 ?>

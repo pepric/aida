@@ -1,8 +1,26 @@
+/**
+ * Application Helper Scripts and Global Event Listeners.
+ *
+ * Provides jQuery event bindings for dynamic form inputs, statistical parameter checkboxes,
+ * datetime pickers, operating mode updates, and application data export/import workflows.
+ *
+ * @package    AIDA
+ * @subpackage JS\Helpers
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+
+/**
+ * Event listener: Triggers extra statistics parameter configuration inputs when a checkbox is toggled.
+ */
 $(document).on('change', '.check', function () {
   var el = $(this)[0];
   more_stats_params(el)
 });
 
+/**
+ * Event listener: Handles "Select/Deselect All" checkbox toggle for statistical functions.
+ */
 $('#checkThemAll').on('change', function () {
   if ($(this).prop('checked')) {
     $('.check').each(function () {
@@ -15,6 +33,9 @@ $('#checkThemAll').on('change', function () {
   }
 });
 
+/**
+ * DOM Load Listener: Configures datetime pickers for start/end dates in UTC timezone.
+ */
 $(document).ready(function () {
   $('#tend').prop('disabled', true);
   $('#tstart').datetimepicker({
@@ -41,6 +62,9 @@ $(document).ready(function () {
   $('#dateiconstart').on("click", function (){$("#tstart").focus()})
 });
 
+/**
+ * DOM Load Listener: Dynamically loads parameter form fields via AJAX when data source changes.
+ */
 $(document).ready(function(){
   $("#hktm_source").change(function(){
     //init hidden det type
@@ -97,6 +121,9 @@ $(document).ready(function(){
   });
 });
 
+/**
+ * Configures histogram bin size and count radio button change listeners.
+ */
 function set_bins(){
     
   $("input[type='radio'][name=bintype]").change(function(){
@@ -118,6 +145,9 @@ function set_bins(){
   });
 };
 
+/**
+ * Event listener: Submits AJAX request to update system operating mode.
+ */
 $('#change_op').on("click", function(){
   $("#loader").show();
   var new_op = $('select[name=opmode] option').filter(':selected').val()
@@ -161,7 +191,9 @@ $('#change_op').on("click", function(){
   });        
 }); 
 
-
+/**
+ * Event listener: Handles data export/backup creation via AJAX.
+ */
 $('#export-btn').on("click", function(){
   $("#loader").show();
   var out_hist
@@ -262,6 +294,9 @@ $('#export-btn').on("click", function(){
   }
 }); 
 
+/**
+ * Event listener: Handles data import/restore from backup file via AJAX.
+ */
 $('#import-btn').on("click", function(){
   $("#loader").show();
 

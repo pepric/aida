@@ -1,5 +1,15 @@
 #!/usr/bin/python
 
+"""
+Image File Listing Handler.
+
+This module handles CGI requests to retrieve image file lists from target data 
+sources and repositories, compiling error and diagnostic status flags.
+
+@package AIDA
+@module get_images_data
+"""
+
 import json
 import numpy as np
 import cgi, cgitb 
@@ -7,6 +17,20 @@ cgitb.enable(display=0, logdir="cgi-logs")   # for troubleshooting
 import functions as util
 
 def get_file_list(data,e):
+    """Retrieve image file list for specified source and repository settings.
+
+    Parameters
+    ----------
+    data : cgi.FieldStorage
+        Input request parameters containing source and parameter counts.
+    e : statusMsg
+        Status message diagnostic handler object.
+
+    Returns
+    -------
+    result : dict
+        Retrieved image files list dictionary.
+    """
     source = data['source'].value
     ny = int(data['ny'].value)
     usecase = 'image'
@@ -26,6 +50,13 @@ def get_file_list(data,e):
     return result
 
 def main(data):
+    """CGI main entry point for image data file listing queries.
+
+    Parameters
+    ----------
+    data : cgi.FieldStorage
+        HTTP request payload containing action parameter.
+    """
 
     e = util.statusMsg()
     action = data['action'].value

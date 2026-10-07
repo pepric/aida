@@ -1,3 +1,16 @@
+<?php
+/**
+ * Header User/Login Box Component.
+ *
+ * Renders the top-right user profile dropdown (for logged-in sessions) or the login
+ * form and quick links (for guests).
+ *
+ * @package    AIDA
+ * @subpackage Views\Components
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?> 
 				<div class="header-right" id="header-right">
 					<span class="separator"></span>
 					<?php if($check==true){?>

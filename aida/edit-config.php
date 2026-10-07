@@ -1,9 +1,22 @@
+<?php
+/**
+ * Edit Report Configuration File View.
+ *
+ * View template for modifying existing JSON report configuration files via an interactive
+ * code editor textarea. Populates file metadata and periodicity options based on URL parameters.
+ *
+ * @package    AIDA
+ * @subpackage Views\Reports
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+
+$title = "Edit Configuration File";
+include("header.php"); 
+?>
 <!doctype html>
 <html class="fixed">
-	<?php 
-		$title = "Edit Configuration File";
-		include("header.php"); ?>
-	
+
 	<!-- start: page -->
 	
 		<div class="row">

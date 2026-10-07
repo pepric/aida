@@ -1,3 +1,16 @@
+<?php
+/**
+ * Configuration Files View.
+ *
+ * Tabbed view listing Periodic, On-Demand, and Uncompleted JSON configuration files
+ * available to the user or system.
+ *
+ * @package    AIDA
+ * @subpackage Views\Reports
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+ ?>
 <!doctype html>
 <html class="fixed">
 	<?php 

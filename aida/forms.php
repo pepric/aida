@@ -1,17 +1,57 @@
-<?php include("functions.php");
+<?php 
+/**
+ * Dynamic Form Rendering Engine for Data Analysis and Plotting.
+ *
+ * Provides object-oriented classes and helper methods to dynamically construct
+ * HTML input forms, drop-down menus, and parameter selectors for various analysis
+ * tasks (Trend Analysis, Scatter Plots, Histograms, Statistics, Machine Learning, and Images)
+ * across different data sources (EFD, Fake DB, Local Uploads).
+ *
+ * @package    AIDA
+ * @subpackage FormEngine
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
 
+include("functions.php");
+
+/**
+ * @var string $plot    Requested analysis/plot type from POST payload (e.g., 'Trend', 'Scatter', 'Histogram', 'ML').
+ * @var string $origin  Data origin or subsystem (e.g., 'hktm', 'science', or list of CSV/FITS column names).
+ * @var string $source  Data source repository ('EFD', 'Fake', 'Upload').
+ * @var string $ml_tech Machine Learning technique identifier ('classification', 'regression', 'cluster').
+ */
 $plot = $_POST["p"];
 $origin = $_POST["o"];
 $source = $_POST["s"];
 $ml_tech = $_POST["t"];
 
+/**
+ * Base Form Element Renderer Class.
+ *
+ * Provides reusable protected methods to construct standard HTML form components
+ * such as labels, select boxes, buttons, wrappers, and filter controls.
+ */
 class Render{
-	
+/**
+	 * Render an HTML label element.
+	 *
+	 * @param string $id    Optional element ID.
+	 * @param string $for   Optional 'for' attribute referencing input ID.
+	 * @param string $style Optional inline CSS style string.
+	 * @param string $class CSS class names. Default 'col-md-2 control-label'.
+	 * @param string $text  Label text content. Default 'Parameters'.
+	 * @return string Rendered HTML label tag.
+	 */	
 	protected function add_label($id="",$for="",$style="",$class="col-md-2 control-label",$text="Parameters"){
 		$res = '<label id="'.$id.'" for="'.$for.'" style="'.$style.'" class="'.$class.'">'.$text.'</label>';
 		return $res;
 	}
-	
+/**
+	 * Render the form section for configuring histogram bin size or number of bins.
+	 *
+	 * @return string Rendered HTML markup for bin configuration controls.
+	 */	
 	protected function render_bins_div(){
 		$div='<div class="form-group" id="bins" style="display:none;">';
 		$div .= $this->add_label("","","","col-md-2 control-label","Bin size/Number of Bins");
@@ -35,7 +75,13 @@ class Render{
 			</div>';
 		return $div;
 	}	
-
+/**
+	 * Render 'Add More' and 'Remove Last' dynamic field action buttons.
+	 *
+	 * @param int  $add_arg Index argument passed to JS addmore_btn() function.
+	 * @param bool $display Whether the 'Add More' button should be visible initially. Default false.
+	 * @return string Rendered HTML buttons.
+	 */
 	protected function render_more_btns($add_arg,$display=false){
 		$style="";
 		if(!$display){
@@ -45,7 +91,13 @@ class Render{
 			  <button type="button" class="mb-xs mt-xs mr-xs btn btn-danger btn-sm" style="display:none;" id = "remove" onclick="remove_btn()">Remove Last...</button>';
 		return $res;
 	}
-
+/**
+	 * Render extra filter toggle buttons for a given coordinate axis.
+	 *
+	 * @param string $coord   Coordinate prefix (e.g. 'x', 'y0').
+	 * @param string $display Inline CSS display value.
+	 * @return string Rendered HTML toggle spans.
+	 */
 	protected function render_extra_btns($coord, $display){
 		
 		$div =	'<div style="display:'.$display.'">                             
@@ -54,10 +106,15 @@ class Render{
 				</div>';
 		return $div;	
 	}
-
+/**
+	 * Render parameter field type select dropdown menu.
+	 *
+	 * @param string $coord   Coordinate axis identifier prefix.
+	 * @param string $extra   Option tags HTML string.
+	 * @param bool   $display Whether the select box should be visible. Default false.
+	 * @return string Rendered HTML select element.
+	 */
 	protected function render_partype($coord, $extra,$display=false){
-		
-		//AGGIUNGERE SUBSYSTEM E FARE QUERY PER FILTRI
 		
 		$style="";
 		if(!$display){
@@ -67,7 +124,16 @@ class Render{
 				<option value="" disabled selected>Select Field</option>'.$extra.'</select>';
 		return $res;
 	}
-
+/**
+	 * Render parameter selection dropdown menu.
+	 *
+	 * @param string $coord    Coordinate axis identifier prefix.
+	 * @param string $onchange JS onchange handler string.
+	 * @param bool   $display  Whether the select box should be visible. Default false.
+	 * @param string $text     Default placeholder option text. Default "Parameter".
+	 * @param string $cols     Pre-populated HTML options string.
+	 * @return string Rendered HTML select element.
+	 */
 	protected function render_params_select($coord,$onchange, $display=false, $text="Parameter", $cols=""){
 		$style="";
 		if(!$display){
@@ -80,12 +146,27 @@ class Render{
 		return $res;
 		
 	}
-
+/**
+	 * Render hidden values selection dropdown menu.
+	 *
+	 * @param string $coord Coordinate axis identifier prefix.
+	 * @return string Rendered HTML select element.
+	 */
 	protected function render_values_select($coord){
 		$res = '<select id="'.$coord.'-values" name="'.$coord.'-values" style="display:none"></select>';
 		return $res;
 	}
-
+/**
+	 * Render main subsystem or category selection dropdown menu.
+	 *
+	 * @param string $id           Element ID and name attribute.
+	 * @param bool   $display      Whether the select box should be visible. Default false.
+	 * @param string $onchange     JS onchange handler string.
+	 * @param string $disabled_opt Default disabled option placeholder text.
+	 * @param bool   $all          Whether to include an 'ALL' option. Default false.
+	 * @param string $options      Additional HTML option elements.
+	 * @return string Rendered HTML select element.
+	 */
 	protected function render_main_select($id, $display=false, $onchange="", $disabled_opt="", $all=false, $options=""){
 		$style="";
 		if(!$display){
@@ -107,7 +188,15 @@ class Render{
 		return $res;
 		
 	}
-
+/**
+	 * Render extra filter input or textarea element.
+	 *
+	 * @param string $id    Element ID attribute.
+	 * @param string $text  Label text description.
+	 * @param string $tag   HTML tag type ('input' or 'textarea').
+	 * @param string $style Optional inline CSS style string for outer wrapper span.
+	 * @return string Rendered HTML label and input control.
+	 */
 	protected function render_extra_filters($id, $text, $tag, $style=""){
 		$pieces = explode("_", $id);
 		$id_label = $pieces[0]."l";
@@ -135,7 +224,13 @@ class Render{
 		$res .= "<".$tag." ".$type." cols=".$cols." id=".$id." name=".$id." value=''></".$tag.">".$end_span;
 		return $res;		
 	}
-
+/**
+	 * Render ADU/Calibrated units checkbox control wrapper.
+	 *
+	 * @param string $coord   Coordinate axis identifier prefix.
+	 * @param string $display CSS display value for wrapper.
+	 * @return string Rendered HTML control.
+	 */
 	protected function render_adubox($coord, $display){
 		$res = '<div style="display:'.$display.'">
 					<div id="'.$coord.'-adu_check" style="display:none; margin-right: 30px;">
@@ -147,7 +242,12 @@ class Render{
 				</div>';
 		return $res;
 	}
-	
+/**
+	 * Generate closing div tags.
+	 *
+	 * @param int $n Number of closing div tags to generate. Default 1.
+	 * @return string Concatenated closing div tags.
+	 */	
 	protected function close_div($n=1){
 		$res="";
 		$i=1;
@@ -158,18 +258,34 @@ class Render{
 		return $res;
 		
 	}
-	
+/**
+	 * Generate an opening div tag with ID, class, and style attributes.
+	 *
+	 * @param string $id    Element ID attribute.
+	 * @param string $class CSS class names. Default 'form-group'.
+	 * @param string $style Inline CSS style. Default 'display:block'.
+	 * @return string Opening div HTML tag.
+	 */	
 	protected function create_div($id,$class="form-group",$style="display:block"){
 		$res='<div class="'.$class.'" id="'.$id.'" style="'.$style.'">';
 		return $res;
 	}
 }
 
-
-/*Plot classes*/
-
+/**
+ * Machine Learning Form Dispatcher.
+ */
 class ML{
-  
+/**
+	 * Dynamically instantiate data source class and render Machine Learning form.
+	 *
+	 * @param string $source   Data source class name ('EFD', 'Fake').
+	 * @param string $origin   Data origin parameter.
+	 * @param array  $settings Display settings array.
+	 * @param array  $repo_set Repository fields configuration array.
+	 * @param string $ml_tech  ML technique ('classification', 'regression', 'cluster').
+	 * @return string Rendered HTML form string.
+	 */  
 	public function call_source($source, $origin, $settings, $repo_set, $ml_tech){
 		//Instantiate source class
     	$s = new ReflectionClass(ucfirst($source));
@@ -181,9 +297,20 @@ class ML{
 
 }
 
-
+/**
+ * Trend Analysis Form Dispatcher.
+ */
 class Trend{
-
+/**
+	 * Dynamically instantiate data source class and render Trend Analysis form.
+	 *
+	 * @param string $source   Data source class name.
+	 * @param string $origin   Data origin parameter.
+	 * @param array  $settings Display settings array.
+	 * @param array  $repo_set Repository fields configuration array.
+	 * @param string $ml_tech  ML technique (unused).
+	 * @return string Rendered HTML form string.
+	 */
 	public function call_source($source, $origin, $settings, $repo_set, $ml_tech){
 		//Instantiate source class
     	$s = new ReflectionClass(ucfirst($source));
@@ -193,9 +320,20 @@ class Trend{
     	return $result;
     }  
 }
-
+/**
+ * Scatter Plot Form Dispatcher.
+ */
 class Scatter{
-  
+/**
+	 * Dynamically instantiate data source class and render Scatter Plot form.
+	 *
+	 * @param string $source   Data source class name.
+	 * @param string $origin   Data origin parameter.
+	 * @param array  $settings Display settings array.
+	 * @param array  $repo_set Repository fields configuration array.
+	 * @param string $ml_tech  ML technique (unused).
+	 * @return string Rendered HTML form string.
+	 */  
 	public function call_source($source, $origin, $settings, $repo_set, $ml_tech){
 		//Instantiate source class
     	$s = new ReflectionClass(ucfirst($source));
@@ -206,9 +344,20 @@ class Scatter{
     } 
 
 }
-
+/**
+ * Histogram Form Dispatcher.
+ */
 class Histogram{
-  
+/**
+	 * Dynamically instantiate data source class and render Histogram form.
+	 *
+	 * @param string $source   Data source class name.
+	 * @param string $origin   Data origin parameter.
+	 * @param array  $settings Display settings array.
+	 * @param array  $repo_set Repository fields configuration array.
+	 * @param string $ml_tech  ML technique (unused).
+	 * @return string Rendered HTML form string.
+	 */  
 	public function call_source($source, $origin, $settings, $repo_set, $ml_tech){
 		//Instantiate source class
     	$s = new ReflectionClass(ucfirst($source));
@@ -220,9 +369,20 @@ class Histogram{
 
 }
 
-
+/**
+ * Statistical Analysis Form Dispatcher.
+ */
 class Stats{
-  
+/**
+	 * Dynamically instantiate data source class and render Statistical form.
+	 *
+	 * @param string $source   Data source class name.
+	 * @param string $origin   Data origin parameter.
+	 * @param array  $settings Display settings array.
+	 * @param array  $repo_set Repository fields configuration array.
+	 * @param string $ml_tech  ML technique (unused).
+	 * @return string Rendered HTML form string.
+	 */  
 	public function call_source($source, $origin, $settings, $repo_set, $ml_tech){
 		//Instantiate source class
     	$s = new ReflectionClass(ucfirst($source));
@@ -233,9 +393,20 @@ class Stats{
     } 
 
 }
-
+/**
+ * Image Explorer Form Dispatcher.
+ */
 class Image{
-  
+/**
+	 * Dynamically instantiate data source class and render Image form.
+	 *
+	 * @param string $source   Data source class name.
+	 * @param string $origin   Data origin parameter.
+	 * @param array  $settings Display settings array.
+	 * @param array  $repo_set Repository fields configuration array.
+	 * @param string $ml_tech  ML technique (unused).
+	 * @return string Rendered HTML form string.
+	 */  
 	public function call_source($source, $origin, $settings, $repo_set, $ml_tech){
 		//Instantiate source class
     	$s = new ReflectionClass(ucfirst($source));
@@ -247,9 +418,21 @@ class Image{
 
 }
 
-
+/**
+ * EFD Repository Data Source Form Generator.
+ *
+ * Implements form construction methods for EFD telemetry and scientific data sources.
+ */
 class EFD extends Render{
-
+/**
+	 * Render Machine Learning form controls for EFD data source.
+	 *
+	 * @param string $origin   Data origin.
+	 * @param array  $settings UI display settings.
+	 * @param array  $repo_set Repository fields configuration array.
+	 * @param string $ml_tech  ML technique ('classification', 'regression', 'cluster').
+	 * @return string Rendered HTML form markup.
+	 */
 	function render_ml_form($origin, $settings, $repo_set, $ml_tech){
 		$keys = array_keys($repo_set["required"]);      
 		ob_start();
@@ -296,7 +479,14 @@ class EFD extends Render{
     }
 
 
-
+/**
+	 * Render Histogram form controls for EFD data source.
+	 *
+	 * @param string $origin   Data origin.
+	 * @param array  $settings UI display settings.
+	 * @param array  $repo_set Repository fields configuration array.
+	 * @return string Rendered HTML form markup.
+	 */
 	function render_hist_form($origin, $settings, $repo_set){
 		$keys = array_keys($repo_set["required"]);       
 		ob_start();
@@ -319,7 +509,14 @@ class EFD extends Render{
 		$result .= $this->render_bins_div() .'</div>';
     	return $result;
     }
-  
+/**
+	 * Render Scatter Plot form controls for EFD data source.
+	 *
+	 * @param string $origin   Data origin.
+	 * @param array  $settings UI display settings.
+	 * @param array  $repo_set Repository fields configuration array.
+	 * @return string Rendered HTML form markup.
+	 */  
 	function render_scatter_form($origin, $settings, $repo_set){
 		$keys = array_keys($repo_set["required"]);      
 		ob_start();
@@ -363,7 +560,14 @@ class EFD extends Render{
 			</div>'; */
     	return $result;
     }
-
+/**
+	 * Render Statistical form controls for EFD data source.
+	 *
+	 * @param string $origin   Data origin.
+	 * @param array  $settings UI display settings.
+	 * @param array  $repo_set Repository fields configuration array.
+	 * @return string Rendered HTML form markup.
+	 */
 	function render_stats_form($origin, $settings, $repo_set){
 		$keys = array_keys($repo_set["required"]);       
 		ob_start();
@@ -385,7 +589,14 @@ class EFD extends Render{
 		$result .= $this->close_div(3);
     	return $result;
     }  
-  
+/**
+	 * Render Trend Analysis form controls for EFD data source.
+	 *
+	 * @param string $origin   Data origin.
+	 * @param array  $settings UI display settings.
+	 * @param array  $repo_set Repository fields configuration array.
+	 * @return string Rendered HTML form markup.
+	 */  
 	function render_trend_form($origin, $settings, $repo_set){
 		$keys = array_keys($repo_set["required"]);  
 		ob_start();
@@ -407,8 +618,6 @@ class EFD extends Render{
 		
 /* 					<select id = "y0-sys" onchange="set_params(this)" class="form-control" >
                       	<option value="" disabled selected>Select '.ucfirst($keys[0]).'</option>'.$dd.'</select>'; */
-		
-		#METTERE OPZIONE SUBSYSTEM OPPURE IN SET PARAMS  VEDI SET_PARGROUP JAVASCRIPT
 		/* $result .= $this->render_partype("y0", $extra); */
 		$result .= $this->render_params_select("y0", "populate_values(this)");
 		$result .= $this->render_values_select("y0");
@@ -428,11 +637,20 @@ class EFD extends Render{
 }
 
 
-
-
-
-
+/**
+ * Fake Data Source Form Generator.
+ *
+ * Implements form construction methods for local demonstration fake data.
+ */
 class Fake extends Render{
+/**
+	 * Render Machine Learning form controls for Fake data.
+	 *
+	 * @param string $origin   Data origin.
+	 * @param array  $settings UI display settings.
+	 * @param array  $repo_set Repository fields configuration array.
+	 * @return string Rendered HTML form markup.
+	 */	
 	function render_ml_form($origin, $settings, $repo_set){
 		$keys = array_keys($repo_set["required"]);      
 		$options = create_option($repo_set, 0);
@@ -478,7 +696,14 @@ class Fake extends Render{
     	return $result;
     }
 
-
+/**
+	 * Render Histogram form controls for Fake data.
+	 *
+	 * @param string $origin   Data origin.
+	 * @param array  $settings UI display settings.
+	 * @param array  $repo_set Repository fields configuration array.
+	 * @return string Rendered HTML form markup.
+	 */
 	function render_hist_form($origin, $settings, $repo_set){
 		$keys = array_keys($repo_set["required"]);       
 	    if($origin=="hktm"){
@@ -582,7 +807,14 @@ class Fake extends Render{
     	}
     	return $result;
     }
-  
+/**
+	 * Render Scatter Plot form controls for Fake data.
+	 *
+	 * @param string $origin   Data origin.
+	 * @param array  $settings UI display settings.
+	 * @param array  $repo_set Repository fields configuration array.
+	 * @return string Rendered HTML form markup.
+	 */  
 	function render_scatter_form($origin, $settings, $repo_set){
 		$keys = array_keys($repo_set["required"]);      
 	    if($origin=="hktm"){
@@ -699,7 +931,14 @@ class Fake extends Render{
     	}
     	return $result;
     }
-
+/**
+	 * Render Statistical form controls for Fake data.
+	 *
+	 * @param string $origin   Data origin.
+	 * @param array  $settings UI display settings.
+	 * @param array  $repo_set Repository fields configuration array.
+	 * @return string Rendered HTML form markup.
+	 */
 	function render_stats_form($origin, $settings, $repo_set){
 		$keys = array_keys($repo_set["required"]);      
 	    if($origin=="hktm"){
@@ -778,7 +1017,14 @@ class Fake extends Render{
     }    
   
   
-  
+/**
+	 * Render Trend Analysis form controls for Fake data.
+	 *
+	 * @param string $origin   Data origin.
+	 * @param array  $settings UI display settings.
+	 * @param array  $repo_set Repository fields configuration array.
+	 * @return string Rendered HTML form markup.
+	 */  
 	function render_trend_form($origin, $settings, $repo_set){
 		$keys = array_keys($repo_set["required"]);        
 	    if($origin=="hktm"){
@@ -859,9 +1105,22 @@ class Fake extends Render{
   
 }
 
-
+/**
+ * Upload Data Source Form Renderer Class.
+ *
+ * Implements form generation logic for user-uploaded local tabular data files (CSV, FITS).
+ */
 class Upload{
+/**
+     * Render Histogram configuration form for user-uploaded data.
+     *
+     * @param string $origin   Comma-separated list of extracted table column names.
+     * @param array  $settings Operating mode view settings.
+     * @param array  $repo_set Selectable parameters metadata array.
+     * @return string HTML form markup.
+     */		
 	function render_hist_form($origin, $settings, $repo_set){
+	
 		$cols = explode(",",$origin);
         $optcols = "";
 		foreach($cols as $c){ // iterate cols
@@ -898,8 +1157,17 @@ class Upload{
     	return $result;      
 
     }
-  
+
+/**
+     * Render Scatter plot configuration form for user-uploaded data.
+     *
+     * @param string $origin   Comma-separated list of extracted table column names.
+     * @param array  $settings Operating mode view settings.
+     * @param array  $repo_set Selectable parameters metadata array.
+     * @return string HTML form markup.
+     */	  
 	function render_scatter_form($origin, $settings, $repo_set){
+	
 		$cols = explode(",",$origin);
         $optcols = "";
 		foreach($cols as $c){ // iterate cols
@@ -928,7 +1196,16 @@ class Upload{
     	return $result;
     }
 
+/**
+     * Render Statistical Analysis configuration form for user-uploaded data.
+     *
+     * @param string $origin   Comma-separated list of extracted table column names.
+     * @param array  $settings Operating mode view settings.
+     * @param array  $repo_set Selectable parameters metadata array.
+     * @return string HTML form markup.
+     */
 	function render_stats_form($origin, $settings, $repo_set){
+
 		$cols = explode(",",$origin);
         $optcols = "";
 		foreach($cols as $c){ // iterate cols
@@ -947,7 +1224,15 @@ class Upload{
 
     	return $result;      
     }  
-  
+	
+/**
+     * Render Trend Analysis configuration form for user-uploaded data.
+     *
+     * @param string $origin   Comma-separated list of extracted table column names.
+     * @param array  $settings Operating mode view settings.
+     * @param array  $repo_set Selectable parameters metadata array.
+     * @return string HTML form markup.
+     */  
 	function render_trend_form($origin, $settings, $repo_set){
 		$cols = explode(",",$origin);
         $optcols = "";
@@ -978,7 +1263,15 @@ class Upload{
     }
 
 }
-
+/**
+ * Generate HTML `<option>` tags from a nested metadata array.
+ *
+ * @param array  $arr       Selectable items configuration structure.
+ * @param int    $id        Index of the required key in the structure.
+ * @param string $type      Configuration section type. Default 'required'.
+ * @param bool   $from_keys Whether to build options from array keys instead of values. Default false.
+ * @return string Concatenated HTML option tags string.
+ */
 function create_option($arr, $id, $type="required",$from_keys=false){
 	//render list of options of a select box from an array
 	$keys = array_keys($arr[$type]);

@@ -1,3 +1,6 @@
+/**
+ * Event listener: Configures custom validation methods and attaches submit handlers.
+ */
 $(document).ready(function() {
 	// init validation rule:sequence of integer numbers separated by return
 	$.validator.addMethod("listnum", function(value, element){
@@ -41,6 +44,9 @@ $(document).ready(function() {
 		return true;
 	}, "Invalid format. Only single integer >0, comma separated integers >0 or range of integers >0 (a-b) are allowed");  
 
+	/**
+	 * Event listener: Validates detector form inputs before executing image file list retrieval.
+	 */
 	$('#submit_img_button').on('click', function(event) { 
 		$("#img_op").val("")
 		var ny = document.getElementById("n_ypar").value
@@ -70,7 +76,9 @@ $(document).ready(function() {
 			get_list_files()
 	   }
 	})
-
+	/**
+	 * Event listener: Validates plot parameter form and initiates online or offline script execution.
+	 */
 	$('#submit_button').on('click', function(event) { 
 		var ny = document.getElementById("n_ypar").value
 		var plot = document.getElementById("plot_type").value
@@ -279,6 +287,9 @@ $(document).ready(function() {
 
 $(document).ready(function() {
 
+	/**
+	 * Event listener: Validates configuration form submission and generates editor.
+	 */
 	$('#submit_config').on('click', function(event) {
 	// prevent default submit action         
 		event.preventDefault();
@@ -303,6 +314,9 @@ $(document).ready(function() {
 });	
 
 $(document).ready(function() {
+	/**
+	 * Event listener: Validates configuration editor form and triggers execution.
+	 */
 	$('#run_config').on('click', function(event) {
 		var page = document.getElementById("page").value	
 	// prevent default submit action         
@@ -327,7 +341,9 @@ $(document).ready(function() {
 
 
 $(document).ready(function() {
-
+	/**
+	 * Event listener: Validates configuration editor form and saves finalized config file.
+	 */
 	$('#complete_config').on('click', function(event) {
 		var page = document.getElementById("page").value	
 	// prevent default submit action         
@@ -351,7 +367,9 @@ $(document).ready(function() {
 });	
 
 $(document).ready(function() {
-
+	/**
+	 * Event listener: Validates editor form and saves temporary configuration file.
+	 */
 	$('#submit_temp').on('click', function(event) {
 		var page = document.getElementById("page").value
 	// prevent default submit action         
@@ -374,6 +392,9 @@ $(document).ready(function() {
 });	
 
 $(document).ready(function() {
+	/**
+	 * Event listener: Validates modal export settings and initiates PDF generation.
+	 */	
 	$('#store-btn').on('click', function(event) {
 		// prevent default submit action         
 		event.preventDefault();
@@ -402,6 +423,9 @@ $(document).ready(function() {
 
 
 $(document).ready(function() {
+	/**
+	 * Event listener: Validates modal form and submits password change request.
+	 */	
 	$('#change-pwd').on('click', function(event) {
 
 	// prevent default submit action         
@@ -450,6 +474,9 @@ $(document).ready(function() {
 });
 
 $(document).ready(function() {
+	/**
+	 * Event listener: Validates modal report inputs and exports status report flags.
+	 */	
 	$(document).on('click', '#store-rep-btn', function () {
 
 		if($('#modal-form').validate().form()) {
@@ -479,8 +506,9 @@ $(document).ready(function() {
 });
 
 $(document).ready(function() {
-		
-	// initialize the validator
+	/**
+	 * Event listener: Configures validation rules and constraints for user registration form.
+	 */
 	$('#signupform').validate({
 		rules : {
 			password : {

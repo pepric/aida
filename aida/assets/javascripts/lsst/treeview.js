@@ -1,3 +1,9 @@
+/**
+ * Triggers refresh of execution history for specific user or global context.
+ *
+ * @param {string} name Username identifier or "global".
+ * @param {string} classname Target DOM container suffix/class.
+ */
 function update_history(name, classname){
 	//refresh history on dashboard
 	$("#wait_"+classname).show();
@@ -12,6 +18,14 @@ function update_history(name, classname){
 	setTimeout(() => { $("#wait_"+classname).hide(); }, 2500);
 }
 
+/**
+ * Triggers UI treeview component refresh on the dashboard.
+ *
+ * @param {string} name Target user or path name.
+ * @param {string} classname Selector class/ID for target DOM container.
+ * @param {string} ext File extension filter.
+ * @param {string} olink Link target template URL.
+ */
 function update_tree(name, classname, ext, olink){
 	//refresh trees on dashboard
 	var s2 = classname.substr(1);
@@ -29,6 +43,12 @@ function update_tree(name, classname, ext, olink){
 	setTimeout(() => { $("#wait_"+s2).hide(); }, 2500);
 }
 
+/**
+ * Fetches user or global history markup via POST request from backend script.
+ *
+ * @param {string} name Username or scope identifier.
+ * @param {string} classname Target DOM container element ID.
+ */
 function get_history(name, classname){
 	//Get history on dashboard
 	var divid = document.getElementById(classname);
@@ -57,6 +77,15 @@ function get_history(name, classname){
 	});
 };
 
+/**
+ * Asynchronously retrieves file directory listings and populates or refreshes jsTree instances.
+ *
+ * @param {string} name Main directory name.
+ * @param {string} classname Selector for tree target element.
+ * @param {string} ext File extension filter.
+ * @param {string} openlink Node action link URL.
+ * @param {number} [refresh=0] Flag indicating whether to update existing tree data (1) or create new (0).
+ */
 function get_tree(name, classname, ext, openlink, refresh = 0){
 	//Get trees on dashboard
 	$.ajax({
@@ -103,6 +132,14 @@ function get_tree(name, classname, ext, openlink, refresh = 0){
 	});
 };
 
+/**
+ * Instantiates a jsTree widget on target element using structured JSON data.
+ *
+ * @param {string} name Scope identifier.
+ * @param {string} classname Selector for tree DOM element.
+ * @param {string} jsondata JSON formatted tree hierarchy string.
+ * @returns {Object} Initialized jsTree instance.
+ */
 function create_tree(name, classname, jsondata){
 	//render tree from backend data
 	var jdata = JSON.parse(jsondata)

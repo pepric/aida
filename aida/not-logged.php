@@ -1,3 +1,16 @@
+<?php
+/**
+ * Unauthorized Access Page View.
+ *
+ * Displayed when an unauthenticated user attempts to access a protected application page.
+ * Renders an access denied message with links to log in or request account registration.
+ *
+ * @package    AIDA
+ * @subpackage Views
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+ ?>
 <!doctype html>
 <html class="fixed">
 

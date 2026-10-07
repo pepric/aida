@@ -1,3 +1,15 @@
+<?php
+/**
+ * Plot Results Display View Template.
+ *
+ * Renders the page structure and container panels for displaying plot query results and statistics.
+ *
+ * @package    AIDA
+ * @subpackage Views\Plots
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+?>
 <!doctype html>
 <html class="fixed">
 	<?php include("header.php"); ?>

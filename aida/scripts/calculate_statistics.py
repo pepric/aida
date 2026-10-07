@@ -1,4 +1,16 @@
 #!/usr/bin/python
+"""
+Statistical Calculation Engine.
+
+This module provides functions to calculate basic (global) and custom/advanced 
+statistical metrics on datasets retrieved from data repositories. It processes 
+single or multi-parameter series, handles missing/invalid values (NaNs/sentinels), 
+and formats results for frontend display and reporting.
+
+@package AIDA
+@module calculate_statistics
+"""
+
 
 import json
 import ast
@@ -9,20 +21,22 @@ import functions as util
 from iotstats   import Data
 
 def calc_stat(datain, stats):
-    """ Calculate statistics for single parameter.
-    
+    """Calculate statistical metrics for a single dataset parameter.
+
     Parameters
-    ---------
-    datain : ndarray,
-            array of values to use for calculation
-    stats_config : dict,
-                dictionary of statistics to calculate in the form {<Name to display> : <function to calculate>}
-        
+    ----------
+    datain : array_like
+        Array or sequence of data values to analyze.
+    stats : dict
+        Dictionary of statistics configuration mapping metric names to 
+        functions or parameter dictionaries.
+
     Returns
-    --------
-    res_dict  :  dict,
-            dictionary containing analysis result in the form {<stats#1> : <value#1>, <stats#2> : <value#2>, ...,<stats#i> : <value#i>}
-    """    
+    -------
+    res_dict : dict
+        Dictionary containing metric names as keys and calculated 
+        values as dictionary entries.
+    """  
     
     data = Data(datain) 
     res_dict = {}
@@ -70,18 +84,18 @@ def calc_stat(datain, stats):
     return(res_dict)
 
 def get_global_stats(stats):
-    """ Perform calculation of selected statistics
+    """Fetch global statistical functions configuration from local database.
+
     Parameters
-    ---------
-    stats : "global",
-            type of statistical analysis to perform (global/advanced)
-        
+    ----------
+    stats : str
+        Statistical analysis category identifier (e.g., 'global').
+
     Returns
-    --------
-    stats_config : dict,
-                    dictionary of statistics to calculate in the form {<Name to display> : <function to calculate>}
-    
-    """    
+    -------
+    stats_config : dict
+        Dictionary mapping statistic display names to backend function names.
+    """   
     conf = util.repConfig()
     connection = util.connect_db(conf.data['local_db'])
     query_globals = util.db_query(connection, "statistics", "stat_name, stat_function", "WHERE stat_type='"+stats+"'")
@@ -91,22 +105,23 @@ def get_global_stats(stats):
     return stats_config
   
 def do_calculation(indata, plot, stats_config, ny):
-    """ Perform calculation of selected statistics
+    """Filter invalid entries and compute statistical metrics for all plot parameters.
+
     Parameters
-    ---------
-    indata : dict,
-            dictionary containing data to analyze in the form {"x" : <x data>, "y0" : <y0 data>, ... , "y<n>" : <yn data>}
-    plot   : str,
-            name of the plot experiment performing statistical calculation
-    stats_config : dict,
-                dictionary of statistics to calculate in the form {<Name to display> : <function to calculate>}
-    ny : int,
-        number of y parameters
-        
+    ----------
+    indata : dict
+        Dictionary containing dataset series for X and Y parameters.
+    plot : str
+        Type of plot experiment being analyzed (e.g., 'scatter').
+    stats_config : dict
+        Configuration mapping of statistical functions to execute.
+    ny : int
+        Number of Y parameters in the dataset.
+
     Returns
-    --------
-    result  :  dict,
-            dictionary containing analysis result in the form {"x_stats" : {<stats#1> : <value#1>,...,<stats#i> : <value#i>}, "y0_stats" : {<stats#1> : <value#1>,...,<stats#i> : <value#i>},...,"y<n>_stats" : {<stats#1> : <value#1>,...,<stats#i> : <value#i>} }
+    -------
+    result : str
+        JSON-formatted string containing calculated statistics for X and Y parameters.
     """    
     result = {}
     resultx = {}
@@ -181,18 +196,14 @@ def do_calculation(indata, plot, stats_config, ny):
     return result
         
 def main(data):
-    """Start a new statistical analysis.
+    """CGI main entry point for statistical computation jobs.
+
     Parameters
     ----------
-    data : cgi.FieldStorage,
-        Contains all data coming from client side script: input data, number of parameters, plot type, basic/advanced operation flag, statistics to perform
-    
-    Returns
-    -------
-    result : dict,
-            result of statistical analysis in the form: {y0_stats : {<stats 1 name> : value, ... <stats N name> : value}, ... , y<i>_stats : {...}}
+    data : cgi.FieldStorage
+        HTTP request payload containing input data, parameter count, plot type, 
+        and statistical options.
     """
-
     #read data
     inputdata = json.loads(data['inputdata'].value)
     ny = int(data['ny'].value)

@@ -1,3 +1,17 @@
+<?php
+/**
+ * New Report Configuration Setup View.
+ *
+ * Page template for defining basic settings for a new report configuration
+ * (periodicity, start date, sampling, window amplitude, number of acquisitions)
+ * and editing the generated JSON structure via an interactive code editor.
+ *
+ * @package    AIDA
+ * @subpackage Views\Reports
+ * @author     Giuseppe Riccio
+ * @version    1.1.0
+ */
+ ?>
 <!doctype html>
 <html class="fixed">
 	<?php 

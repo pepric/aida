@@ -1,4 +1,17 @@
-	<?php include("header.php");
+	<?php 
+		/**
+		 * Public Landing Page View.
+		 *
+		 * Main entry page displaying general project information, versioning,
+		 * core functionalities, and the login/signup interface.
+		 *
+		 * @package    AIDA
+		 * @subpackage Views
+		 * @author     Giuseppe Riccio
+		 * @version    1.1.0
+		 */
+	
+		include("header.php");
   		//redirect to dashboard if logged
 		if($check == true){   
 			exit("<script type='text/javascript'>window.location.href='dashboard.php';</script>");
