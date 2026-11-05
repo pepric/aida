@@ -10,7 +10,7 @@
  * @subpackage Controllers\Auth
  * @author     Giuseppe Riccio
  * @version    1.1.0
- */
+ */   
 
 /* Namespace alias. 
 use PHPMailer\PHPMailer\PHPMailer;
@@ -85,6 +85,8 @@ if(isset($_POST['captcha_challenge']) && $_POST['captcha_challenge'] == $_SESSIO
       
       }
 
+
+
       if($error==0){
           if($install == 0){
             // SEND MAIL TO ADMIN
@@ -116,7 +118,7 @@ echo $error;
  * @param string $email      Administrator email address.
  * @param string $notifemail Notification email address.
  * @return int Error status code (0 on success, 1 on error).
- */
+ */   
 function send_activation_email($username, $email, $notifemail){
 	
 	$configmail = read_json_file("smtp.json");
@@ -136,7 +138,7 @@ function send_activation_email($username, $email, $notifemail){
 	
 	// subject and message
 	$subject = "AIDA Account Confirmation";
-	$msg = "<p>Dear ".$username.",<br/> your registration has been submitted. Please, confirm to activate your Admin account by clicking  <a href='".$address."/index.php?user=".$username."&email=".$notifemail."&confirm=1'>here</a>.</p><p>The IOT</p>";
+	$msg = "<p>Dear ".$username.",<br/> your registration has been submitted. Please, confirm to activate your Admin account by clicking  <a href='".$address."/index.php?user=".$username."&email=".$notifemail."&confirm=1'>here</a>.</p><p>The AIDA team</p>";
 
 	/* Create a new PHPMailer object. Passing TRUE to the constructor enables exceptions. */
 	/* $mail = new PHPMailer(TRUE); */
@@ -145,7 +147,7 @@ function send_activation_email($username, $email, $notifemail){
 /* Open the try/catch block. */
 	$error = 0;
 //	try {
-		$mail->IsSMTP();
+		$mail->IsSMTP(); // Utilizzo della classe SMTP al posto del comando php mail()
 		
 						//Enable SMTP debugging
 		// 0 = off (for production use)
@@ -173,7 +175,12 @@ function send_activation_email($username, $email, $notifemail){
 		}      
 		$mail->Host = $host;
 		$mail->Port = $port;
-		$mail->SMTPSecure = 'tls';
+		if($port==465){
+			$mail->SMTPSecure = 'ssl';
+		}
+		else{
+			$mail->SMTPSecure = 'tls';
+		}
 		$mail->IsHTML(true); 
 		$mail->Username = $user; // SMTP user
 		$mail->Password = $pwd; // email account Password
@@ -195,6 +202,7 @@ function send_activation_email($username, $email, $notifemail){
 
 	   /* Finally send the mail. */
 	   $mail->send();
+
 	
 	return $error;
 
@@ -209,6 +217,7 @@ function send_activation_email($username, $email, $notifemail){
  * @param string $role       Requested user role.
  * @return int Error status code (0 on success, 1 on error).
  */
+   
 function send_admin_email($username, $email, $mail_admin, $role){
 	
 /* 	require(".\PHPMailer\src\Exception.php");
@@ -221,11 +230,13 @@ function send_admin_email($username, $email, $mail_admin, $role){
 	$user = $configmail['user'];
 	$pwd = $configmail['password'];
 	
-	
+	$appurl = (empty($_SERVER['HTTPS']) ? 'http' : 'https') . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+	$thispage = end(explode('/', $_SERVER['PHP_SELF']));
+	$appurl = str_replace($thispage, "", $appurl);
 	// subject and body
 	$subject = "New Registration Request on AIDA";
 	$msg = "<p>A new user requested registration in AIDA web app. Please activate user in the DB if authorized.<p><p>Name: ".$username."</p><p>Email: ".$email."</p><p>Role: ".$role."</p>";
-
+	$msg .= "<p>Application instance url : ".$appurl."</p>";
 	/* Create a new PHPMailer object. Passing TRUE to the constructor enables exceptions. */
 	/* $mail = new PHPMailer(TRUE); */
 	$mail = new PHPMailer\PHPMailer\PHPMailer();
@@ -233,9 +244,9 @@ function send_admin_email($username, $email, $mail_admin, $role){
 /* Open the try/catch block. */
 	$error = 0;
 	try {
-		$mail->IsSMTP(); 
+		$mail->IsSMTP(); // Utilizzo della classe SMTP al posto del comando php mail()
 		
-		//Enable SMTP debugging
+						//Enable SMTP debugging
 		// 0 = off (for production use)
 		// 1 = client messages
 		// 2 = client and server messages
@@ -261,19 +272,27 @@ function send_admin_email($username, $email, $mail_admin, $role){
 		}      
 		$mail->Host = $host;
 		$mail->Port = $port;
-		$mail->SMTPSecure = 'tls';
+		if($port==465){
+			$mail->SMTPSecure = 'ssl';
+		}
+		else{
+			$mail->SMTPSecure = 'tls';
+		}
 		$mail->IsHTML(true); 
-		$mail->Username = $user;
-		$mail->Password = $pwd;
+		$mail->Username = $user; // Nome utente SMTP autenticato
+		$mail->Password = $pwd; // Password account email con SMTP autenticato
 		
-		/*!!!NOTE: GMAIL requires to enable unsecure apps*/
+		/*!!!NOTE: GMAIL require to enable unsecure apps*/
 					
 					
 	   /* Set the mail sender. */
 	   $mail->setFrom($user, "AIDA webapp");
 
-	   /* Add a recipient. */
-	   $mail->addAddress($mail_admin, 'AIDA admin');
+	   /* Add recipients. */
+	   $all_admins = explode(",",$mail_admin);
+	   foreach($all_admins as $id => $curr){
+		   $mail->AddCC(trim($curr), 'AIDA admin '.($id+1));
+	   }
 
 	   /* Set the subject. */
 	   $mail->Subject = $subject;
@@ -312,7 +331,7 @@ function send_admin_email($username, $email, $mail_admin, $role){
  * @param string $email      Recipient email address.
  * @param string $mail_admin Administrator email address.
  * @return int Error status code (0 on success, 1 on error).
- */
+ */  
 function send_user_email($username, $email, $mail_admin){
 	
 	$configmail = read_json_file("smtp.json");
@@ -323,7 +342,7 @@ function send_user_email($username, $email, $mail_admin){
 	
 	// subject and body
 	$subject = "New Registration Request on RUBIN LSST";
-	$msg = "<p>Dear User,<br/> your registration request has been submitted. You will receive the confirm of your activation as soon as possible.</p><p>The IOT</p>";
+	$msg = "<p>Dear User,<br/> your registration request has been submitted. You will receive the confirm of your activation as soon as possible.</p><p>The AIDA team</p>";
 
 	/* Create a new PHPMailer object. Passing TRUE to the constructor enables exceptions. */
 	/* $mail = new PHPMailer(TRUE); */
@@ -332,9 +351,9 @@ function send_user_email($username, $email, $mail_admin){
 /* Open the try/catch block. */
 	$error = 0;
 	try {
-		$mail->IsSMTP(); 
+		$mail->IsSMTP(); // Utilizzo della classe SMTP al posto del comando php mail()
 		
-		//Enable SMTP debugging
+						//Enable SMTP debugging
 		// 0 = off (for production use)
 		// 1 = client messages
 		// 2 = client and server messages
@@ -354,24 +373,30 @@ function send_user_email($username, $email, $mail_admin){
 		/*********************************************/
 		
 		if($pwd==""){
-			$mail->SMTPAuth = false;
+			$mail->SMTPAuth = false; // Autenticazione SMTP
         }
 		else{
-			$mail->SMTPAuth = true;
+			$mail->SMTPAuth = true; // Autenticazione SMTP
 		} 
 		$mail->Host = $host;
 		$mail->Port = $port;
-		$mail->SMTPSecure = 'tls';
+		if($port==465){
+			$mail->SMTPSecure = 'ssl';
+		}
+		else{
+			$mail->SMTPSecure = 'tls';
+		}
 		$mail->IsHTML(true); 
-		$mail->Username = $user;
-		$mail->Password = $pwd;
+		$mail->Username = $user; 
+		$mail->Password = $pwd; 
 		
 		/*!!!NOTE: GMAIL require to enable unsecure apps*/
 					
 					
 	   /* Set the mail sender. */
-	   /*$mail->setFrom($mail_admin, "AIDA admin");*/
-		$mail->setFrom($user, "AIDA admin");
+	   /*$all_admins = explode(",",$mail_admin); FORSE SOSTITUIRE MAIL_ADMIN CON USER
+	   $mail->setFrom($all_admins[0], "AIDA admin");*/
+	   $mail->setFrom($user, "AIDA admin");
 
 	   /* Add a recipient. */
 	   $mail->addAddress($email, $username);
@@ -406,7 +431,7 @@ function send_user_email($username, $email, $mail_admin){
  * @param string $col Target database column name.
  * @return bool True if record exists, false otherwise.
  */
-function check_exist($con, $val, $col){
+ function check_exist($con, $val, $col){
 	//query
 	
 	$sql="SELECT * FROM members WHERE $col = '".$val."'";

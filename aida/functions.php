@@ -3692,7 +3692,7 @@ function render_systems_setting($systems){
 						/* error_system_json($name,'Missing configuration', $origin[$i]); */
 					}
 					else{
-						$branch_conf = json_decode($orig_branch);
+						// $branch_conf = json_decode($orig_branch);
 						if(empty((array)$orig_branch)){
 							$disabled = "disabled";
 							$sw_class = "stats-tooltip";

@@ -895,15 +895,17 @@ def store_smtp(data):
     #check smtp connection
     if error == 0:
         try:
-            server = smtplib.SMTP(host, port)
-            server.ehlo()
-            server.starttls()
+            if port=='465':
+                server=smtplib.SMTP_SSL(host, port)
+            else:
+                server = smtplib.SMTP(host, port)
+                server.ehlo()
+                server.starttls()
             if pwd != "":        
                 server.login(user, pwd)
             server.quit()
         except:
             error = 2
-
     return error
 
 def flush_data(isfull = True, remove_stored = False, keep_config = False):
